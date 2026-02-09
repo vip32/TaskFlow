@@ -6,14 +6,14 @@ namespace TaskFlow.Domain;
 public interface IProjectRepository
 {
     /// <summary>
-    /// Gets all projects.
+    /// Gets all projects for the current subscription.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A list of projects.</returns>
     global::System.Threading.Tasks.Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets a project by identifier.
+    /// Gets a project by identifier for the current subscription.
     /// </summary>
     /// <param name="id">Project identifier.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
@@ -37,7 +37,7 @@ public interface IProjectRepository
     global::System.Threading.Tasks.Task<Project> UpdateAsync(Project project, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes a project by identifier.
+    /// Deletes a project by identifier for the current subscription.
     /// </summary>
     /// <param name="id">Project identifier.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>

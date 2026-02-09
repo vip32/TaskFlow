@@ -8,6 +8,11 @@ public class Project
     private readonly List<Task> tasks = [];
 
     /// <summary>
+    /// Gets the subscription identifier that owns this project.
+    /// </summary>
+    public Guid SubscriptionId { get; private set; }
+
+    /// <summary>
     /// Gets the unique identifier of the project.
     /// </summary>
     public Guid Id { get; private set; }
@@ -57,12 +62,18 @@ public class Project
     /// <summary>
     /// Initializes a new project with required metadata.
     /// </summary>
+    /// <param name="subscriptionId">Owning subscription identifier.</param>
     /// <param name="name">Project display name.</param>
     /// <param name="color">Project color marker.</param>
     /// <param name="icon">Project icon key.</param>
     /// <param name="isDefault">Whether the project is the default project.</param>
-    public Project(string name, string color, string icon, bool isDefault = false)
+    public Project(Guid subscriptionId, string name, string color, string icon, bool isDefault = false)
     {
+        if (subscriptionId == Guid.Empty)
+        {
+            throw new ArgumentException("Subscription id cannot be empty.", nameof(subscriptionId));
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("Project name cannot be empty.", nameof(name));
@@ -78,6 +89,7 @@ public class Project
             throw new ArgumentException("Project icon cannot be empty.", nameof(icon));
         }
 
+        this.SubscriptionId = subscriptionId;
         this.Id = Guid.NewGuid();
         this.Name = name.Trim();
         this.Color = color.Trim();
@@ -94,6 +106,11 @@ public class Project
     public void AddTask(Task task)
     {
         ArgumentNullException.ThrowIfNull(task);
+
+        if (task.SubscriptionId != this.SubscriptionId)
+        {
+            throw new InvalidOperationException("Task subscription must match project subscription.");
+        }
 
         if (this.tasks.Any(existing => existing.Id == task.Id))
         {

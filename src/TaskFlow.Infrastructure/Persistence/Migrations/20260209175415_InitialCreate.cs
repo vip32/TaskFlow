@@ -1,0 +1,173 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace TaskFlow.Infrastructure.Persistence.Migrations
+{
+    /// <inheritdoc />
+    public partial class InitialCreate : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "Subscriptions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Tier = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Subscriptions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FocusSessions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    SubscriptionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    TaskId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EndedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FocusSessions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FocusSessions_Subscriptions_SubscriptionId",
+                        column: x => x.SubscriptionId,
+                        principalTable: "Subscriptions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Projects",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    SubscriptionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Color = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    Icon = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ViewType = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Projects", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Projects_Subscriptions_SubscriptionId",
+                        column: x => x.SubscriptionId,
+                        principalTable: "Subscriptions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SubscriptionSchedules",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    SubscriptionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    StartsOn = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    EndsOn = table.Column<DateOnly>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubscriptionSchedules", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubscriptionSchedules_Subscriptions_SubscriptionId",
+                        column: x => x.SubscriptionId,
+                        principalTable: "Subscriptions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tasks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    SubscriptionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Title = table.Column<string>(type: "TEXT", maxLength: 300, nullable: false),
+                    Note = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsFocused = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    ProjectId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ParentTaskId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tasks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Tasks_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Tasks_Subscriptions_SubscriptionId",
+                        column: x => x.SubscriptionId,
+                        principalTable: "Subscriptions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FocusSessions_SubscriptionId_TaskId_StartedAt",
+                table: "FocusSessions",
+                columns: new[] { "SubscriptionId", "TaskId", "StartedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Projects_SubscriptionId_Name",
+                table: "Projects",
+                columns: new[] { "SubscriptionId", "Name" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubscriptionSchedules_SubscriptionId_StartsOn",
+                table: "SubscriptionSchedules",
+                columns: new[] { "SubscriptionId", "StartsOn" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_ProjectId",
+                table: "Tasks",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_SubscriptionId_ProjectId_CreatedAt",
+                table: "Tasks",
+                columns: new[] { "SubscriptionId", "ProjectId", "CreatedAt" });
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "FocusSessions");
+
+            migrationBuilder.DropTable(
+                name: "SubscriptionSchedules");
+
+            migrationBuilder.DropTable(
+                name: "Tasks");
+
+            migrationBuilder.DropTable(
+                name: "Projects");
+
+            migrationBuilder.DropTable(
+                name: "Subscriptions");
+        }
+    }
+}

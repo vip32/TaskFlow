@@ -8,6 +8,11 @@ public class Task
     private readonly List<Task> subTasks = [];
 
     /// <summary>
+    /// Gets the subscription identifier that owns this task.
+    /// </summary>
+    public Guid SubscriptionId { get; private set; }
+
+    /// <summary>
     /// Gets the unique identifier of the task.
     /// </summary>
     public Guid Id { get; private set; }
@@ -77,10 +82,16 @@ public class Task
     /// <summary>
     /// Initializes a new task in a project.
     /// </summary>
+    /// <param name="subscriptionId">Owning subscription identifier.</param>
     /// <param name="title">Task title.</param>
     /// <param name="projectId">Owning project identifier.</param>
-    public Task(string title, Guid projectId)
+    public Task(Guid subscriptionId, string title, Guid projectId)
     {
+        if (subscriptionId == Guid.Empty)
+        {
+            throw new ArgumentException("Subscription id cannot be empty.", nameof(subscriptionId));
+        }
+
         if (string.IsNullOrWhiteSpace(title))
         {
             throw new ArgumentException("Task title cannot be empty.", nameof(title));
@@ -91,6 +102,7 @@ public class Task
             throw new ArgumentException("Project id cannot be empty.", nameof(projectId));
         }
 
+        this.SubscriptionId = subscriptionId;
         this.Id = Guid.NewGuid();
         this.Title = title.Trim();
         this.Note = string.Empty;
@@ -157,6 +169,11 @@ public class Task
         if (this.subTasks.Any(existing => existing.Id == subTask.Id))
         {
             throw new InvalidOperationException("Subtask is already attached to this task.");
+        }
+
+        if (subTask.SubscriptionId != this.SubscriptionId)
+        {
+            throw new InvalidOperationException("Subtask subscription must match parent task subscription.");
         }
 
         subTask.SetParent(this.Id);

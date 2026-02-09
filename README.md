@@ -49,3 +49,33 @@ TaskFlow follows a layered architecture with a rich domain model at its core.
 - `TaskFlow.UnitTests`: xUnit-based tests using AAA and Shouldly assertions
 
 Key principle: business rules live in the domain, while application services orchestrate and repositories handle database access.
+
+## Release Process
+
+TaskFlow uses tag-driven releases with GitHub Actions and MinVer.
+
+### Prerequisites
+
+- Keep release notes up to date in `CHANGELOG.md`.
+- Ensure `master` is green in the `Build` workflow.
+
+### How a Release Is Created
+
+1. Add a new section in `CHANGELOG.md` (for example `## [1.0.2] - YYYY-MM-DD`) and commit it.
+2. Create and push a stable SemVer tag:
+
+```bash
+git tag 1.0.2
+git push origin 1.0.2
+```
+
+3. Pushing the tag triggers `.github/workflows/release.yml`, which:
+   - restores tools and resolves version with `dotnet minver`
+   - validates/builds/tests the solution in Release mode
+   - creates a GitHub Release with generated release notes
+
+### Tag Rules
+
+- Stable tags must match `X.Y.Z` (for example `1.0.2`) to publish a release.
+- Pre-release tags like `1.1.0-beta.1` or `1.1.0-preview.1` do not create a stable GitHub release.
+- MinVer is configured for plain tags (no `v` prefix).

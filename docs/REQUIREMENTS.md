@@ -14,10 +14,13 @@
 ## Document Overview
 
 ### Purpose
-This document captures all functional and non-functional requirements for TaskFlow, a personal task management application built with Blazor Server.
+This document captures all functional and non-functional requirements for TaskFlow, a productivity application built with Blazor Server and prepared for SaaS-style subscription boundaries.
 
 ### Scope
 TaskFlow provides task and project management with:
+- Subscription-scoped data ownership (each user has exactly one subscription that owns projects, tasks, and focus sessions)
+- Subscription schedules with active windows (from/to, open-ended end date supported)
+- Subscription tiers: Free (limited), Plus (less limited), Pro (full)
 - Project organization
 - Task prioritization
 - SubTask support
@@ -28,9 +31,10 @@ TaskFlow provides task and project management with:
 - Private network access via Tailscale
 
 ### Target Audience
-- **Primary**: Single user (personal deployment)
+- **Primary (current)**: Personal deployment with a single subscription
+- **Primary (target)**: Multi-user SaaS model where each user operates within exactly one subscription boundary
 - **Environment**: Raspberry Pi 5, Debian 13, private Tailscale network
-- **Scale**: Personal use (10-50 projects, 100-1000 tasks)
+- **Scale**: Per subscription, 10-50 projects and 100-1000 tasks in baseline usage
 
 ### Version
 - **Version**: 1.0
@@ -164,6 +168,7 @@ TaskFlow provides task and project management with:
 - Changes are saved on blur or Enter key
 - Changes persist to database immediately
 - UI updates in real-time via SignalR
+- No explicit Save button is used for task edits
 
 **Priority**: Must Have
 
@@ -535,6 +540,7 @@ TaskFlow provides task and project management with:
 - Edit on blur or Enter key
 - Cancel on Escape key
 - No dialog modals for editing
+- No Save buttons for create/update flows; actions persist immediately
 
 **Priority**: Must Have
 
@@ -1042,6 +1048,17 @@ TaskFlow provides task and project management with:
 ---
 
 ### FR14: Code Quality Standards
+
+#### FR14.0 Immediate Persistence UX Rule
+**Description**: Create and update actions must persist immediately without explicit save buttons.
+
+**Requirements**:
+- Any input change that confirms intent (blur, Enter, selection change, toggle, OK action) must write directly to persistence.
+- No Save button in create/update forms and editors.
+- Delete flows are the only flows that require explicit confirmation.
+- Repository add/update methods are called as part of each confirmed UI action.
+
+**Priority**: Must Have
 
 #### FR14.1 Rich Domain Methods
 **Description**: Domain entity methods must encapsulate business logic clearly.
