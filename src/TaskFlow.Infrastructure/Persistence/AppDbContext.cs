@@ -28,6 +28,11 @@ public class AppDbContext : DbContext
     public DbSet<TaskFlow.Domain.SubscriptionSchedule> SubscriptionSchedules => this.Set<TaskFlow.Domain.SubscriptionSchedule>();
 
     /// <summary>
+    /// Gets the task history set.
+    /// </summary>
+    public DbSet<TaskFlow.Domain.TaskHistory> TaskHistories => this.Set<TaskFlow.Domain.TaskHistory>();
+
+    /// <summary>
     /// Gets the projects set.
     /// </summary>
     public DbSet<TaskFlow.Domain.Project> Projects => this.Set<TaskFlow.Domain.Project>();
@@ -84,10 +89,12 @@ public class AppDbContext : DbContext
             entity.Property(p => p.Name).IsRequired().HasMaxLength(200);
             entity.Property(p => p.Color).IsRequired().HasMaxLength(32);
             entity.Property(p => p.Icon).IsRequired().HasMaxLength(64);
+            entity.Property(p => p.Note).IsRequired().HasMaxLength(4000);
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.IsDefault).IsRequired();
             entity.Property(p => p.ViewType).HasConversion<int>().IsRequired();
             entity.Ignore(p => p.Tasks);
+            entity.Ignore(p => p.Tags);
 
             entity.HasOne<TaskFlow.Domain.Subscription>()
                 .WithMany()
@@ -113,6 +120,7 @@ public class AppDbContext : DbContext
             entity.Property(t => t.CreatedAt).IsRequired();
             entity.Property(t => t.CompletedAt).IsRequired();
             entity.Ignore(t => t.SubTasks);
+            entity.Ignore(t => t.Tags);
 
             entity.HasOne<TaskFlow.Domain.Project>()
                 .WithMany()
@@ -144,6 +152,25 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(f => new { f.SubscriptionId, f.TaskId, f.StartedAt });
+        });
+
+        modelBuilder.Entity<TaskFlow.Domain.TaskHistory>(entity =>
+        {
+            entity.ToTable("TaskHistory");
+            entity.HasKey(h => h.Id);
+            entity.Property(h => h.SubscriptionId).IsRequired();
+            entity.Property(h => h.Name).IsRequired().HasMaxLength(500);
+            entity.Property(h => h.IsSubTaskName).IsRequired();
+            entity.Property(h => h.LastUsedAt).IsRequired();
+            entity.Property(h => h.UsageCount).IsRequired();
+
+            entity.HasOne<TaskFlow.Domain.Subscription>()
+                .WithMany()
+                .HasForeignKey(h => h.SubscriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(h => new { h.SubscriptionId, h.IsSubTaskName, h.Name });
+            entity.HasIndex(h => new { h.SubscriptionId, h.LastUsedAt });
         });
 
         base.OnModelCreating(modelBuilder);

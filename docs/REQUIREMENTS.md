@@ -20,10 +20,13 @@ This document captures all functional and non-functional requirements for TaskFl
 TaskFlow provides task and project management with:
 - Subscription-scoped data ownership (each user has exactly one subscription that owns projects, tasks, and focus sessions)
 - Subscription schedules with active windows (from/to, open-ended end date supported)
+- Subscription can be explicitly deactivated regardless of schedule
 - Subscription tiers: Free (limited), Plus (less limited), Pro (full)
 - Project organization
 - Task prioritization
 - SubTask support
+- Tags on projects, tasks, and subtasks (zero or more)
+- Task/subtask title history for autocomplete and autofill
 - Kanban board views
 - My Task Flow smart views (Today, Upcoming, Recent)
 - Focus pin for highlighting important tasks
@@ -58,6 +61,8 @@ TaskFlow provides task and project management with:
 - System sets CreatedAt timestamp to current time
 - System sets IsDefault to false for all created projects
 - System sets default ViewType to List
+- System sets optional project note to empty
+- System initializes project tags as empty
 
 **Priority**: Must Have
 
@@ -80,6 +85,8 @@ TaskFlow provides task and project management with:
 - User can update project name
 - User can change project color
 - User can change project icon
+- User can edit optional project note
+- User can assign zero or more tags
 - Changes are persisted to database immediately
 - UI updates in real-time via SignalR
 
@@ -135,9 +142,11 @@ TaskFlow provides task and project management with:
 - System sets Priority to Medium (2) by default
 - System sets IsCompleted to false
 - System sets IsFocused to false
-- System sets Status to ToDo
+- System sets Status to New
 - System sets CreatedAt to current timestamp
 - System sets ProjectId to current project ID
+- System initializes task tags as empty
+- System stores created title in task name history for future autocomplete
 - Task appears immediately in list via SignalR
 
 **Priority**: Must Have
@@ -148,7 +157,7 @@ TaskFlow provides task and project management with:
 **Requirements**:
 - System displays tasks in List view or Board view
 - List view shows: Checkbox, Focus pin, Title, Note preview, Priority badge, Timestamps, Actions
-- Board view shows tasks in 3 columns (ToDo, InProgress, Done)
+- Board view supports statuses: New, InProgress, Paused, Done, Cancelled
 - Tasks are sorted by CreatedAt (newest first) by default, with focused tasks at top
 - User can toggle sorting by Priority or CreatedAt or Focused
 - User can filter by priority (All, High, Medium, Low)
@@ -164,11 +173,14 @@ TaskFlow provides task and project management with:
 - In-line editing for task title (click to edit)
 - Optional note field (expandable text area)
 - Dropdown to change priority (High, Medium, Low)
+- Dropdown to change status (New, InProgress, Paused, Done, Cancelled)
+- User can assign zero or more tags
 - Priority changes update badge color immediately
 - Changes are saved on blur or Enter key
 - Changes persist to database immediately
 - UI updates in real-time via SignalR
 - No explicit Save button is used for task edits
+- Task/subtask title inputs support autocomplete from historical names
 
 **Priority**: Must Have
 
@@ -312,7 +324,7 @@ TaskFlow provides task and project management with:
 **Description**: User must be able to view tasks in Kanban board layout.
 
 **Requirements**:
-- 3 columns: ToDo, InProgress, Done
+- 5 columns: New, InProgress, Paused, Done, Cancelled
 - Each column shows tasks with that Status
 - Task count badge per column
 - Drag-and-drop to move tasks between columns
@@ -397,7 +409,7 @@ TaskFlow provides task and project management with:
 **Description**: User must be able to filter tasks by status.
 
 **Requirements**:
-- Status filter dropdown (ToDo, InProgress, Done, All)
+- Status filter dropdown (New, InProgress, Paused, Done, Cancelled, All)
 - Available in both List and Board views
 - Filters update immediately
 
@@ -962,7 +974,7 @@ TaskFlow provides task and project management with:
 
 **Requirements**:
 - TaskPriority enum (Low, Medium, High)
-- TaskStatus enum (ToDo, InProgress, Done)
+- TaskStatus enum (New, InProgress, Paused, Done, Cancelled)
 - ProjectViewType enum (List, Board)
 - Value objects are immutable
 - Value objects defined in domain layer
@@ -1693,8 +1705,8 @@ TaskFlow provides task and project management with:
 - **Task**: An item to be completed, with title, priority, status, and metadata
 - **Subtask**: A nested task under a parent task (1-level only)
 - **Priority**: Importance level (Low=1, Medium=2, High=3)
-- **Status**: Workflow state (ToDo, InProgress, Done)
-- **Board View**: Kanban-style layout with 3 columns
+- **Status**: Workflow state (New, InProgress, Paused, Done, Cancelled)
+- **Board View**: Kanban-style layout with status columns
 - **List View**: Traditional vertical list layout
 - **My Task Flow**: Smart task views (Today, Upcoming, Recent) that aggregate tasks across all projects
 - **Today View**: Tasks due today or marked for today (independent of projects)

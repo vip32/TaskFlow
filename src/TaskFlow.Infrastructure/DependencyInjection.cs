@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using TaskFlow.Domain;
 using TaskFlow.Infrastructure.Persistence;
-using TaskFlow.Infrastructure.Repositories;
 
 namespace TaskFlow.Infrastructure;
 
@@ -35,9 +33,7 @@ public static class DependencyInjection
                     await TaskFlowDataSeeder.SeedAsync((AppDbContext)dbContext, cancellationToken);
                 }));
 
-        services.AddSingleton<ICurrentSubscriptionAccessor, CurrentSubscriptionAccessor>();
-        services.AddScoped<IProjectRepository, ProjectRepository>();
-        services.AddScoped<ITaskRepository, TaskRepository>();
+        services.AddTaskFlowInfrastructureServices();
 
         return services;
     }

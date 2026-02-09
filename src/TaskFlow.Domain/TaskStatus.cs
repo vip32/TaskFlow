@@ -6,9 +6,9 @@ namespace TaskFlow.Domain;
 public enum TaskStatus
 {
     /// <summary>
-    /// Task is not started.
+    /// Task is newly created and not started.
     /// </summary>
-    ToDo = 0,
+    New = 0,
 
     /// <summary>
     /// Task is actively being worked on.
@@ -16,7 +16,17 @@ public enum TaskStatus
     InProgress = 1,
 
     /// <summary>
+    /// Task is paused and intentionally not active.
+    /// </summary>
+    Paused = 2,
+
+    /// <summary>
     /// Task is completed.
     /// </summary>
-    Done = 2,
+    Done = 3,
+
+    /// <summary>
+    /// Task is cancelled.
+    /// </summary>
+    Cancelled = 4,
 }

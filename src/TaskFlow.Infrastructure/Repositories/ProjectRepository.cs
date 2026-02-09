@@ -1,3 +1,4 @@
+using Injectio.Attributes;
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Domain;
 using TaskFlow.Infrastructure.Persistence;
@@ -7,6 +8,7 @@ namespace TaskFlow.Infrastructure.Repositories;
 /// <summary>
 /// EF Core repository for project aggregate persistence.
 /// </summary>
+[RegisterScoped(ServiceType = typeof(IProjectRepository))]
 public sealed class ProjectRepository : IProjectRepository
 {
     private readonly IDbContextFactory<AppDbContext> factory;

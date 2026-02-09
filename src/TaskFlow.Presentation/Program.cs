@@ -17,7 +17,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddTaskFlowApplication();
+builder.Services.AddTaskFlowApplicationServices();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))

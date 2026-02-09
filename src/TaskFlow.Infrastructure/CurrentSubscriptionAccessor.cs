@@ -1,3 +1,4 @@
+using Injectio.Attributes;
 using Microsoft.Extensions.Configuration;
 using TaskFlow.Domain;
 
@@ -6,6 +7,7 @@ namespace TaskFlow.Infrastructure;
 /// <summary>
 /// Provides the current subscription context for infrastructure operations.
 /// </summary>
+[RegisterScoped(ServiceType = typeof(ICurrentSubscriptionAccessor))]
 public sealed class CurrentSubscriptionAccessor : ICurrentSubscriptionAccessor
 {
     private const string DEFAULT_SUBSCRIPTION_ID = "00000000-0000-0000-0000-000000000001";

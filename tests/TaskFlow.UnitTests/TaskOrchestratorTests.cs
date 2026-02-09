@@ -20,7 +20,8 @@ public class TaskOrchestratorTests
 
         var accessor = new FakeCurrentSubscriptionAccessor(subscription);
         var repository = new FakeTaskRepository();
-        var orchestrator = new TaskOrchestrator(repository, accessor);
+        var historyRepository = new FakeTaskHistoryRepository();
+        var orchestrator = new TaskOrchestrator(repository, historyRepository, accessor);
 
         var created = await orchestrator.CreateAsync(Guid.NewGuid(), "Draft roadmap", TaskPriority.High, "Initial note");
 
@@ -41,7 +42,8 @@ public class TaskOrchestratorTests
         var existing = new DomainTask(subscription.Id, "Old", Guid.NewGuid());
         var accessor = new FakeCurrentSubscriptionAccessor(subscription);
         var repository = new FakeTaskRepository(existing);
-        var orchestrator = new TaskOrchestrator(repository, accessor);
+        var historyRepository = new FakeTaskHistoryRepository();
+        var orchestrator = new TaskOrchestrator(repository, historyRepository, accessor);
 
         var updated = await orchestrator.UpdateTitleAsync(existing.Id, "New");
 
@@ -131,6 +133,19 @@ public class TaskOrchestratorTests
         public global::System.Threading.Tasks.Task<DomainTask> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return global::System.Threading.Tasks.Task.FromResult(this.store[id]);
+        }
+    }
+
+    private sealed class FakeTaskHistoryRepository : ITaskHistoryRepository
+    {
+        public global::System.Threading.Tasks.Task RegisterUsageAsync(string name, bool isSubTaskName, CancellationToken cancellationToken = default)
+        {
+            return global::System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        public global::System.Threading.Tasks.Task<List<string>> GetSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default)
+        {
+            return global::System.Threading.Tasks.Task.FromResult(new List<string>());
         }
     }
 }

@@ -56,6 +56,7 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                     Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Color = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     Icon = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    Note = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
                     IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
                     ViewType = table.Column<int>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -85,6 +86,28 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                     table.PrimaryKey("PK_SubscriptionSchedules", x => x.Id);
                     table.ForeignKey(
                         name: "FK_SubscriptionSchedules_Subscriptions_SubscriptionId",
+                        column: x => x.SubscriptionId,
+                        principalTable: "Subscriptions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaskHistory",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    SubscriptionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    IsSubTaskName = table.Column<bool>(type: "INTEGER", nullable: false),
+                    LastUsedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UsageCount = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaskHistory", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TaskHistory_Subscriptions_SubscriptionId",
                         column: x => x.SubscriptionId,
                         principalTable: "Subscriptions",
                         principalColumn: "Id",
@@ -141,6 +164,16 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                 columns: new[] { "SubscriptionId", "StartsOn" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_TaskHistory_SubscriptionId_IsSubTaskName_Name",
+                table: "TaskHistory",
+                columns: new[] { "SubscriptionId", "IsSubTaskName", "Name" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaskHistory_SubscriptionId_LastUsedAt",
+                table: "TaskHistory",
+                columns: new[] { "SubscriptionId", "LastUsedAt" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_ProjectId",
                 table: "Tasks",
                 column: "ProjectId");
@@ -159,6 +192,9 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "SubscriptionSchedules");
+
+            migrationBuilder.DropTable(
+                name: "TaskHistory");
 
             migrationBuilder.DropTable(
                 name: "Tasks");

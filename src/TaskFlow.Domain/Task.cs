@@ -6,6 +6,7 @@ namespace TaskFlow.Domain;
 public class Task
 {
     private readonly List<Task> subTasks = [];
+    private readonly List<string> tags = [];
 
     /// <summary>
     /// Gets the subscription identifier that owns this task.
@@ -73,6 +74,11 @@ public class Task
     /// </summary>
     public IReadOnlyCollection<Task> SubTasks => this.subTasks.AsReadOnly();
 
+    /// <summary>
+    /// Gets tags assigned to this task.
+    /// </summary>
+    public IReadOnlyCollection<string> Tags => this.tags.AsReadOnly();
+
     private Task()
     {
         this.Title = string.Empty;
@@ -109,7 +115,7 @@ public class Task
         this.ProjectId = projectId;
         this.ParentTaskId = Guid.Empty;
         this.Priority = TaskPriority.Medium;
-        this.Status = TaskStatus.ToDo;
+        this.Status = TaskStatus.New;
         this.CreatedAt = DateTime.UtcNow;
         this.CompletedAt = DateTime.MinValue;
     }
@@ -149,7 +155,7 @@ public class Task
 
         if (this.Status == TaskStatus.Done)
         {
-            this.Status = TaskStatus.ToDo;
+            this.Status = TaskStatus.New;
         }
     }
 
@@ -264,6 +270,52 @@ public class Task
         {
             this.Uncomplete();
         }
+
+        if (status == TaskStatus.Cancelled)
+        {
+            this.IsCompleted = false;
+            this.CompletedAt = DateTime.MinValue;
+        }
+    }
+
+    /// <summary>
+    /// Assigns all tags for the task.
+    /// </summary>
+    /// <param name="newTags">Target tags collection.</param>
+    public void SetTags(IEnumerable<string> newTags)
+    {
+        ArgumentNullException.ThrowIfNull(newTags);
+
+        this.tags.Clear();
+        foreach (var tag in newTags)
+        {
+            this.AddTag(tag);
+        }
+    }
+
+    /// <summary>
+    /// Adds a tag to the task.
+    /// </summary>
+    /// <param name="tag">Tag value.</param>
+    public void AddTag(string tag)
+    {
+        var normalized = NormalizeTag(tag);
+        if (this.tags.Any(existing => string.Equals(existing, normalized, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        this.tags.Add(normalized);
+    }
+
+    /// <summary>
+    /// Removes a tag from the task.
+    /// </summary>
+    /// <param name="tag">Tag value.</param>
+    public void RemoveTag(string tag)
+    {
+        var normalized = NormalizeTag(tag);
+        this.tags.RemoveAll(existing => string.Equals(existing, normalized, StringComparison.OrdinalIgnoreCase));
     }
 
     private void SetParent(Guid parentTaskId)
@@ -274,5 +326,15 @@ public class Task
         }
 
         this.ParentTaskId = parentTaskId;
+    }
+
+    private static string NormalizeTag(string tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            throw new ArgumentException("Tag cannot be empty.", nameof(tag));
+        }
+
+        return tag.Trim();
     }
 }

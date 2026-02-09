@@ -6,6 +6,7 @@ namespace TaskFlow.Domain;
 public class Project
 {
     private readonly List<Task> tasks = [];
+    private readonly List<string> tags = [];
 
     /// <summary>
     /// Gets the subscription identifier that owns this project.
@@ -33,6 +34,11 @@ public class Project
     public string Icon { get; private set; }
 
     /// <summary>
+    /// Gets the optional note content for the project.
+    /// </summary>
+    public string Note { get; private set; }
+
+    /// <summary>
     /// Gets a value indicating whether this project is the default project.
     /// </summary>
     public bool IsDefault { get; private set; }
@@ -52,11 +58,17 @@ public class Project
     /// </summary>
     public IReadOnlyCollection<Task> Tasks => this.tasks.AsReadOnly();
 
+    /// <summary>
+    /// Gets tags assigned to this project.
+    /// </summary>
+    public IReadOnlyCollection<string> Tags => this.tags.AsReadOnly();
+
     private Project()
     {
         this.Name = string.Empty;
         this.Color = string.Empty;
         this.Icon = string.Empty;
+        this.Note = string.Empty;
     }
 
     /// <summary>
@@ -66,8 +78,9 @@ public class Project
     /// <param name="name">Project display name.</param>
     /// <param name="color">Project color marker.</param>
     /// <param name="icon">Project icon key.</param>
+    /// <param name="note">Optional project note.</param>
     /// <param name="isDefault">Whether the project is the default project.</param>
-    public Project(Guid subscriptionId, string name, string color, string icon, bool isDefault = false)
+    public Project(Guid subscriptionId, string name, string color, string icon, string note = "", bool isDefault = false)
     {
         if (subscriptionId == Guid.Empty)
         {
@@ -94,6 +107,7 @@ public class Project
         this.Name = name.Trim();
         this.Color = color.Trim();
         this.Icon = icon.Trim();
+        this.Note = string.IsNullOrWhiteSpace(note) ? string.Empty : note.Trim();
         this.IsDefault = isDefault;
         this.ViewType = ProjectViewType.List;
         this.CreatedAt = DateTime.UtcNow;
@@ -190,5 +204,66 @@ public class Project
         }
 
         this.Icon = newIcon.Trim();
+    }
+
+    /// <summary>
+    /// Updates the project note.
+    /// </summary>
+    /// <param name="newNote">New note value.</param>
+    public void UpdateNote(string newNote)
+    {
+        this.Note = string.IsNullOrWhiteSpace(newNote)
+            ? string.Empty
+            : newNote.Trim();
+    }
+
+    /// <summary>
+    /// Assigns all tags for the project.
+    /// </summary>
+    /// <param name="newTags">Target tags collection.</param>
+    public void SetTags(IEnumerable<string> newTags)
+    {
+        ArgumentNullException.ThrowIfNull(newTags);
+
+        this.tags.Clear();
+        foreach (var tag in newTags)
+        {
+            this.AddTag(tag);
+        }
+    }
+
+    /// <summary>
+    /// Adds a tag to the project.
+    /// </summary>
+    /// <param name="tag">Tag value.</param>
+    public void AddTag(string tag)
+    {
+        var normalized = NormalizeTag(tag);
+        if (this.tags.Any(existing => string.Equals(existing, normalized, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        this.tags.Add(normalized);
+    }
+
+    /// <summary>
+    /// Removes a tag from the project.
+    /// </summary>
+    /// <param name="tag">Tag value.</param>
+    public void RemoveTag(string tag)
+    {
+        var normalized = NormalizeTag(tag);
+        this.tags.RemoveAll(existing => string.Equals(existing, normalized, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string NormalizeTag(string tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            throw new ArgumentException("Tag cannot be empty.", nameof(tag));
+        }
+
+        return tag.Trim();
     }
 }

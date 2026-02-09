@@ -1,3 +1,4 @@
+using Injectio.Attributes;
 using TaskFlow.Domain;
 
 namespace TaskFlow.Application;
@@ -5,6 +6,7 @@ namespace TaskFlow.Application;
 /// <summary>
 /// Default application orchestrator for project use cases.
 /// </summary>
+[RegisterScoped(ServiceType = typeof(IProjectOrchestrator))]
 public sealed class ProjectOrchestrator : IProjectOrchestrator
 {
     private readonly IProjectRepository projectRepository;
@@ -37,7 +39,7 @@ public sealed class ProjectOrchestrator : IProjectOrchestrator
     public async global::System.Threading.Tasks.Task<Project> CreateAsync(string name, string color, string icon, bool isDefault = false, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
-        var project = new Project(subscriptionId, name, color, icon, isDefault);
+        var project = new Project(subscriptionId, name, color, icon, note: string.Empty, isDefault: isDefault);
         return await this.projectRepository.AddAsync(project, cancellationToken);
     }
 

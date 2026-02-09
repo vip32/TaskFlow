@@ -27,6 +27,16 @@ public interface ITaskOrchestrator
     global::System.Threading.Tasks.Task<List<DomainTask>> SearchAsync(Guid projectId, string query, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets historical task name suggestions for autocomplete.
+    /// </summary>
+    /// <param name="prefix">Current input prefix.</param>
+    /// <param name="isSubTaskName">Whether suggestions are for subtask context.</param>
+    /// <param name="take">Maximum suggestion count.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Suggested names ordered by recent usage and frequency.</returns>
+    global::System.Threading.Tasks.Task<List<string>> GetNameSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Creates a task and persists it immediately.
     /// </summary>
     /// <param name="projectId">Project identifier.</param>

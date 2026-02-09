@@ -1,3 +1,4 @@
+using Injectio.Attributes;
 using TaskFlow.Domain;
 using DomainTask = TaskFlow.Domain.Task;
 using DomainTaskStatus = TaskFlow.Domain.TaskStatus;
@@ -7,19 +8,23 @@ namespace TaskFlow.Application;
 /// <summary>
 /// Default application orchestrator for task use cases.
 /// </summary>
+[RegisterScoped(ServiceType = typeof(ITaskOrchestrator))]
 public sealed class TaskOrchestrator : ITaskOrchestrator
 {
     private readonly ITaskRepository taskRepository;
+    private readonly ITaskHistoryRepository taskHistoryRepository;
     private readonly ICurrentSubscriptionAccessor currentSubscriptionAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskOrchestrator"/> class.
     /// </summary>
     /// <param name="taskRepository">Task repository.</param>
+    /// <param name="taskHistoryRepository">Task history repository.</param>
     /// <param name="currentSubscriptionAccessor">Current subscription accessor.</param>
-    public TaskOrchestrator(ITaskRepository taskRepository, ICurrentSubscriptionAccessor currentSubscriptionAccessor)
+    public TaskOrchestrator(ITaskRepository taskRepository, ITaskHistoryRepository taskHistoryRepository, ICurrentSubscriptionAccessor currentSubscriptionAccessor)
     {
         this.taskRepository = taskRepository;
+        this.taskHistoryRepository = taskHistoryRepository;
         this.currentSubscriptionAccessor = currentSubscriptionAccessor;
     }
 
@@ -36,13 +41,21 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
+    public global::System.Threading.Tasks.Task<List<string>> GetNameSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default)
+    {
+        return this.taskHistoryRepository.GetSuggestionsAsync(prefix, isSubTaskName, take, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public async global::System.Threading.Tasks.Task<DomainTask> CreateAsync(Guid projectId, string title, TaskPriority priority, string note, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var task = new DomainTask(subscriptionId, title, projectId);
         task.SetPriority(priority);
         task.UpdateNote(note);
-        return await this.taskRepository.AddAsync(task, cancellationToken);
+        var created = await this.taskRepository.AddAsync(task, cancellationToken);
+        await this.taskHistoryRepository.RegisterUsageAsync(created.Title, false, cancellationToken);
+        return created;
     }
 
     /// <inheritdoc/>
@@ -50,7 +63,9 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.UpdateTitle(newTitle);
-        return await this.taskRepository.UpdateAsync(task, cancellationToken);
+        var updated = await this.taskRepository.UpdateAsync(task, cancellationToken);
+        await this.taskHistoryRepository.RegisterUsageAsync(updated.Title, updated.ParentTaskId != Guid.Empty, cancellationToken);
+        return updated;
     }
 
     /// <inheritdoc/>

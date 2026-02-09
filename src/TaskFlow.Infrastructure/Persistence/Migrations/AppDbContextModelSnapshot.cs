@@ -69,6 +69,11 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("SubscriptionId")
                         .HasColumnType("TEXT");
 
@@ -181,6 +186,38 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                     b.ToTable("Tasks", (string)null);
                 });
 
+            modelBuilder.Entity("TaskFlow.Domain.TaskHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSubTaskName")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LastUsedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionId", "LastUsedAt");
+
+                    b.HasIndex("SubscriptionId", "IsSubTaskName", "Name");
+
+                    b.ToTable("TaskHistory", (string)null);
+                });
+
             modelBuilder.Entity("TaskFlow.Domain.FocusSession", b =>
                 {
                     b.HasOne("TaskFlow.Domain.Subscription", null)
@@ -216,6 +253,15 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("TaskFlow.Domain.Subscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TaskFlow.Domain.TaskHistory", b =>
+                {
                     b.HasOne("TaskFlow.Domain.Subscription", null)
                         .WithMany()
                         .HasForeignKey("SubscriptionId")
