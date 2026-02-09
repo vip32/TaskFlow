@@ -17,6 +17,8 @@ All notable updates to TaskFlow are documented here.
 - Additional local tool manifest entry for `csharp-ls` in `dotnet-tools.json`.
 - Persisted ordering support for project tasks and subtasks with new reorder use cases (`FR2.10`, `FR3.6`) and traceability updates.
 - EF Core migration `AddTaskOrdering` for persisted `Task.SortOrder` and ordering index improvements.
+- Optional-field nullability model for domain entities (for example unassigned task `ProjectId`, optional completion/due/reminder timestamps, and open-ended subscription schedules).
+- New single baseline migration `InitialCreate` regenerated from the current domain model after migration reset.
 
 ### Changed
 - Subscription schedules now use `DateOnly` to avoid UTC date boundary issues.
@@ -33,6 +35,9 @@ All notable updates to TaskFlow are documented here.
 - Task aggregate now includes persisted `SortOrder`; task and subtask creation paths assign next sibling order value.
 - Task orchestration and repository contracts now support project/subtask reordering and ordered retrieval.
 - Unit test suite increased to 31 passing tests after ordering coverage and domain invariant checks.
+- Sentinel values (`Guid.Empty`, `DateTime.MinValue`, `DateOnly.MinValue`, `TimeOnly.MinValue`) were replaced by nullable optional properties where semantically appropriate.
+- EF Core mappings were updated so optional fields are nullable in persistence, including optional task-project foreign key behavior.
+- Historical incremental migrations were consolidated by deleting prior migration chain and recreating a single initial migration from current schema.
 
 ## [1.0.1] - 2026-02-09
 

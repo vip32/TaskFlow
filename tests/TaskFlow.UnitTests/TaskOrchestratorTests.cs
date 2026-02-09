@@ -42,7 +42,7 @@ public class TaskOrchestratorTests
 
         var created = await orchestrator.CreateUnassignedAsync("Inbox idea", TaskPriority.Medium, string.Empty);
 
-        Assert.Equal(Guid.Empty, created.ProjectId);
+        Assert.Null(created.ProjectId);
         Assert.True(created.IsUnassigned);
         Assert.Equal(1, repository.AddCallCount);
     }
@@ -100,7 +100,7 @@ public class TaskOrchestratorTests
         var dueToday = new DomainTask(subscription.Id, "Due today", Guid.NewGuid());
         dueToday.SetDueDate(today);
 
-        var markedToday = new DomainTask(subscription.Id, "Marked today", Guid.Empty);
+        var markedToday = new DomainTask(subscription.Id, "Marked today", null);
         markedToday.ToggleTodayMark();
 
         var accessor = new FakeCurrentSubscriptionAccessor(subscription);
@@ -201,7 +201,7 @@ public class TaskOrchestratorTests
         public Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
         {
             var result = this.store.Values
-                .Where(task => task.ProjectId == projectId && task.ParentTaskId == Guid.Empty)
+                .Where(task => task.ProjectId == projectId && !task.ParentTaskId.HasValue)
                 .OrderBy(task => task.SortOrder)
                 .ThenBy(task => task.CreatedAt)
                 .ToList();
@@ -218,7 +218,7 @@ public class TaskOrchestratorTests
             return System.Threading.Tasks.Task.FromResult(result);
         }
 
-        public Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default)
+        public Task<int> GetNextSortOrderAsync(Guid? projectId, Guid? parentTaskId, CancellationToken cancellationToken = default)
         {
             var maxSortOrder = this.store.Values
                 .Where(task => task.ProjectId == projectId && task.ParentTaskId == parentTaskId)
@@ -266,7 +266,7 @@ public class TaskOrchestratorTests
         public Task<List<DomainTask>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default)
         {
             var threshold = DateTime.UtcNow.AddDays(-Math.Abs(days));
-            var result = this.store.Values.Where(task => task.ProjectId == Guid.Empty && task.CreatedAt >= threshold).OrderByDescending(task => task.CreatedAt).ToList();
+            var result = this.store.Values.Where(task => !task.ProjectId.HasValue && task.CreatedAt >= threshold).OrderByDescending(task => task.CreatedAt).ToList();
             return System.Threading.Tasks.Task.FromResult(result);
         }
 

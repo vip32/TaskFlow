@@ -24,11 +24,11 @@ public interface ITaskRepository
     /// <summary>
     /// Gets next sort order value for tasks in the same sibling scope.
     /// </summary>
-    /// <param name="projectId">Project identifier (or Guid.Empty for unassigned).</param>
-    /// <param name="parentTaskId">Parent task identifier (Guid.Empty for top-level tasks).</param>
+    /// <param name="projectId">Project identifier (or null for unassigned).</param>
+    /// <param name="parentTaskId">Parent task identifier (or null for top-level tasks).</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>Next zero-based sort order value.</returns>
-    Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default);
+    Task<int> GetNextSortOrderAsync(Guid? projectId, Guid? parentTaskId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets tasks by priority within a project for the current subscription.

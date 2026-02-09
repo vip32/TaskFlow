@@ -52,17 +52,17 @@ public class Task
     /// <summary>
     /// Gets the identifier of the project containing this task.
     /// </summary>
-    public Guid ProjectId { get; private set; }
+    public Guid? ProjectId { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether this task is currently unassigned.
     /// </summary>
-    public bool IsUnassigned => this.ProjectId == Guid.Empty;
+    public bool IsUnassigned => !this.ProjectId.HasValue;
 
     /// <summary>
     /// Gets the parent task identifier when this task is a subtask.
     /// </summary>
-    public Guid ParentTaskId { get; private set; }
+    public Guid? ParentTaskId { get; private set; }
 
     /// <summary>
     /// Gets the UTC timestamp when the task was created.
@@ -71,9 +71,9 @@ public class Task
 
     /// <summary>
     /// Gets the UTC timestamp when the task was completed.
-    /// DateTime.MinValue indicates not completed.
+    /// Null indicates not completed.
     /// </summary>
-    public DateTime CompletedAt { get; private set; }
+    public DateTime? CompletedAt { get; private set; }
 
     /// <summary>
     /// Gets the persisted order position within either a project task list or sibling subtasks.
@@ -83,30 +83,30 @@ public class Task
     /// <summary>
     /// Gets a value indicating whether task has a due date.
     /// </summary>
-    public bool HasDueDate { get; private set; }
+    public bool HasDueDate => this.DueDateLocal.HasValue;
 
     /// <summary>
     /// Gets local due date in subscription timezone.
-    /// DateOnly.MinValue indicates no due date.
+    /// Null indicates no due date.
     /// </summary>
-    public DateOnly DueDateLocal { get; private set; }
+    public DateOnly? DueDateLocal { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether task has a due time.
     /// </summary>
-    public bool HasDueTime { get; private set; }
+    public bool HasDueTime => this.DueTimeLocal.HasValue;
 
     /// <summary>
     /// Gets local due time in subscription timezone.
-    /// TimeOnly.MinValue indicates no due time.
+    /// Null indicates no due time.
     /// </summary>
-    public TimeOnly DueTimeLocal { get; private set; }
+    public TimeOnly? DueTimeLocal { get; private set; }
 
     /// <summary>
     /// Gets UTC due instant when due time is set.
-    /// DateTime.MinValue indicates no due date-time.
+    /// Null indicates no due date-time.
     /// </summary>
-    public DateTime DueAtUtc { get; private set; }
+    public DateTime? DueAtUtc { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether task is explicitly marked for today.
@@ -139,8 +139,8 @@ public class Task
     /// </summary>
     /// <param name="subscriptionId">Owning subscription identifier.</param>
     /// <param name="title">Task title.</param>
-    /// <param name="projectId">Owning project identifier. Use Guid.Empty for unassigned task.</param>
-    public Task(Guid subscriptionId, string title, Guid projectId)
+    /// <param name="projectId">Owning project identifier. Null means unassigned task.</param>
+    public Task(Guid subscriptionId, string title, Guid? projectId)
     {
         if (subscriptionId == Guid.Empty)
         {
@@ -152,22 +152,25 @@ public class Task
             throw new ArgumentException("Task title cannot be empty.", nameof(title));
         }
 
+        if (projectId.HasValue && projectId.Value == Guid.Empty)
+        {
+            throw new ArgumentException("Project id must be null or a non-empty guid.", nameof(projectId));
+        }
+
         this.SubscriptionId = subscriptionId;
         this.Id = Guid.NewGuid();
         this.Title = title.Trim();
         this.Note = string.Empty;
         this.ProjectId = projectId;
-        this.ParentTaskId = Guid.Empty;
+        this.ParentTaskId = null;
         this.Priority = TaskPriority.Medium;
         this.Status = TaskStatus.New;
         this.CreatedAt = DateTime.UtcNow;
-        this.CompletedAt = DateTime.MinValue;
+        this.CompletedAt = null;
         this.SortOrder = 0;
-        this.HasDueDate = false;
-        this.DueDateLocal = DateOnly.MinValue;
-        this.HasDueTime = false;
-        this.DueTimeLocal = TimeOnly.MinValue;
-        this.DueAtUtc = DateTime.MinValue;
+        this.DueDateLocal = null;
+        this.DueTimeLocal = null;
+        this.DueAtUtc = null;
         this.IsMarkedForToday = false;
     }
 
@@ -202,7 +205,7 @@ public class Task
         }
 
         this.IsCompleted = false;
-        this.CompletedAt = DateTime.MinValue;
+        this.CompletedAt = null;
 
         if (this.Status == TaskStatus.Done)
         {
@@ -234,13 +237,13 @@ public class Task
         }
 
         subTask.SetParent(this.Id);
-        if (this.ProjectId == Guid.Empty)
+        if (!this.ProjectId.HasValue)
         {
             subTask.UnassignFromProject();
         }
         else
         {
-            subTask.AssignToProject(this.ProjectId);
+            subTask.AssignToProject(this.ProjectId.Value);
         }
 
         var nextSortOrder = this.subTasks.Count == 0
@@ -284,7 +287,7 @@ public class Task
     /// </summary>
     public void UnassignFromProject()
     {
-        this.ProjectId = Guid.Empty;
+        this.ProjectId = null;
         foreach (var subTask in this.subTasks)
         {
             subTask.UnassignFromProject();
@@ -373,7 +376,7 @@ public class Task
         if (status == TaskStatus.Cancelled)
         {
             this.IsCompleted = false;
-            this.CompletedAt = DateTime.MinValue;
+            this.CompletedAt = null;
         }
     }
 
@@ -388,11 +391,9 @@ public class Task
             throw new ArgumentException("Due date must be a valid date.", nameof(dueDateLocal));
         }
 
-        this.HasDueDate = true;
         this.DueDateLocal = dueDateLocal;
-        this.HasDueTime = false;
-        this.DueTimeLocal = TimeOnly.MinValue;
-        this.DueAtUtc = DateTime.MinValue;
+        this.DueTimeLocal = null;
+        this.DueAtUtc = null;
     }
 
     /// <summary>
@@ -412,9 +413,7 @@ public class Task
 
         var dueLocalDateTime = dueDateLocal.ToDateTime(dueTimeLocal, DateTimeKind.Unspecified);
 
-        this.HasDueDate = true;
         this.DueDateLocal = dueDateLocal;
-        this.HasDueTime = true;
         this.DueTimeLocal = dueTimeLocal;
         this.DueAtUtc = TimeZoneInfo.ConvertTimeToUtc(dueLocalDateTime, timeZone);
     }
@@ -424,11 +423,9 @@ public class Task
     /// </summary>
     public void ClearDueDate()
     {
-        this.HasDueDate = false;
-        this.DueDateLocal = DateOnly.MinValue;
-        this.HasDueTime = false;
-        this.DueTimeLocal = TimeOnly.MinValue;
-        this.DueAtUtc = DateTime.MinValue;
+        this.DueDateLocal = null;
+        this.DueTimeLocal = null;
+        this.DueAtUtc = null;
     }
 
     /// <summary>
@@ -468,7 +465,12 @@ public class Task
     /// <returns>The created reminder.</returns>
     public TaskReminder AddDateOnlyReminder(TimeOnly fallbackLocalTime, TimeZoneInfo timeZone)
     {
-        var reminder = TaskReminder.CreateDateOnlyFallback(this.Id, this.DueDateLocal, fallbackLocalTime, timeZone);
+        if (!this.DueDateLocal.HasValue)
+        {
+            throw new InvalidOperationException("Date-only reminder requires a due date.");
+        }
+
+        var reminder = TaskReminder.CreateDateOnlyFallback(this.Id, this.DueDateLocal.Value, fallbackLocalTime, timeZone);
         this.reminders.Add(reminder);
         return reminder;
     }

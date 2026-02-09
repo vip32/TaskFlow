@@ -86,7 +86,7 @@ public class AppDbContext : DbContext
             entity.HasKey(s => s.Id);
             entity.Property(s => s.SubscriptionId).IsRequired();
             entity.Property(s => s.StartsOn).IsRequired();
-            entity.Property(s => s.EndsOn).IsRequired();
+            entity.Property(s => s.EndsOn).IsRequired(false);
             entity.Ignore(s => s.IsOpenEnded);
 
             entity.HasOne<Domain.Subscription>()
@@ -131,16 +131,14 @@ public class AppDbContext : DbContext
             entity.Property(t => t.Status).HasConversion<int>().IsRequired();
             entity.Property(t => t.IsCompleted).IsRequired();
             entity.Property(t => t.IsFocused).IsRequired();
-            entity.Property(t => t.ProjectId).IsRequired();
-            entity.Property(t => t.ParentTaskId).IsRequired();
+            entity.Property(t => t.ProjectId).IsRequired(false);
+            entity.Property(t => t.ParentTaskId).IsRequired(false);
             entity.Property(t => t.CreatedAt).IsRequired();
-            entity.Property(t => t.CompletedAt).IsRequired();
+            entity.Property(t => t.CompletedAt).IsRequired(false);
             entity.Property(t => t.SortOrder).IsRequired();
-            entity.Property(t => t.HasDueDate).IsRequired();
-            entity.Property(t => t.DueDateLocal).IsRequired();
-            entity.Property(t => t.HasDueTime).IsRequired();
-            entity.Property(t => t.DueTimeLocal).IsRequired();
-            entity.Property(t => t.DueAtUtc).IsRequired();
+            entity.Property(t => t.DueDateLocal).IsRequired(false);
+            entity.Property(t => t.DueTimeLocal).IsRequired(false);
+            entity.Property(t => t.DueAtUtc).IsRequired(false);
             entity.Property(t => t.IsMarkedForToday).IsRequired();
             entity.Ignore(t => t.SubTasks);
             entity.Ignore(t => t.Tags);
@@ -213,7 +211,7 @@ public class AppDbContext : DbContext
             entity.Property(r => r.MinutesBefore).IsRequired();
             entity.Property(r => r.FallbackLocalTime).IsRequired();
             entity.Property(r => r.TriggerAtUtc).IsRequired();
-            entity.Property(r => r.SentAtUtc).IsRequired();
+            entity.Property(r => r.SentAtUtc).IsRequired(false);
 
             entity.HasIndex(r => new { r.TaskId, r.TriggerAtUtc, r.SentAtUtc });
         });

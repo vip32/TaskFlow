@@ -22,7 +22,7 @@ public class MyTaskFlowSectionOrchestratorTests
         var dueTask = new DomainTask(subscription.Id, "Due", Guid.NewGuid());
         dueTask.SetDueDate(DateOnly.FromDateTime(DateTime.UtcNow));
 
-        var manualTask = new DomainTask(subscription.Id, "Manual", Guid.Empty);
+        var manualTask = new DomainTask(subscription.Id, "Manual", null);
         todaySection.IncludeTask(manualTask.Id);
 
         var sectionRepository = new FakeSectionRepository(todaySection);
@@ -114,7 +114,7 @@ public class MyTaskFlowSectionOrchestratorTests
             return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ParentTaskId == parentTaskId).ToList());
         }
 
-        public Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default)
+        public Task<int> GetNextSortOrderAsync(Guid? projectId, Guid? parentTaskId, CancellationToken cancellationToken = default)
         {
             var maxSortOrder = this.tasks.Values
                 .Where(task => task.ProjectId == projectId && task.ParentTaskId == parentTaskId)
@@ -152,7 +152,7 @@ public class MyTaskFlowSectionOrchestratorTests
 
         public Task<List<DomainTask>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default)
         {
-            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == Guid.Empty).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => !task.ProjectId.HasValue).ToList());
         }
 
         public Task<List<DomainTask>> GetDueOnDateAsync(DateOnly localDate, CancellationToken cancellationToken = default)

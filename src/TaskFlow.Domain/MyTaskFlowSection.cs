@@ -209,7 +209,7 @@ public class MyTaskFlowSection
             return true;
         }
 
-        var isAssigned = task.ProjectId != Guid.Empty;
+        var isAssigned = task.ProjectId.HasValue;
         if ((isAssigned && !this.IncludeAssignedTasks) || (!isAssigned && !this.IncludeUnassignedTasks))
         {
             return false;
@@ -228,10 +228,10 @@ public class MyTaskFlowSection
         return this.DueBucket switch
         {
             TaskFlowDueBucket.Any => true,
-            TaskFlowDueBucket.Today => task.IsMarkedForToday || (task.HasDueDate && task.DueDateLocal == todayLocal),
-            TaskFlowDueBucket.ThisWeek => task.HasDueDate && task.DueDateLocal > todayLocal && task.DueDateLocal <= endOfWeekLocal,
-            TaskFlowDueBucket.Upcoming => task.HasDueDate && task.DueDateLocal > endOfWeekLocal,
-            TaskFlowDueBucket.NoDueDate => !task.HasDueDate,
+            TaskFlowDueBucket.Today => task.IsMarkedForToday || (task.DueDateLocal.HasValue && task.DueDateLocal.Value == todayLocal),
+            TaskFlowDueBucket.ThisWeek => task.DueDateLocal.HasValue && task.DueDateLocal.Value > todayLocal && task.DueDateLocal.Value <= endOfWeekLocal,
+            TaskFlowDueBucket.Upcoming => task.DueDateLocal.HasValue && task.DueDateLocal.Value > endOfWeekLocal,
+            TaskFlowDueBucket.NoDueDate => !task.DueDateLocal.HasValue,
             TaskFlowDueBucket.Recent => IsRecent(task, nowUtc, timeZone),
             _ => false,
         };

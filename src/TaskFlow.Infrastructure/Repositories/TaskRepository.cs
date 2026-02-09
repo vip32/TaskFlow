@@ -34,7 +34,7 @@ public sealed class TaskRepository : ITaskRepository
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         return await db.Tasks
             .AsNoTracking()
-            .Where(t => t.SubscriptionId == subscriptionId && t.ProjectId == projectId && t.ParentTaskId == Guid.Empty)
+            .Where(t => t.SubscriptionId == subscriptionId && t.ProjectId == projectId && !t.ParentTaskId.HasValue)
             .OrderBy(t => t.SortOrder)
             .ThenBy(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -55,7 +55,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default)
+    public async Task<int> GetNextSortOrderAsync(Guid? projectId, Guid? parentTaskId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -157,7 +157,7 @@ public sealed class TaskRepository : ITaskRepository
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         return await db.Tasks
             .AsNoTracking()
-            .Where(t => t.SubscriptionId == subscriptionId && t.ProjectId == Guid.Empty && t.CreatedAt >= minCreatedAt)
+            .Where(t => t.SubscriptionId == subscriptionId && !t.ProjectId.HasValue && t.CreatedAt >= minCreatedAt)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -170,7 +170,7 @@ public sealed class TaskRepository : ITaskRepository
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         return await db.Tasks
             .AsNoTracking()
-            .Where(t => t.SubscriptionId == subscriptionId && t.HasDueDate && t.DueDateLocal == localDate)
+            .Where(t => t.SubscriptionId == subscriptionId && t.DueDateLocal.HasValue && t.DueDateLocal == localDate)
             .OrderBy(t => t.DueTimeLocal)
             .ThenBy(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -186,7 +186,7 @@ public sealed class TaskRepository : ITaskRepository
             .AsNoTracking()
             .Where(t =>
                 t.SubscriptionId == subscriptionId &&
-                t.HasDueDate &&
+                t.DueDateLocal.HasValue &&
                 t.DueDateLocal >= localStartInclusive &&
                 t.DueDateLocal <= localEndInclusive)
             .OrderBy(t => t.DueDateLocal)
@@ -202,7 +202,7 @@ public sealed class TaskRepository : ITaskRepository
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         return await db.Tasks
             .AsNoTracking()
-            .Where(t => t.SubscriptionId == subscriptionId && t.HasDueDate && t.DueDateLocal > localDateExclusive)
+            .Where(t => t.SubscriptionId == subscriptionId && t.DueDateLocal.HasValue && t.DueDateLocal > localDateExclusive)
             .OrderBy(t => t.DueDateLocal)
             .ThenBy(t => t.DueTimeLocal)
             .ToListAsync(cancellationToken);

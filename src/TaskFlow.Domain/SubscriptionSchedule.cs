@@ -22,14 +22,14 @@ public class SubscriptionSchedule
 
     /// <summary>
     /// Gets the inclusive end date.
-    /// DateOnly.MinValue indicates an open-ended schedule.
+    /// Null indicates an open-ended schedule.
     /// </summary>
-    public DateOnly EndsOn { get; private set; }
+    public DateOnly? EndsOn { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether this schedule is open ended.
     /// </summary>
-    public bool IsOpenEnded => this.EndsOn == DateOnly.MinValue;
+    public bool IsOpenEnded => !this.EndsOn.HasValue;
 
     private SubscriptionSchedule()
     {
@@ -53,7 +53,7 @@ public class SubscriptionSchedule
             Id = Guid.NewGuid(),
             SubscriptionId = subscriptionId,
             StartsOn = startsOn,
-            EndsOn = DateOnly.MinValue,
+            EndsOn = null,
         };
     }
 
@@ -102,6 +102,6 @@ public class SubscriptionSchedule
             return true;
         }
 
-        return currentDate <= this.EndsOn;
+        return currentDate <= this.EndsOn.Value;
     }
 }

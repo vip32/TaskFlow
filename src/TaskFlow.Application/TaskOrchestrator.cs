@@ -57,7 +57,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var task = new DomainTask(subscriptionId, title, projectId);
-        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(projectId, Guid.Empty, cancellationToken);
+        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(projectId, null, cancellationToken);
         task.SetSortOrder(nextSortOrder);
         task.SetPriority(priority);
         task.UpdateNote(note);
@@ -70,8 +70,8 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     public async Task<DomainTask> CreateUnassignedAsync(string title, TaskPriority priority, string note, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
-        var task = new DomainTask(subscriptionId, title, Guid.Empty);
-        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(Guid.Empty, Guid.Empty, cancellationToken);
+        var task = new DomainTask(subscriptionId, title, null);
+        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(null, null, cancellationToken);
         task.SetSortOrder(nextSortOrder);
         task.SetPriority(priority);
         task.UpdateNote(note);
@@ -86,7 +86,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.UpdateTitle(newTitle);
         var updated = await this.taskRepository.UpdateAsync(task, cancellationToken);
-        await this.taskHistoryRepository.RegisterUsageAsync(updated.Title, updated.ParentTaskId != Guid.Empty, cancellationToken);
+        await this.taskHistoryRepository.RegisterUsageAsync(updated.Title, updated.ParentTaskId.HasValue, cancellationToken);
         return updated;
     }
 
@@ -126,12 +126,12 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     public async Task<DomainTask> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
-        if (task.ParentTaskId != Guid.Empty)
+        if (task.ParentTaskId.HasValue)
         {
             throw new InvalidOperationException("Subtasks inherit parent project assignment and cannot be moved directly.");
         }
 
-        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(newProjectId, Guid.Empty, cancellationToken);
+        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(newProjectId, null, cancellationToken);
         task.MoveToProject(newProjectId);
         task.SetSortOrder(nextSortOrder);
         return await this.taskRepository.UpdateAsync(task, cancellationToken);
@@ -155,12 +155,12 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     public async Task<DomainTask> UnassignFromProjectAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
-        if (task.ParentTaskId != Guid.Empty)
+        if (task.ParentTaskId.HasValue)
         {
             throw new InvalidOperationException("Subtasks inherit parent project assignment and cannot be unassigned directly.");
         }
 
-        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(Guid.Empty, Guid.Empty, cancellationToken);
+        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(null, null, cancellationToken);
         task.UnassignFromProject();
         task.SetSortOrder(nextSortOrder);
         return await this.taskRepository.UpdateAsync(task, cancellationToken);

@@ -14,10 +14,10 @@ public class TaskDomainTests
     [Fact]
     public void Constructor_EmptyProjectId_CreatesUnassignedTask()
     {
-        var task = new DomainTask(Guid.NewGuid(), "Capture", Guid.Empty);
+        var task = new DomainTask(Guid.NewGuid(), "Capture", null);
 
         Assert.True(task.IsUnassigned);
-        Assert.Equal(Guid.Empty, task.ProjectId);
+        Assert.Null(task.ProjectId);
     }
 
     /// <summary>
@@ -27,8 +27,8 @@ public class TaskDomainTests
     public void AssignAndUnassign_SubTasks_CascadeProjectAssociation()
     {
         var subscriptionId = Guid.NewGuid();
-        var parent = new DomainTask(subscriptionId, "Parent", Guid.Empty);
-        var child = new DomainTask(subscriptionId, "Child", Guid.Empty);
+        var parent = new DomainTask(subscriptionId, "Parent", null);
+        var child = new DomainTask(subscriptionId, "Child", null);
         parent.AddSubTask(child);
 
         var projectId = Guid.NewGuid();
@@ -37,8 +37,8 @@ public class TaskDomainTests
         Assert.Equal(projectId, child.ProjectId);
 
         parent.UnassignFromProject();
-        Assert.Equal(Guid.Empty, parent.ProjectId);
-        Assert.Equal(Guid.Empty, child.ProjectId);
+        Assert.Null(parent.ProjectId);
+        Assert.Null(child.ProjectId);
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public class TaskDomainTests
     [Fact]
     public void SetDueDateTime_ValidInput_SetsUtcInstant()
     {
-        var task = new DomainTask(Guid.NewGuid(), "Schedule", Guid.Empty);
+        var task = new DomainTask(Guid.NewGuid(), "Schedule", null);
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         var dueDate = new DateOnly(2026, 2, 10);
         var dueTime = new TimeOnly(9, 30);
@@ -67,7 +67,7 @@ public class TaskDomainTests
     [Fact]
     public void AddRelativeReminder_NoDueDateTime_ThrowsInvalidOperationException()
     {
-        var task = new DomainTask(Guid.NewGuid(), "Reminder", Guid.Empty);
+        var task = new DomainTask(Guid.NewGuid(), "Reminder", null);
 
         Assert.Throws<InvalidOperationException>(() => task.AddRelativeReminder(15));
     }
@@ -78,13 +78,13 @@ public class TaskDomainTests
     [Fact]
     public void AddRelativeReminder_DueDateTime_SetsExpectedTrigger()
     {
-        var task = new DomainTask(Guid.NewGuid(), "Reminder", Guid.Empty);
+        var task = new DomainTask(Guid.NewGuid(), "Reminder", null);
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         task.SetDueDateTime(new DateOnly(2026, 2, 10), new TimeOnly(10, 0), timezone);
 
         var reminder = task.AddRelativeReminder(15);
 
-        Assert.Equal(task.DueAtUtc.AddMinutes(-15), reminder.TriggerAtUtc);
+        Assert.Equal(task.DueAtUtc.Value.AddMinutes(-15), reminder.TriggerAtUtc);
         Assert.Contains(task.Reminders, existing => existing.Id == reminder.Id);
     }
 
@@ -94,7 +94,7 @@ public class TaskDomainTests
     [Fact]
     public void AddDateOnlyReminder_DueDateOnly_SetsReminder()
     {
-        var task = new DomainTask(Guid.NewGuid(), "Reminder", Guid.Empty);
+        var task = new DomainTask(Guid.NewGuid(), "Reminder", null);
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         task.SetDueDate(new DateOnly(2026, 2, 10));
 

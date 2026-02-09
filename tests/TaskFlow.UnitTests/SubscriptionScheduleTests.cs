@@ -20,7 +20,7 @@ public class SubscriptionScheduleTests
 
         Assert.Equal(subscriptionId, schedule.SubscriptionId);
         Assert.Equal(startsOn, schedule.StartsOn);
-        Assert.Equal(DateOnly.MinValue, schedule.EndsOn);
+        Assert.Null(schedule.EndsOn);
         Assert.True(schedule.IsOpenEnded);
     }
 

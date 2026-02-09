@@ -53,7 +53,7 @@ public static class TaskFlowDataSeeder
         task4.SetPriority(TaskPriority.Low);
         task4.SetTags(["Read", "Study"]);
 
-        var task5 = new DomainTask(subscription.Id, "Triage incoming feature requests", Guid.Empty);
+        var task5 = new DomainTask(subscription.Id, "Triage incoming feature requests", null);
         task5.SetPriority(TaskPriority.Medium);
         task5.SetTags(["Study"]);
 
@@ -114,7 +114,7 @@ public static class TaskFlowDataSeeder
         task4.SetPriority(TaskPriority.Low);
         task4.SetTags(["Read", "Study"]);
 
-        var task5 = new DomainTask(subscription.Id, "Triage incoming feature requests", Guid.Empty);
+        var task5 = new DomainTask(subscription.Id, "Triage incoming feature requests", null);
         task5.SetPriority(TaskPriority.Medium);
         task5.SetTags(["Study"]);
 

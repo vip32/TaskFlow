@@ -16,7 +16,7 @@ public class MyTaskFlowSectionTests
     {
         var subscriptionId = Guid.NewGuid();
         var section = new MyTaskFlowSection(subscriptionId, "Two-minute", 10);
-        var task = new DomainTask(subscriptionId, "Quick fix", Guid.Empty);
+        var task = new DomainTask(subscriptionId, "Quick fix", null);
         section.IncludeTask(task.Id);
 
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
@@ -43,7 +43,7 @@ public class MyTaskFlowSectionTests
         var dueTask = new DomainTask(subscriptionId, "Due", Guid.NewGuid());
         dueTask.SetDueDate(today);
 
-        var markedTask = new DomainTask(subscriptionId, "Marked", Guid.Empty);
+        var markedTask = new DomainTask(subscriptionId, "Marked", null);
         markedTask.ToggleTodayMark();
 
         var dueMatches = section.Matches(dueTask, today, today.AddDays(6), nowUtc, timezone);

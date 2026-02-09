@@ -37,9 +37,8 @@ public class TaskReminder
 
     /// <summary>
     /// Gets the UTC instant when reminder was delivered.
-    /// DateTime.MinValue means not delivered.
     /// </summary>
-    public DateTime SentAtUtc { get; private set; }
+    public DateTime? SentAtUtc { get; private set; }
 
     private TaskReminder()
     {
@@ -58,7 +57,7 @@ public class TaskReminder
         this.MinutesBefore = minutesBefore;
         this.FallbackLocalTime = fallbackLocalTime;
         this.TriggerAtUtc = triggerAtUtc;
-        this.SentAtUtc = DateTime.MinValue;
+        this.SentAtUtc = null;
     }
 
     /// <summary>
@@ -68,9 +67,9 @@ public class TaskReminder
     /// <param name="minutesBefore">Minutes before due time.</param>
     /// <param name="dueAtUtc">Task due instant in UTC.</param>
     /// <returns>Created reminder.</returns>
-    public static TaskReminder CreateRelative(Guid taskId, int minutesBefore, DateTime dueAtUtc)
+    public static TaskReminder CreateRelative(Guid taskId, int minutesBefore, DateTime? dueAtUtc)
     {
-        if (dueAtUtc == DateTime.MinValue)
+        if (!dueAtUtc.HasValue)
         {
             throw new InvalidOperationException("Relative reminder requires a due date and time.");
         }
@@ -80,7 +79,7 @@ public class TaskReminder
             throw new ArgumentException("Minutes before cannot be negative.", nameof(minutesBefore));
         }
 
-        var triggerAtUtc = dueAtUtc.AddMinutes(-minutesBefore);
+        var triggerAtUtc = dueAtUtc.Value.AddMinutes(-minutesBefore);
         return new TaskReminder(taskId, TaskReminderMode.RelativeToDueDateTime, minutesBefore, TimeOnly.MinValue, triggerAtUtc);
     }
 
@@ -118,7 +117,7 @@ public class TaskReminder
             throw new ArgumentException("Sent timestamp must be a valid UTC instant.", nameof(sentAtUtc));
         }
 
-        if (this.SentAtUtc != DateTime.MinValue)
+        if (this.SentAtUtc.HasValue)
         {
             return;
         }

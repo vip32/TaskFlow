@@ -11,8 +11,8 @@ using TaskFlow.Infrastructure.Persistence;
 namespace TaskFlow.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260209215304_AddMyTaskFlowSlices")]
-    partial class AddMyTaskFlowSlices
+    [Migration("20260209223651_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -183,7 +183,7 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateOnly>("EndsOn")
+                    b.Property<DateOnly?>("EndsOn")
                         .HasColumnType("TEXT");
 
                     b.Property<DateOnly>("StartsOn")
@@ -205,26 +205,20 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("CompletedAt")
+                    b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("DueAtUtc")
+                    b.Property<DateTime?>("DueAtUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateOnly>("DueDateLocal")
+                    b.Property<DateOnly?>("DueDateLocal")
                         .HasColumnType("TEXT");
 
-                    b.Property<TimeOnly>("DueTimeLocal")
+                    b.Property<TimeOnly?>("DueTimeLocal")
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("HasDueDate")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("HasDueTime")
-                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("INTEGER");
@@ -240,14 +234,17 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ParentTaskId")
+                    b.Property<Guid?>("ParentTaskId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Priority")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid>("ProjectId")
+                    b.Property<Guid?>("ProjectId")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
@@ -269,6 +266,8 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                     b.HasIndex("SubscriptionId", "DueDateLocal");
 
                     b.HasIndex("SubscriptionId", "ProjectId", "CreatedAt");
+
+                    b.HasIndex("SubscriptionId", "ProjectId", "ParentTaskId", "SortOrder");
 
                     b.ToTable("Tasks", (string)null);
                 });
@@ -320,7 +319,7 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                     b.Property<int>("Mode")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("SentAtUtc")
+                    b.Property<DateTime?>("SentAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("TaskId")
