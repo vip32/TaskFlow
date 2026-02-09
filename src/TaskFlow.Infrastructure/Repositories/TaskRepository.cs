@@ -103,7 +103,7 @@ public sealed class TaskRepository : ITaskRepository
             .Where(t => t.SubscriptionId == subscriptionId && t.ProjectId == projectId)
             .Where(t =>
                 EF.Functions.Like(t.Title.ToLower(), $"%{normalized}%") ||
-                EF.Functions.Like(t.Note.ToLower(), $"%{normalized}%"))
+                EF.Functions.Like((t.Note ?? string.Empty).ToLower(), $"%{normalized}%"))
             .OrderBy(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
     }

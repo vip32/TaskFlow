@@ -8,10 +8,10 @@ using TaskFlow.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TaskFlow.Infrastructure.Persistence.Migrations
+namespace TaskFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260209223651_InitialCreate")]
+    [Migration("20260209230649_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -130,7 +130,6 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Note")
-                        .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 
@@ -230,7 +229,6 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Note")
-                        .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 

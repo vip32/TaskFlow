@@ -169,50 +169,50 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 0.8 | Create `Domain/` folder with all domain types (flat, no subfolders) | 10 min | 0.2 | Pending |
-| 0.9 | Create `Domain/Project.cs` aggregate with business methods | 10 min | 0.8 | Pending |
-| 0.10 | Create `Domain/Task.cs` aggregate with business methods | 15 min | 0.8 | Pending |
-| 0.11 | Create `Domain/TaskPriority.cs` value object (enum) | 5 min | 0.8 | Pending |
-| 0.12 | Create `Domain/TaskStatus.cs` value object (enum) | 5 min | 0.8 | Pending |
-| 0.13 | Create `Domain/ProjectViewType.cs` value object (enum) | 5 min | 0.8 | Pending |
-| 0.14 | Add domain methods to Task: Complete(), AddSubTask(), MoveToProject(), SetPriority(), ToggleFocus(), UpdateTitle(), UpdateNote(), SetStatus() | 15 min | 0.10 | Pending |
-| 0.15 | Add domain methods to Project: AddTask(), RemoveTask(), UpdateViewType(), CalculateTaskCount() | 10 min | 0.9 | Pending |
-| 0.16 | Create `Domain/ITaskRepository.cs` | 5 min | 0.10 | Pending |
-| 0.17 | Create `Domain/IProjectRepository.cs` | 5 min | 0.9 | Pending |
-| 0.18 | Create optional `Domain/FocusSession.cs` aggregate (Phase 3) | 5 min | 0.8 | Pending |
+| 0.8 | Create `Domain/` folder with all domain types (flat, no subfolders) | 10 min | 0.2 | Done |
+| 0.9 | Create `Domain/Project.cs` aggregate with business methods | 10 min | 0.8 | Done |
+| 0.10 | Create `Domain/Task.cs` aggregate with business methods | 15 min | 0.8 | Done |
+| 0.11 | Create `Domain/TaskPriority.cs` value object (enum) | 5 min | 0.8 | Done |
+| 0.12 | Create `Domain/TaskStatus.cs` value object (enum) | 5 min | 0.8 | Done |
+| 0.13 | Create `Domain/ProjectViewType.cs` value object (enum) | 5 min | 0.8 | Done |
+| 0.14 | Add domain methods to Task: Complete(), AddSubTask(), MoveToProject(), SetPriority(), ToggleFocus(), UpdateTitle(), UpdateNote(), SetStatus() | 15 min | 0.10 | Done |
+| 0.15 | Add domain methods to Project: AddTask(), RemoveTask(), UpdateViewType(), CalculateTaskCount() | 10 min | 0.9 | Done |
+| 0.16 | Create `Domain/ITaskRepository.cs` | 5 min | 0.10 | Done |
+| 0.17 | Create `Domain/IProjectRepository.cs` | 5 min | 0.9 | Done |
+| 0.18 | Create optional `Domain/FocusSession.cs` aggregate (Phase 3) | 5 min | 0.8 | Done |
 
 **Phase 0B Checklist**:
-- [ ] Domain folder created (flat, no subfolders)
-- [ ] Domain entities created with business logic methods
-- [ ] Value objects defined as immutable types (enums)
-- [ ] Task aggregate: Complete(), AddSubTask(), MoveToProject(), SetPriority(), ToggleFocus(), UpdateTitle(), UpdateNote(), SetStatus()
-- [ ] Project aggregate: AddTask(), RemoveTask(), UpdateViewType(), GetTaskCount(), UpdateName(), UpdateColor(), UpdateIcon()
-- [ ] Repository interfaces created
-- [ ] Domain follows SOLID principles
-- [ ] FocusSession aggregate created (Phase 3)
+- [x] Domain folder created (flat, no subfolders)
+- [x] Domain entities created with business logic methods
+- [x] Value objects defined as immutable types (enums)
+- [x] Task aggregate: Complete(), AddSubTask(), MoveToProject(), SetPriority(), ToggleFocus(), UpdateTitle(), UpdateNote(), SetStatus()
+- [x] Project aggregate: AddTask(), RemoveTask(), UpdateViewType(), GetTaskCount(), UpdateName(), UpdateColor(), UpdateIcon()
+- [x] Repository interfaces created
+- [x] Domain follows SOLID principles
+- [x] FocusSession aggregate created (Phase 3)
 
 #### Phase 0C: Infrastructure Layer Setup (10 tasks)
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 0.19 | Create `Infrastructure/Data/AppDbContext.cs` with DbSet properties | 10 min | 0.10, 0.9 | Pending |
-| 0.20 | Create `Infrastructure/Data/TaskRepository.cs` implementing ITaskRepository | 15 min | 0.16 | Pending |
-| 0.21 | Create `Infrastructure/Data/ProjectRepository.cs` implementing IProjectRepository | 10 min | 0.17 | Pending |
-| 0.22 | Create `Infrastructure/Data/AppDbContextSeed.cs` for data seeding | 15 min | 0.19 | Pending |
-| 0.23 | Create `Infrastructure/Configuration.cs` | 5 min | 0.19 | Pending |
-| 0.24 | Add seeding logic: 1 default project, 3 sample tasks with notes and focused task | 10 min | 0.22 | Pending |
-| 0.25 | Configure SQLite connection string | 5 min | 0.23 | Pending |
-| 0.26 | Test database operations | 10 min | 0.20, 0.21 | Pending |
+| 0.19 | Create `Infrastructure/Data/AppDbContext.cs` with DbSet properties | 10 min | 0.10, 0.9 | Done |
+| 0.20 | Create `Infrastructure/Data/TaskRepository.cs` implementing ITaskRepository | 15 min | 0.16 | Done |
+| 0.21 | Create `Infrastructure/Data/ProjectRepository.cs` implementing IProjectRepository | 10 min | 0.17 | Done |
+| 0.22 | Create `Infrastructure/Data/AppDbContextSeed.cs` for data seeding | 15 min | 0.19 | Done |
+| 0.23 | Create `Infrastructure/Configuration.cs` | 5 min | 0.19 | Done |
+| 0.24 | Add seeding logic: 1 default project, 3 sample tasks with notes and focused task | 10 min | 0.22 | Done |
+| 0.25 | Configure SQLite connection string | 5 min | 0.23 | Done |
+| 0.26 | Test database operations | 10 min | 0.20, 0.21 | Done |
 | 0.27 | Create `Infrastructure/Data/FocusSessionRepository.cs` (Phase 3) | 5 min | 0.18 | Pending |
 
 **Phase 0C Checklist**:
-- [ ] AppDbContext configured with DbSets
-- [ ] TaskRepository implemented (flat in Infrastructure/Data, no Repositories subfolder)
-- [ ] ProjectRepository implemented (flat in Infrastructure/Data, no Repositories subfolder)
-- [ ] Seeding logic created and functional
-- [ ] Configuration created (flat in Infrastructure)
-- [ ] SQLite connection working
-- [ ] Database operations tested
+- [x] AppDbContext configured with DbSets
+- [x] TaskRepository implemented (flat in Infrastructure/Data, no Repositories subfolder)
+- [x] ProjectRepository implemented (flat in Infrastructure/Data, no Repositories subfolder)
+- [x] Seeding logic created and functional
+- [x] Configuration created (flat in Infrastructure)
+- [x] SQLite connection working
+- [x] Database operations tested
 - [ ] FocusSessionRepository created (Phase 3)
 - [ ] FocusSessionRepository created (Phase 3)
 
@@ -220,41 +220,41 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 0.28 | Create `Application/` folder with feature slice structure | 10 min | 0.3 | Pending |
-| 0.29 | Create `Application/IProjectOrchestrator.cs` for orchestration | 10 min | 0.28 | Pending |
-| 0.30 | Create `Application/ITaskOrchestrator.cs` for orchestration | 10 min | 0.28 | Pending |
-| 0.31 | Create `Application/ProjectOrchestrator.cs` - minimal orchestration | 15 min | 0.29 | Pending |
-| 0.32 | Create `Application/TaskOrchestrator.cs` - minimal orchestration | 20 min | 0.30 | Pending |
-| 0.33 | Add CreateProjectAsync to ProjectOrchestrator (calls repository + domain) | 5 min | 0.31 | Pending |
-| 0.34 | Add CreateTaskAsync to TaskOrchestrator (calls repository + domain) | 10 min | 0.32 | Pending |
-| 0.35 | Add GetTasksByProjectAsync to TaskOrchestrator (queries only) | 5 min | 0.32 | Pending |
-| 0.36 | Add orchestration for cross-aggregate operations (e.g., MoveTaskBetweenProjects) | 10 min | 0.32 | Pending |
+| 0.28 | Create `Application/` folder with feature slice structure | 10 min | 0.3 | Done |
+| 0.29 | Create `Application/IProjectOrchestrator.cs` for orchestration | 10 min | 0.28 | Done |
+| 0.30 | Create `Application/ITaskOrchestrator.cs` for orchestration | 10 min | 0.28 | Done |
+| 0.31 | Create `Application/ProjectOrchestrator.cs` - minimal orchestration | 15 min | 0.29 | Done |
+| 0.32 | Create `Application/TaskOrchestrator.cs` - minimal orchestration | 20 min | 0.30 | Done |
+| 0.33 | Add CreateProjectAsync to ProjectOrchestrator (calls repository + domain) | 5 min | 0.31 | Done |
+| 0.34 | Add CreateTaskAsync to TaskOrchestrator (calls repository + domain) | 10 min | 0.32 | Done |
+| 0.35 | Add GetTasksByProjectAsync to TaskOrchestrator (queries only) | 5 min | 0.32 | Done |
+| 0.36 | Add orchestration for cross-aggregate operations (e.g., MoveTaskBetweenProjects) | 10 min | 0.32 | Done |
 
 **Phase 0D Checklist**:
-- [ ] Application folder with feature slice structure created
-- [ ] IProjectOrchestrator interface created
-- [ ] ITaskOrchestrator interface created
-- [ ] ProjectOrchestrator implemented (minimal, orchestration only)
-- [ ] TaskOrchestrator implemented (minimal, orchestration only)
-- [ ] Orchestrators delegate business logic to domain entities
-- [ ] Orchestrators handle transactions and repository coordination
-- [ ] No business logic in orchestrators
+- [x] Application folder with feature slice structure created
+- [x] IProjectOrchestrator interface created
+- [x] ITaskOrchestrator interface created
+- [x] ProjectOrchestrator implemented (minimal, orchestration only)
+- [x] TaskOrchestrator implemented (minimal, orchestration only)
+- [x] Orchestrators delegate business logic to domain entities
+- [x] Orchestrators handle transactions and repository coordination
+- [x] No business logic in orchestrators
 
 #### Phase 0E: Configuration & DI Setup (5 tasks)
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 0.38 | Configure DI container in `Program.cs` - register repositories as scoped | 10 min | 0.20, 0.21 | Pending |
-| 0.39 | Configure DI container - register application services as scoped | 10 min | 0.32, 0.33 | Pending |
-| 0.40 | Configure DbContextFactory in DI container | 5 min | 0.27 | Pending |
-| 0.41 | Configure Blazor Server with SignalR | 5 min | 0.27, 0.40 | Pending |
+| 0.38 | Configure DI container in `Program.cs` - register repositories as scoped | 10 min | 0.20, 0.21 | Done |
+| 0.39 | Configure DI container - register application services as scoped | 10 min | 0.32, 0.33 | Done |
+| 0.40 | Configure DbContextFactory in DI container | 5 min | 0.27 | Done |
+| 0.41 | Configure Blazor Server with SignalR | 5 min | 0.27, 0.40 | Done |
 | 0.42 | Configure MudBlazor services in `Program.cs` | 10 min | 0.3, 0.40 | Pending |
 
 **Phase 0E Checklist**:
-- [ ] Repositories registered as scoped
-- [ ] Application services registered as scoped
-- [ ] DbContextFactory registered
-- [ ] Blazor Server configured with SignalR
+- [x] Repositories registered as scoped
+- [x] Application services registered as scoped
+- [x] DbContextFactory registered
+- [x] Blazor Server configured with SignalR
 - [ ] MudBlazor theme configured with custom Turquoise colors
 
 #### Phase 0F: Test Architecture Setup (5 tasks)
@@ -263,14 +263,14 @@ TaskFlow is a personal task management web application built with Blazor Server,
 |----|------|-----------|--------------|--------|
 | 0.49 | Test all dependency injections work correctly | 5 min | 0.44 | Pending |
 | 0.50 | Test repository methods work | 10 min | 0.19, 0.20 | Pending |
-| 0.51 | Test application services coordinate correctly | 10 min | 0.29, 0.30 | Pending |
+| 0.51 | Test application services coordinate correctly | 10 min | 0.29, 0.30 | Done |
 | 0.52 | Test database operations through full layer stack | 10 min | 0.25 | Pending |
 | 0.53 | Test clean architecture separation (no cross-layer violations) | 5 min | 0.26, 0.46 | Pending |
 
 **Phase 0F Checklist**:
 - [ ] Dependency injection working correctly
 - [ ] Repository operations functional
-- [ ] Application services functional
+- [x] Application services functional
 - [ ] Database operations work through all layers
 - [ ] Clean architecture separation verified
 
@@ -288,35 +288,35 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 1.1 | Create full solution structure with all project folders | 15 min | Phase 0 | Pending |
-| 1.2 | Create `Domain/` folder (flat, all types in one folder) | 5 min | 1.1 | Pending |
-| 1.3 | Create `Application/` folder with feature slices | 10 min | 1.1 | Pending |
-| 1.4 | Create `Infrastructure/` folder structure | 10 min | 1.1 | Pending |
-| 1.5 | Create `Presentation/` folder with feature slices | 10 min | 1.1 | Pending |
-| 1.6 | Set up `TaskFlow.sln` solution file | 5 min | 1.1 | Pending |
-| 1.7 | Configure project references (solution-level dependencies) | 10 min | 1.6 | Pending |
-| 1.8 | Set up `Directory.Build.props` for shared MSBuild properties | 5 min | 1.6 | Pending |
-| 1.9 | Verify solution builds successfully | 5 min | 1.7 | Pending |
-| 1.10 | Create GitHub repository and initialize | 5 min | 1.9 | Pending |
-| 1.11 | Create `.github/workflows/docker-build.yml` workflow | 15 min | 1.10 | Pending |
-| 1.12 | Configure workflow to build on push to main | 5 min | 1.11 | Pending |
+| 1.1 | Create full solution structure with all project folders | 15 min | Phase 0 | Done |
+| 1.2 | Create `Domain/` folder (flat, all types in one folder) | 5 min | 1.1 | Done |
+| 1.3 | Create `Application/` folder with feature slices | 10 min | 1.1 | Done |
+| 1.4 | Create `Infrastructure/` folder structure | 10 min | 1.1 | Done |
+| 1.5 | Create `Presentation/` folder with feature slices | 10 min | 1.1 | Done |
+| 1.6 | Set up `TaskFlow.sln` solution file | 5 min | 1.1 | Done |
+| 1.7 | Configure project references (solution-level dependencies) | 10 min | 1.6 | Done |
+| 1.8 | Set up `Directory.Build.props` for shared MSBuild properties | 5 min | 1.6 | Done |
+| 1.9 | Verify solution builds successfully | 5 min | 1.7 | Done |
+| 1.10 | Create GitHub repository and initialize | 5 min | 1.9 | Done |
+| 1.11 | Create `.github/workflows/docker-build.yml` workflow | 15 min | 1.10 | Done |
+| 1.12 | Configure workflow to build on push to main | 5 min | 1.11 | Done |
 | 1.13 | Configure workflow to build Docker image (ARM64) | 10 min | 1.11 | Pending |
 | 1.14 | Configure workflow to push image to container registry | 10 min | 1.13 | Pending |
 | 1.15 | Test GitHub Actions workflow manually | 10 min | 1.14 | Pending |
 
 **Phase 1A Checklist**:
-- [ ] Full solution structure created
-- [ ] Domain folder flat (no subfolders)
-- [ ] Application folder feature-sliced
-- [ ] Infrastructure folder properly structured
-- [ ] Presentation folder feature-sliced
-- [ ] Solution file created and configured
-- [ ] Project references configured
-- [ ] Directory.Build.props created
-- [ ] Solution builds successfully
-- [ ] GitHub repository initialized
-- [ ] GitHub Actions workflow created
-- [ ] Workflow configured for builds on push
+- [x] Full solution structure created
+- [x] Domain folder flat (no subfolders)
+- [x] Application folder feature-sliced
+- [x] Infrastructure folder properly structured
+- [x] Presentation folder feature-sliced
+- [x] Solution file created and configured
+- [x] Project references configured
+- [x] Directory.Build.props created
+- [x] Solution builds successfully
+- [x] GitHub repository initialized
+- [x] GitHub Actions workflow created
+- [x] Workflow configured for builds on push
 - [ ] Workflow builds ARM64 Docker image
 - [ ] Workflow pushes to container registry
 - [ ] Workflow tested manually
@@ -325,29 +325,29 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 1.8 | Create `Models/Project.cs` with Guid Id | 10 min | 1.7 | Pending |
-| 1.9 | Create `Models/Task.cs` with Guid Id, Note, IsFocused | 15 min | 1.7 | Pending |
-| 1.10 | Create `Models/Task.cs` - Add Status and ParentTaskId for Phase 2 | 5 min | 1.9 | Pending |
-| 1.11 | Create `Data/AppDbContext.cs` with Project and Task DbSets | 15 min | 1.8, 1.9 | Pending |
+| 1.8 | Create `Models/Project.cs` with Guid Id | 10 min | 1.7 | Done |
+| 1.9 | Create `Models/Task.cs` with Guid Id, Note, IsFocused | 15 min | 1.7 | Done |
+| 1.10 | Create `Models/Task.cs` - Add Status and ParentTaskId for Phase 2 | 5 min | 1.9 | Done |
+| 1.11 | Create `Data/AppDbContext.cs` with Project and Task DbSets | 15 min | 1.8, 1.9 | Done |
 | 1.12 | Add seeding: 1 default project "Inbox", 3 sample tasks with notes and focused task | 10 min | 1.11 | Pending |
-| 1.13 | Configure SQLite connection in `appsettings.json` | 5 min | - | Pending |
-| 1.14 | Register DbContext and services in `Program.cs` | 10 min | 1.11, 1.13 | Pending |
-| 1.15 | Configure Blazor Server with SignalR | 5 min | 1.14 | Pending |
-| 1.16 | Ensure database auto-creates on startup | 5 min | 1.14 | Pending |
+| 1.13 | Configure SQLite connection in `appsettings.json` | 5 min | - | Done |
+| 1.14 | Register DbContext and services in `Program.cs` | 10 min | 1.11, 1.13 | Done |
+| 1.15 | Configure Blazor Server with SignalR | 5 min | 1.14 | Done |
+| 1.16 | Ensure database auto-creates on startup | 5 min | 1.14 | Done |
 | 1.17 | Configure MudBlazor services in `Program.cs` | 10 min | 1.3 | Pending |
 | 1.18 | Add keyboard shortcut handler service | 10 min | 1.17 | Pending |
 | 1.19 | Test database seeding on startup | 5 min | 1.16 | Pending |
 
 **Phase 1B Checklist**:
-- [ ] Project model created with all required properties
-- [ ] Task model created with Note and IsFocused fields
-- [ ] Task model has Status and ParentTaskId for Phase 2
-- [ ] DbContext configured with DbSet<Project> and DbSet<Task>
+- [x] Project model created with all required properties
+- [x] Task model created with Note and IsFocused fields
+- [x] Task model has Status and ParentTaskId for Phase 2
+- [x] DbContext configured with DbSet<Project> and DbSet<Task>
 - [ ] Database seeding working (default project + sample tasks)
-- [ ] SQLite connection configured
-- [ ] Services registered in DI container
-- [ ] Blazor Server configured with SignalR
-- [ ] Database auto-creates on first run
+- [x] SQLite connection configured
+- [x] Services registered in DI container
+- [x] Blazor Server configured with SignalR
+- [x] Database auto-creates on first run
 - [ ] MudBlazor theme configured with custom Turquoise colors
 - [ ] Keyboard service added
 
@@ -505,7 +505,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 1.82 | Create Dockerfile for Blazor Server (ARM64) | 15 min | 1.7 | Pending |
+| 1.82 | Create Dockerfile for Blazor Server (ARM64) | 15 min | 1.7 | Done |
 | 1.83 | Create `Projects/taskflow-nginx/nginx.conf` reverse proxy | 10 min | - | Pending |
 | 1.84 | Add `ts-taskflow` service to `/home/vip32/docker-compose.yaml` | 10 min | 1.1, 1.82 | Pending |
 | 1.85 | Add `taskflow` service with volume and ports | 10 min | 1.82, 1.83 | Pending |
@@ -514,7 +514,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 1.88 | Verify network_mode pattern matches existing services | 5 min | 1.87 | Pending |
 
 **Phase 1H Checklist**:
-- [ ] Dockerfile created for ARM64
+- [x] Dockerfile created for ARM64
 - [ ] nginx.conf created with reverse proxy
 - [ ] ts-taskflow service added to docker-compose
 - [ ] taskflow service added
@@ -555,17 +555,17 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 2.1 | Update `Models/Project.cs` - Add `ViewType` property (enum: List/Board) | 5 min | Phase 1B | Pending |
-| 2.2 | Update `Models/Task.cs` - Set `Status` to required (enum: ToDo/InProgress/Done) | 2 min | 1.10 | Pending |
-| 2.3 | Update `Models/Task.cs` - Set `ParentTaskId` to required (nullable Guid) | 2 min | 1.10 | Pending |
+| 2.1 | Update `Models/Project.cs` - Add `ViewType` property (enum: List/Board) | 5 min | Phase 1B | Done |
+| 2.2 | Update `Models/Task.cs` - Set `Status` to required (enum: ToDo/InProgress/Done) | 2 min | 1.10 | Done |
+| 2.3 | Update `Models/Task.cs` - Set `ParentTaskId` to required (nullable Guid) | 2 min | 1.10 | Done |
 | 2.4 | Update `Data/AppDbContext.cs` - Add navigation properties for SubTasks | 5 min | 2.2-2.3 | Pending |
 | 2.5 | Add migration or update database creation logic for new fields | 10 min | 2.4 | Pending |
 | 2.6 | Update seeding to include sample SubTasks and board view project | 5 min | 2.5 | Pending |
 
 **Phase 2A Checklist**:
-- [ ] Project model has ViewType property
-- [ ] Task model has required Status
-- [ ] Task model has required ParentTaskId
+- [x] Project model has ViewType property
+- [x] Task model has required Status
+- [x] Task model has required ParentTaskId
 - [ ] DbContext has navigation properties
 - [ ] Database migration/update applied
 - [ ] Seeding updated with SubTasks
@@ -697,7 +697,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 3.1 | Update Task model to add IsTodayMarked property | 5 min | Phase 2A | Pending |
+| 3.1 | Update Task model to add IsTodayMarked property | 5 min | Phase 2A | Done |
 | 3.2 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add GetTodayTasksAsync | 10 min | 3.1 | Pending |
 | 3.3 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add GetUpcomingTasksAsync | 10 min | 3.1 | Pending |
 | 3.4 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add GetRecentTasksAsync | 10 min | 3.1 | Pending |
@@ -709,7 +709,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 3.10 | Test all My Task Flow views | 10 min | 3.7-3.9 | Pending |
 
 **Phase 3A Checklist**:
-- [ ] Task model has IsTodayMarked property
+- [x] Task model has IsTodayMarked property
 - [ ] GetTodayTasksAsync implemented
 - [ ] GetUpcomingTasksAsync implemented
 - [ ] GetRecentTasksAsync implemented
@@ -724,7 +724,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 3.11 | Create `Domain/Entities/FocusSession.cs` aggregate | 10 min | Phase 1B | Pending |
+| 3.11 | Create `Domain/Entities/FocusSession.cs` aggregate | 10 min | Phase 1B | Done |
 | 3.12 | Update `Infrastructure/Data/AppDbContext.cs` - Add FocusSession DbSet | 5 min | 3.11 | Pending |
 | 3.13 | Create `Domain/Interfaces/IFocusSessionRepository.cs` | 5 min | 3.11 | Pending |
 | 3.14 | Create `Infrastructure/Data/Repositories/FocusSessionRepository.cs` | 10 min | 3.13 | Pending |
@@ -736,7 +736,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 3.20 | Test complete timer workflow | 15 min | 3.16-3.19 | Pending |
 
 **Phase 3B Checklist**:
-- [ ] FocusSession aggregate created
+- [x] FocusSession aggregate created
 - [ ] DbContext includes FocusSession
 - [ ] IFocusSessionRepository created
 - [ ] FocusSessionRepository implemented

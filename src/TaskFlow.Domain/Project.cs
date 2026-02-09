@@ -5,6 +5,8 @@ namespace TaskFlow.Domain;
 /// </summary>
 public class Project
 {
+    private const int MAX_NAME_LENGTH = 100;
+
     private readonly List<Task> tasks = [];
     private readonly List<string> tags = [];
 
@@ -68,7 +70,7 @@ public class Project
         this.Name = string.Empty;
         this.Color = string.Empty;
         this.Icon = string.Empty;
-        this.Note = string.Empty;
+        this.Note = null;
     }
 
     /// <summary>
@@ -92,6 +94,11 @@ public class Project
             throw new ArgumentException("Project name cannot be empty.", nameof(name));
         }
 
+        if (name.Trim().Length > MAX_NAME_LENGTH)
+        {
+            throw new ArgumentException($"Project name cannot exceed {MAX_NAME_LENGTH} characters.", nameof(name));
+        }
+
         if (string.IsNullOrWhiteSpace(color))
         {
             throw new ArgumentException("Project color cannot be empty.", nameof(color));
@@ -107,7 +114,7 @@ public class Project
         this.Name = name.Trim();
         this.Color = color.Trim();
         this.Icon = icon.Trim();
-        this.Note = string.IsNullOrWhiteSpace(note) ? string.Empty : note.Trim();
+        this.Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
         this.IsDefault = isDefault;
         this.ViewType = ProjectViewType.List;
         this.CreatedAt = DateTime.UtcNow;
@@ -180,6 +187,11 @@ public class Project
             throw new ArgumentException("Project name cannot be empty.", nameof(newName));
         }
 
+        if (newName.Trim().Length > MAX_NAME_LENGTH)
+        {
+            throw new ArgumentException($"Project name cannot exceed {MAX_NAME_LENGTH} characters.", nameof(newName));
+        }
+
         this.Name = newName.Trim();
     }
 
@@ -218,7 +230,7 @@ public class Project
     public void UpdateNote(string newNote)
     {
         this.Note = string.IsNullOrWhiteSpace(newNote)
-            ? string.Empty
+            ? null
             : newNote.Trim();
     }
 

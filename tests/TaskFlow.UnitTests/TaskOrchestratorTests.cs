@@ -240,7 +240,7 @@ public class TaskOrchestratorTests
             var normalized = query.Trim().ToLowerInvariant();
             var result = this.store.Values
                 .Where(task => task.ProjectId == projectId)
-                .Where(task => task.Title.ToLowerInvariant().Contains(normalized) || task.Note.ToLowerInvariant().Contains(normalized))
+                .Where(task => task.Title.ToLowerInvariant().Contains(normalized) || (task.Note ?? string.Empty).ToLowerInvariant().Contains(normalized))
                 .ToList();
             return System.Threading.Tasks.Task.FromResult(result);
         }

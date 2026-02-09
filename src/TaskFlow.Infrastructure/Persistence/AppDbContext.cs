@@ -105,7 +105,7 @@ public class AppDbContext : DbContext
             entity.Property(p => p.Name).IsRequired().HasMaxLength(200);
             entity.Property(p => p.Color).IsRequired().HasMaxLength(32);
             entity.Property(p => p.Icon).IsRequired().HasMaxLength(64);
-            entity.Property(p => p.Note).IsRequired().HasMaxLength(4000);
+            entity.Property(p => p.Note).IsRequired(false).HasMaxLength(4000);
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.IsDefault).IsRequired();
             entity.Property(p => p.ViewType).HasConversion<int>().IsRequired();
@@ -126,7 +126,7 @@ public class AppDbContext : DbContext
             entity.HasKey(t => t.Id);
             entity.Property(t => t.SubscriptionId).IsRequired();
             entity.Property(t => t.Title).IsRequired().HasMaxLength(300);
-            entity.Property(t => t.Note).IsRequired().HasMaxLength(4000);
+            entity.Property(t => t.Note).IsRequired(false).HasMaxLength(4000);
             entity.Property(t => t.Priority).HasConversion<int>().IsRequired();
             entity.Property(t => t.Status).HasConversion<int>().IsRequired();
             entity.Property(t => t.IsCompleted).IsRequired();

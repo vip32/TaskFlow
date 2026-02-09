@@ -8,6 +8,25 @@ namespace TaskFlow.UnitTests;
 /// </summary>
 public class TaskDomainTests
 {
+    [Fact]
+    public void Constructor_TitleTooLong_ThrowsArgumentException()
+    {
+        var title = new string('a', 501);
+
+        Assert.Throws<ArgumentException>(() => new DomainTask(Guid.NewGuid(), title, null));
+    }
+
+    [Fact]
+    public void UpdateNote_Whitespace_ClearsToNull()
+    {
+        var task = new DomainTask(Guid.NewGuid(), "Task", null);
+        task.UpdateNote("Some note");
+
+        task.UpdateNote("   ");
+
+        Assert.Null(task.Note);
+    }
+
     /// <summary>
     /// Verifies task can be created unassigned.
     /// </summary>

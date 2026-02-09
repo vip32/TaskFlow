@@ -7,7 +7,7 @@ using TaskFlow.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TaskFlow.Infrastructure.Persistence.Migrations
+namespace TaskFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -127,7 +127,6 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Note")
-                        .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 
@@ -227,7 +226,6 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Note")
-                        .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 

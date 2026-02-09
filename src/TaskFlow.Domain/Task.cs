@@ -5,6 +5,8 @@ namespace TaskFlow.Domain;
 /// </summary>
 public class Task
 {
+    private const int MAX_TITLE_LENGTH = 500;
+
     private readonly List<Task> subTasks = [];
     private readonly List<string> tags = [];
     private readonly List<TaskReminder> reminders = [];
@@ -131,7 +133,7 @@ public class Task
     private Task()
     {
         this.Title = string.Empty;
-        this.Note = string.Empty;
+        this.Note = null;
     }
 
     /// <summary>
@@ -152,6 +154,11 @@ public class Task
             throw new ArgumentException("Task title cannot be empty.", nameof(title));
         }
 
+        if (title.Trim().Length > MAX_TITLE_LENGTH)
+        {
+            throw new ArgumentException($"Task title cannot exceed {MAX_TITLE_LENGTH} characters.", nameof(title));
+        }
+
         if (projectId.HasValue && projectId.Value == Guid.Empty)
         {
             throw new ArgumentException("Project id must be null or a non-empty guid.", nameof(projectId));
@@ -160,7 +167,7 @@ public class Task
         this.SubscriptionId = subscriptionId;
         this.Id = Guid.NewGuid();
         this.Title = title.Trim();
-        this.Note = string.Empty;
+        this.Note = null;
         this.ProjectId = projectId;
         this.ParentTaskId = null;
         this.Priority = TaskPriority.Medium;
@@ -336,6 +343,11 @@ public class Task
             throw new ArgumentException("Task title cannot be empty.", nameof(newTitle));
         }
 
+        if (newTitle.Trim().Length > MAX_TITLE_LENGTH)
+        {
+            throw new ArgumentException($"Task title cannot exceed {MAX_TITLE_LENGTH} characters.", nameof(newTitle));
+        }
+
         this.Title = newTitle.Trim();
     }
 
@@ -347,7 +359,7 @@ public class Task
     {
         if (string.IsNullOrWhiteSpace(newNote))
         {
-            this.Note = string.Empty;
+            this.Note = null;
             return;
         }
 

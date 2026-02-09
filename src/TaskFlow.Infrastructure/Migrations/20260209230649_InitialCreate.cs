@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TaskFlow.Infrastructure.Persistence.Migrations
+namespace TaskFlow.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -83,7 +83,7 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                     Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Color = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     Icon = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    Note = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    Note = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
                     IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
                     ViewType = table.Column<int>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -148,7 +148,7 @@ namespace TaskFlow.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     SubscriptionId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Title = table.Column<string>(type: "TEXT", maxLength: 300, nullable: false),
-                    Note = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    Note = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
                     Priority = table.Column<int>(type: "INTEGER", nullable: false),
                     IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsFocused = table.Column<bool>(type: "INTEGER", nullable: false),
