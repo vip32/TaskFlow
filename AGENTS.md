@@ -2,10 +2,40 @@
 
 This file is the working guide for coding agents in this repository.
 
+## Project Overview
+
+TaskFlow is a Blazor Server productivity app focused on helping users complete work, not just collect tasks. It supports project-based task management, rich task details (priority, notes, subtasks, focus markers), and cross-project "My Task Flow" views (Today, Upcoming, Recent).
+
+The codebase follows DDD with a rich domain model and clean architecture. Business behavior belongs in domain entities, while the application layer orchestrates use-cases and the infrastructure layer handles persistence.
+
+## Technology Stack
+
+- Runtime and language: .NET 10, C# 14
+- Web UI: Blazor Server (SignalR-backed interactivity)
+- UI component library: MudBlazor 8.x
+- Data access: Entity Framework Core
+- Database: SQLite
+- Deployment: Docker (Raspberry Pi ARM64 target), private Tailscale network
+- Testing: xUnit
+
+## Layering Details
+
+- **Dependency direction**: `Presentation -> Application -> Domain` and `Infrastructure -> Domain`
+- **Domain layer**: Aggregates, entities, value types, invariants, repository interfaces
+- **Application layer**: Orchestrators only (coordination, transactions, cross-aggregate flows), no business rules
+- **Infrastructure layer**: EF Core `DbContext`, repository implementations, persistence configuration
+- **Presentation layer**: Razor pages/components, UI state and interactions only
+
 ## Scope
 
 - Apply these rules for all edits in this repo.
 - Prefer small, focused changes that match existing conventions.
+- Generate concise, idiomatic C# 10+ (.NET 10) code following DDD and clean architecture.
+- Respect layering boundaries and module isolation; avoid cross-layer leakage.
+- Prefer repository abstractions and specifications over direct DbContext access in Application code.
+- Use existing devkit features (requester, notifier, pipeline behaviors) instead of re-inventing infrastructure.
+- Produce testable changes with unit/integration tests where meaningful.
+
 
 ## Agent Skills
 
