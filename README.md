@@ -1,2 +1,2 @@
 # TaskFlow
-Task Flow is a focused personal productivity app built to help you do more than just collect tasks.
+> Task Flow is a focused personal productivity app built to help you do more than just collect tasks — it helps you follow through and finish them. While most todo apps stop at organizing lists, Task Flow is designed around action, with project-based planning, rich task context, focus-driven workflows, and the “My Task Flow” views that surface what matters now, next, and recently completed. It brings structure, clarity, and momentum together so your task list becomes a system for getting things done, not just storing intentions.
