@@ -4,6 +4,16 @@ All notable updates to TaskFlow are documented here.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-02-09
+
+### Added
+- New release workflow at `.github/workflows/release.yml` that uses MinVer and creates GitHub releases for stable tags.
+- Additional local .NET tools in `dotnet-tools.json`: `dotnet-ef`, `dotnet-outdated-tool`, and `dotnet-inspect`.
+
+### Changed
+- MinVer tag prefix handling was updated to use plain tags (for example `1.0.1` instead of `v1.0.1`).
+- Docker build flow was updated to copy central props files before restore and run publish with restore for reliable CI container builds.
+
 ## [1.0.0] - 2026-02-09
 
 ### Added
