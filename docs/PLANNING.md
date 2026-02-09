@@ -27,13 +27,38 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - **Architecture**: Domain-Driven Design (DDD) with Rich Domain Model
 
 ### Project Location
-- **Source**: `/home/vip32/Projects/taskflow/`
+- **Source**: `/home/vip32/Projects/TaskFlow/`
 - **Database Volume**: `taskflow-data`
 - **Tailscale State**: `/home/vip32/Projects/ts-taskflow/state`
 - **Nginx Config**: `/home/vip32/Projects/taskflow-nginx/nginx.conf`
 
 ### Access URL
 - **Production**: http://taskflow.churra-platy.ts.net
+
+### Execution Status (2026-02-09)
+
+#### Completed
+- [x] Solution scaffolded (`TaskFlow.sln`) with all baseline projects in `src/` and `tests/`.
+- [x] Project references configured according to architecture dependency direction.
+- [x] Core packages added (EF Core, SQLite provider, MudBlazor, test stack).
+- [x] Domain baseline implemented for Phase 0B:
+  - [x] `Project` aggregate
+  - [x] `Task` aggregate
+  - [x] Value enums (`TaskPriority`, `TaskStatus`, `ProjectViewType`)
+  - [x] Repository interfaces (`IProjectRepository`, `ITaskRepository`)
+  - [x] Optional `FocusSession` aggregate
+- [x] Build and test verified locally via .NET 10 SDK.
+- [x] CI workflow created for restore/build/test/container build (no image push).
+- [x] Dockerfile added for application container build.
+- [x] MinVer local tool manifest added and MinVer wired into build.
+- [x] Central package management enabled (`Directory.Packages.props`).
+- [x] Shared build settings centralized (`Directory.Build.props`).
+
+#### In Progress / Deferred
+- [ ] Phase 0C Infrastructure implementation (DbContext, repositories, seeding).
+- [ ] Phase 0D Application orchestrators.
+- [ ] Phase 0E DI registration and startup composition.
+- [ ] Tailscale-related deployment steps are intentionally deferred for now.
 
 ---
 

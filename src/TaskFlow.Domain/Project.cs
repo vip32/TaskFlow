@@ -1,23 +1,50 @@
 namespace TaskFlow.Domain;
 
+/// <summary>
+/// Represents a project aggregate root that owns task organization settings.
+/// </summary>
 public class Project
 {
     private readonly List<Task> tasks = [];
 
+    /// <summary>
+    /// Gets the unique identifier of the project.
+    /// </summary>
     public Guid Id { get; private set; }
 
+    /// <summary>
+    /// Gets the display name of the project.
+    /// </summary>
     public string Name { get; private set; }
 
+    /// <summary>
+    /// Gets the color marker used by the project in the UI.
+    /// </summary>
     public string Color { get; private set; }
 
+    /// <summary>
+    /// Gets the icon name used by the project in the UI.
+    /// </summary>
     public string Icon { get; private set; }
 
+    /// <summary>
+    /// Gets a value indicating whether this project is the default project.
+    /// </summary>
     public bool IsDefault { get; private set; }
 
+    /// <summary>
+    /// Gets the preferred view mode for this project.
+    /// </summary>
     public ProjectViewType ViewType { get; private set; }
 
+    /// <summary>
+    /// Gets the UTC timestamp when the project was created.
+    /// </summary>
     public DateTime CreatedAt { get; private set; }
 
+    /// <summary>
+    /// Gets the tasks currently associated with this project.
+    /// </summary>
     public IReadOnlyCollection<Task> Tasks => this.tasks.AsReadOnly();
 
     private Project()
@@ -27,6 +54,13 @@ public class Project
         this.Icon = string.Empty;
     }
 
+    /// <summary>
+    /// Initializes a new project with required metadata.
+    /// </summary>
+    /// <param name="name">Project display name.</param>
+    /// <param name="color">Project color marker.</param>
+    /// <param name="icon">Project icon key.</param>
+    /// <param name="isDefault">Whether the project is the default project.</param>
     public Project(string name, string color, string icon, bool isDefault = false)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -53,6 +87,10 @@ public class Project
         this.CreatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Adds a task to this project and aligns the task project identifier.
+    /// </summary>
+    /// <param name="task">Task to add.</param>
     public void AddTask(Task task)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -66,6 +104,10 @@ public class Project
         this.tasks.Add(task);
     }
 
+    /// <summary>
+    /// Removes a task from this project.
+    /// </summary>
+    /// <param name="task">Task to remove.</param>
     public void RemoveTask(Task task)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -73,16 +115,28 @@ public class Project
         this.tasks.RemoveAll(existing => existing.Id == task.Id);
     }
 
+    /// <summary>
+    /// Updates the preferred project view mode.
+    /// </summary>
+    /// <param name="viewType">Target view mode.</param>
     public void UpdateViewType(ProjectViewType viewType)
     {
         this.ViewType = viewType;
     }
 
+    /// <summary>
+    /// Gets the number of active tasks in this project.
+    /// </summary>
+    /// <returns>Count of non-completed tasks.</returns>
     public int GetTaskCount()
     {
         return this.tasks.Count(task => !task.IsCompleted);
     }
 
+    /// <summary>
+    /// Updates the project name.
+    /// </summary>
+    /// <param name="newName">New name value.</param>
     public void UpdateName(string newName)
     {
         if (string.IsNullOrWhiteSpace(newName))
@@ -93,6 +147,10 @@ public class Project
         this.Name = newName.Trim();
     }
 
+    /// <summary>
+    /// Updates the project color marker.
+    /// </summary>
+    /// <param name="newColor">New color value.</param>
     public void UpdateColor(string newColor)
     {
         if (string.IsNullOrWhiteSpace(newColor))
@@ -103,6 +161,10 @@ public class Project
         this.Color = newColor.Trim();
     }
 
+    /// <summary>
+    /// Updates the project icon key.
+    /// </summary>
+    /// <param name="newIcon">New icon value.</param>
     public void UpdateIcon(string newIcon)
     {
         if (string.IsNullOrWhiteSpace(newIcon))

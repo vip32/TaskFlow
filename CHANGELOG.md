@@ -15,11 +15,13 @@ All notable updates to TaskFlow are documented here.
 - Local tool manifest `dotnet-tools.json` with `minver-cli`.
 - Central package management via `Directory.Packages.props`.
 - Shared build settings and MinVer wiring via `Directory.Build.props`.
+- XML documentation comments for all current public domain symbols (classes, enums, properties, and methods).
 
 ### Changed
 - Documentation structure was reorganized into a dedicated `docs/` area for easier navigation and maintenance.
 - README messaging was refreshed to better explain TaskFlow's value, audience, and architecture.
 - Project configuration now enforces `net10.0`, `LangVersion=latest`, nullable disabled, and warnings treated as errors.
+- System design and planning documents were updated to reflect the repository's actual implemented baseline and progress tracking.
 
 ### Documentation
 - Initial architecture and delivery plan documentation was added to establish project direction.

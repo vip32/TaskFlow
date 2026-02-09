@@ -33,6 +33,20 @@ TaskFlow is a task management application built with Blazor Server, providing us
 - **URL**: http://taskflow.churra-platy.ts.net
 - **Scale**: Single user deployment (personal use)
 
+### Current Implementation Snapshot (2026-02-09)
+
+The repository currently contains the foundational architecture and build pipeline:
+
+- **Solution and projects created**: `TaskFlow.sln` with `TaskFlow.Domain`, `TaskFlow.Application`, `TaskFlow.Infrastructure`, `TaskFlow.Presentation`, and `TaskFlow.UnitTests`.
+- **Project references wired**: `Presentation -> Application, Infrastructure`, `Application -> Domain`, `Infrastructure -> Domain`, tests reference `Domain` and `Application`.
+- **Domain baseline implemented**: `Project`, `Task`, and `FocusSession` aggregates plus value enums and repository interfaces.
+- **Nullable annotations policy in code**: Nullable reference type annotations are disabled for this codebase; public APIs avoid nullable reference annotations.
+- **Build configuration centralized**: `Directory.Build.props` configures language/features, warning policy, and MinVer integration.
+- **NuGet versions centralized**: `Directory.Packages.props` enables central package management.
+- **Versioning baseline set**: Local tool manifest (`dotnet-tools.json`) includes `minver-cli`; build integrates MinVer for tag-based versioning.
+- **CI baseline added**: `.github/workflows/build.yml` restores, builds, tests, and builds the container image (without push).
+- **Container build baseline added**: Root `Dockerfile` publishes and runs `TaskFlow.Presentation`.
+
 ---
 
 ## Architecture
@@ -1631,11 +1645,15 @@ jobs:
 
 ```mermaid
 flowchart TD
-    Root["TaskFlow.sln"] --> Domain["Domain"]
-    Root --> Application["Application"]
-    Root --> Infrastructure["Infrastructure"]
-    Root --> Presentation["Presentation"]
-    Root --> CI[".github/workflows/docker-build.yml"]
+    Root["TaskFlow.sln"] --> Domain["src/TaskFlow.Domain"]
+    Root --> Application["src/TaskFlow.Application"]
+    Root --> Infrastructure["src/TaskFlow.Infrastructure"]
+    Root --> Presentation["src/TaskFlow.Presentation"]
+    Root --> Tests["tests/TaskFlow.UnitTests"]
+    Root --> CI[".github/workflows/build.yml"]
+    Root --> Docker["Dockerfile"]
+    Root --> BuildProps["Directory.Build.props"]
+    Root --> PackageProps["Directory.Packages.props"]
 ```
 
 ### Folder Organization Principles
