@@ -34,9 +34,42 @@ public sealed class TaskRepository : ITaskRepository
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         return await db.Tasks
             .AsNoTracking()
-            .Where(t => t.SubscriptionId == subscriptionId && t.ProjectId == projectId)
-            .OrderBy(t => t.CreatedAt)
+            .Where(t => t.SubscriptionId == subscriptionId && t.ProjectId == projectId && t.ParentTaskId == Guid.Empty)
+            .OrderBy(t => t.SortOrder)
+            .ThenBy(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        return await db.Tasks
+            .AsNoTracking()
+            .Where(t => t.SubscriptionId == subscriptionId && t.ParentTaskId == parentTaskId)
+            .OrderBy(t => t.SortOrder)
+            .ThenBy(t => t.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        var maxSortOrder = await db.Tasks
+            .AsNoTracking()
+            .Where(t =>
+                t.SubscriptionId == subscriptionId &&
+                t.ProjectId == projectId &&
+                t.ParentTaskId == parentTaskId)
+            .Select(t => (int?)t.SortOrder)
+            .MaxAsync(cancellationToken);
+
+        return maxSortOrder.HasValue ? maxSortOrder.Value + 1 : 0;
     }
 
     /// <inheritdoc/>
@@ -217,6 +250,28 @@ public sealed class TaskRepository : ITaskRepository
         db.Tasks.Update(task);
         await db.SaveChangesAsync(cancellationToken);
         return task;
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> UpdateRangeAsync(IEnumerable<DomainTask> tasks, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(tasks);
+
+        var list = tasks.ToList();
+        foreach (var task in list)
+        {
+            EnsureSubscriptionMatch(task.SubscriptionId);
+        }
+
+        if (list.Count == 0)
+        {
+            return [];
+        }
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        db.Tasks.UpdateRange(list);
+        await db.SaveChangesAsync(cancellationToken);
+        return list;
     }
 
     /// <inheritdoc/>

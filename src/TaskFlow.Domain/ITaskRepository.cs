@@ -14,6 +14,23 @@ public interface ITaskRepository
     global::System.Threading.Tasks.Task<List<Task>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets direct subtasks for a parent task.
+    /// </summary>
+    /// <param name="parentTaskId">Parent task identifier.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>Direct subtasks ordered by persisted sort order.</returns>
+    global::System.Threading.Tasks.Task<List<Task>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets next sort order value for tasks in the same sibling scope.
+    /// </summary>
+    /// <param name="projectId">Project identifier (or Guid.Empty for unassigned).</param>
+    /// <param name="parentTaskId">Parent task identifier (Guid.Empty for top-level tasks).</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>Next zero-based sort order value.</returns>
+    global::System.Threading.Tasks.Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets tasks by priority within a project for the current subscription.
     /// </summary>
     /// <param name="priority">Priority to match.</param>
@@ -110,6 +127,14 @@ public interface ITaskRepository
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The updated task.</returns>
     global::System.Threading.Tasks.Task<Task> UpdateAsync(Task task, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates a batch of tasks.
+    /// </summary>
+    /// <param name="tasks">Tasks to update.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>The updated tasks.</returns>
+    global::System.Threading.Tasks.Task<List<Task>> UpdateRangeAsync(IEnumerable<Task> tasks, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a task by identifier within the current subscription.

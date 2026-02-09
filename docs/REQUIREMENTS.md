@@ -167,6 +167,7 @@ TaskFlow provides task and project management with:
 - User can filter by priority (All, High, Medium, Low)
 - User can show/hide completed tasks
 - Empty state displayed when no tasks exist
+- User-defined manual order is supported and persisted per project
 
 **Priority**: Must Have
 
@@ -261,6 +262,18 @@ TaskFlow provides task and project management with:
 
 **Priority**: Must Have
 
+#### FR2.10 Task Reordering
+**Description**: User must be able to reorder top-level tasks within a project, and order must persist.
+
+**Requirements**:
+- User can reorder tasks via drag and drop in project task lists
+- Reordering updates a persisted `SortOrder` for top-level tasks in that project
+- Reloading the app preserves the same task order
+- Reordering is independent for each project
+- Reordering changes persist immediately with no Save button
+
+**Priority**: Must Have
+
 ---
 
 ### FR3: SubTask Management
@@ -317,6 +330,18 @@ TaskFlow provides task and project management with:
 - Marking parent task complete marks all SubTasks complete
 - Uncompleting parent task does NOT uncomplete SubTasks
 - Visual indicator when parent has completed SubTasks
+
+**Priority**: Must Have (Phase 2)
+
+#### FR3.6 SubTask Reordering
+**Description**: User must be able to reorder direct SubTasks under a parent task, and order must persist.
+
+**Requirements**:
+- User can reorder direct SubTasks within the same parent task
+- Reordering updates a persisted `SortOrder` for sibling SubTasks
+- Reloading the app preserves subtask order under each parent
+- Reordering is scoped to direct siblings only (1-level SubTasks)
+- Reordering changes persist immediately with no Save button
 
 **Priority**: Must Have (Phase 2)
 
@@ -1258,6 +1283,8 @@ TaskFlow provides task and project management with:
 
 **US2.9**: As a user, I want to see when tasks were created and completed so that I can track productivity.
 
+**US2.10**: As a user, I want to reorder tasks in a project so I can keep my own preferred execution order.
+
 ---
 
 ### Epic 3: SubTask Management
@@ -1271,6 +1298,8 @@ TaskFlow provides task and project management with:
 **US3.4**: As a user, I want to delete SubTasks so that I can remove unnecessary SubTasks.
 
 **US3.5**: As a user, I want completing a parent task to complete all SubTasks so that I don't have to complete them individually.
+
+**US3.6**: As a user, I want to reorder SubTasks so sibling steps follow the sequence I need.
 
 ---
 
@@ -1747,11 +1776,13 @@ TaskFlow provides task and project management with:
 | FR2.7 | US2.7 | - | Must Have |
 | FR2.8 | US2.8 | - | Must Have |
 | FR2.9 | US2.9 | - | Must Have |
+| FR2.10 | US2.10 | - | Must Have |
 | FR3.1 | US3.1 | AC3.1 | Must Have (Phase 2) |
 | FR3.2 | US3.2 | - | Must Have (Phase 2) |
 | FR3.3 | US3.3 | - | Must Have (Phase 2) |
 | FR3.4 | US3.4 | - | Must Have (Phase 2) |
 | FR3.5 | US3.5 | AC3.2 | Must Have (Phase 2) |
+| FR3.6 | US3.6 | - | Must Have (Phase 2) |
 | FR4.1 | US4.1 | AC4.1 | Must Have (Phase 2) |
 | FR4.2 | US4.2 | AC4.3 | Must Have (Phase 2) |
 | FR4.3 | US4.3 | AC4.2 | Must Have (Phase 2) |
@@ -1842,6 +1873,7 @@ TaskFlow provides task and project management with:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 2.2 | 2026-02-09 | System | Added persisted ordering requirements for project tasks (FR2.10) and subtasks (FR3.6), including immediate-save reorder behavior |
 | 2.1 | 2026-02-09 | System | Expanded My Task Flow requirements with unassigned task triage, custom hybrid sections, subscription-timezone behavior (default Europe/Berlin), and formalized due date/reminder requirements |
 | 2.0 | 2025-02-09 | System | Added FR13 Clean Architecture (8 requirements), added FR14 Code Quality Standards (5 requirements), updated NFR5 to include code quality standards, updated system design with clean architecture 4-layer onion |
 | 1.2 | 2025-02-09 | System | Added My Task Flow concept (Today, Upcoming, Recent), added Focus Timer as Phase 3, updated terminology (Todo→Task, subtask→SubTask), added Note and IsFocused fields |

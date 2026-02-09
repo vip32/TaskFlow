@@ -131,7 +131,12 @@ public class Project
             throw new InvalidOperationException("Task is already in this project.");
         }
 
+        var nextSortOrder = this.tasks.Count == 0
+            ? 0
+            : this.tasks.Max(existing => existing.SortOrder) + 1;
+
         task.MoveToProject(this.Id);
+        task.SetSortOrder(nextSortOrder);
         this.tasks.Add(task);
     }
 

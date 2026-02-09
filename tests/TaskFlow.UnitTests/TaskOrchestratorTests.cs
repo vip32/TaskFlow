@@ -48,6 +48,27 @@ public class TaskOrchestratorTests
     }
 
     /// <summary>
+    /// Verifies newly created project task gets next persisted sort order.
+    /// </summary>
+    [Fact]
+    public async global::System.Threading.Tasks.Task CreateAsync_ExistingProjectTasks_AssignsNextSortOrder()
+    {
+        var subscription = CreateSubscription();
+        var projectId = Guid.NewGuid();
+        var existing = new DomainTask(subscription.Id, "Existing", projectId);
+        existing.SetSortOrder(3);
+
+        var accessor = new FakeCurrentSubscriptionAccessor(subscription);
+        var repository = new FakeTaskRepository(existing);
+        var historyRepository = new FakeTaskHistoryRepository();
+        var orchestrator = new TaskOrchestrator(repository, historyRepository, accessor);
+
+        var created = await orchestrator.CreateAsync(projectId, "New", TaskPriority.Medium, string.Empty);
+
+        Assert.Equal(4, created.SortOrder);
+    }
+
+    /// <summary>
     /// Verifies title updates persist immediately.
     /// </summary>
     [Fact]
@@ -94,6 +115,51 @@ public class TaskOrchestratorTests
         Assert.Contains(tasks, task => task.Id == markedToday.Id);
     }
 
+    /// <summary>
+    /// Verifies project task reorder persists requested order.
+    /// </summary>
+    [Fact]
+    public async global::System.Threading.Tasks.Task ReorderProjectTasksAsync_ValidOrder_PersistsSortOrder()
+    {
+        var subscription = CreateSubscription();
+        var projectId = Guid.NewGuid();
+
+        var first = new DomainTask(subscription.Id, "First", projectId);
+        var second = new DomainTask(subscription.Id, "Second", projectId);
+        first.SetSortOrder(0);
+        second.SetSortOrder(1);
+
+        var accessor = new FakeCurrentSubscriptionAccessor(subscription);
+        var repository = new FakeTaskRepository(first, second);
+        var historyRepository = new FakeTaskHistoryRepository();
+        var orchestrator = new TaskOrchestrator(repository, historyRepository, accessor);
+
+        var reordered = await orchestrator.ReorderProjectTasksAsync(projectId, [second.Id, first.Id]);
+
+        Assert.Equal(second.Id, reordered[0].Id);
+        Assert.Equal(0, reordered[0].SortOrder);
+        Assert.Equal(1, reordered[1].SortOrder);
+    }
+
+    /// <summary>
+    /// Verifies moving a subtask directly is rejected.
+    /// </summary>
+    [Fact]
+    public async global::System.Threading.Tasks.Task MoveToProjectAsync_SubTask_ThrowsInvalidOperationException()
+    {
+        var subscription = CreateSubscription();
+        var parent = new DomainTask(subscription.Id, "Parent", Guid.NewGuid());
+        var child = new DomainTask(subscription.Id, "Child", parent.ProjectId);
+        parent.AddSubTask(child);
+
+        var accessor = new FakeCurrentSubscriptionAccessor(subscription);
+        var repository = new FakeTaskRepository(parent, child);
+        var historyRepository = new FakeTaskHistoryRepository();
+        var orchestrator = new TaskOrchestrator(repository, historyRepository, accessor);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => orchestrator.MoveToProjectAsync(child.Id, Guid.NewGuid()));
+    }
+
     private static Subscription CreateSubscription()
     {
         var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true, "Europe/Berlin");
@@ -134,8 +200,33 @@ public class TaskOrchestratorTests
 
         public global::System.Threading.Tasks.Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
         {
-            var result = this.store.Values.Where(task => task.ProjectId == projectId).ToList();
+            var result = this.store.Values
+                .Where(task => task.ProjectId == projectId && task.ParentTaskId == Guid.Empty)
+                .OrderBy(task => task.SortOrder)
+                .ThenBy(task => task.CreatedAt)
+                .ToList();
             return global::System.Threading.Tasks.Task.FromResult(result);
+        }
+
+        public global::System.Threading.Tasks.Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
+        {
+            var result = this.store.Values
+                .Where(task => task.ParentTaskId == parentTaskId)
+                .OrderBy(task => task.SortOrder)
+                .ThenBy(task => task.CreatedAt)
+                .ToList();
+            return global::System.Threading.Tasks.Task.FromResult(result);
+        }
+
+        public global::System.Threading.Tasks.Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default)
+        {
+            var maxSortOrder = this.store.Values
+                .Where(task => task.ProjectId == projectId && task.ParentTaskId == parentTaskId)
+                .Select(task => (int?)task.SortOrder)
+                .DefaultIfEmpty(null)
+                .Max();
+
+            return global::System.Threading.Tasks.Task.FromResult(maxSortOrder.HasValue ? maxSortOrder.Value + 1 : 0);
         }
 
         public global::System.Threading.Tasks.Task<List<DomainTask>> GetByPriorityAsync(TaskPriority priority, Guid projectId, CancellationToken cancellationToken = default)
@@ -216,6 +307,18 @@ public class TaskOrchestratorTests
             this.UpdateCallCount++;
             this.store[task.Id] = task;
             return global::System.Threading.Tasks.Task.FromResult(task);
+        }
+
+        public global::System.Threading.Tasks.Task<List<DomainTask>> UpdateRangeAsync(IEnumerable<DomainTask> tasks, CancellationToken cancellationToken = default)
+        {
+            var updated = tasks.ToList();
+            foreach (var task in updated)
+            {
+                this.store[task.Id] = task;
+            }
+
+            this.UpdateCallCount++;
+            return global::System.Threading.Tasks.Task.FromResult(updated);
         }
 
         public global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)

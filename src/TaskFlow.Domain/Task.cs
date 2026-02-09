@@ -76,6 +76,11 @@ public class Task
     public DateTime CompletedAt { get; private set; }
 
     /// <summary>
+    /// Gets the persisted order position within either a project task list or sibling subtasks.
+    /// </summary>
+    public int SortOrder { get; private set; }
+
+    /// <summary>
     /// Gets a value indicating whether task has a due date.
     /// </summary>
     public bool HasDueDate { get; private set; }
@@ -157,6 +162,7 @@ public class Task
         this.Status = TaskStatus.New;
         this.CreatedAt = DateTime.UtcNow;
         this.CompletedAt = DateTime.MinValue;
+        this.SortOrder = 0;
         this.HasDueDate = false;
         this.DueDateLocal = DateOnly.MinValue;
         this.HasDueTime = false;
@@ -237,6 +243,11 @@ public class Task
             subTask.AssignToProject(this.ProjectId);
         }
 
+        var nextSortOrder = this.subTasks.Count == 0
+            ? 0
+            : this.subTasks.Max(existing => existing.SortOrder) + 1;
+        subTask.SetSortOrder(nextSortOrder);
+
         this.subTasks.Add(subTask);
     }
 
@@ -287,6 +298,20 @@ public class Task
     public void SetPriority(TaskPriority priority)
     {
         this.Priority = priority;
+    }
+
+    /// <summary>
+    /// Sets persisted list order position for this task.
+    /// </summary>
+    /// <param name="sortOrder">Zero-based position value.</param>
+    public void SetSortOrder(int sortOrder)
+    {
+        if (sortOrder < 0)
+        {
+            throw new ArgumentException("Sort order must be zero or greater.", nameof(sortOrder));
+        }
+
+        this.SortOrder = sortOrder;
     }
 
     /// <summary>

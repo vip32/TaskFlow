@@ -135,6 +135,7 @@ public class AppDbContext : DbContext
             entity.Property(t => t.ParentTaskId).IsRequired();
             entity.Property(t => t.CreatedAt).IsRequired();
             entity.Property(t => t.CompletedAt).IsRequired();
+            entity.Property(t => t.SortOrder).IsRequired();
             entity.Property(t => t.HasDueDate).IsRequired();
             entity.Property(t => t.DueDateLocal).IsRequired();
             entity.Property(t => t.HasDueTime).IsRequired();
@@ -160,6 +161,7 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(t => new { t.SubscriptionId, t.ProjectId, t.CreatedAt });
+            entity.HasIndex(t => new { t.SubscriptionId, t.ProjectId, t.ParentTaskId, t.SortOrder });
             entity.HasIndex(t => new { t.SubscriptionId, t.DueDateLocal });
             entity.HasIndex(t => new { t.SubscriptionId, t.DueAtUtc });
         });

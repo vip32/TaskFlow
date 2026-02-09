@@ -18,6 +18,14 @@ public interface ITaskOrchestrator
     global::System.Threading.Tasks.Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets direct subtasks for one parent task.
+    /// </summary>
+    /// <param name="parentTaskId">Parent task identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Direct subtasks in persisted order.</returns>
+    global::System.Threading.Tasks.Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Searches tasks in a project.
     /// </summary>
     /// <param name="projectId">Project identifier.</param>
@@ -109,6 +117,24 @@ public interface ITaskOrchestrator
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
     global::System.Threading.Tasks.Task<DomainTask> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Persists custom ordering for top-level tasks in a project.
+    /// </summary>
+    /// <param name="projectId">Project identifier.</param>
+    /// <param name="orderedTaskIds">Ordered list of task identifiers.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Updated ordered tasks.</returns>
+    global::System.Threading.Tasks.Task<List<DomainTask>> ReorderProjectTasksAsync(Guid projectId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Persists custom ordering for direct subtasks under a parent task.
+    /// </summary>
+    /// <param name="parentTaskId">Parent task identifier.</param>
+    /// <param name="orderedTaskIds">Ordered list of subtask identifiers.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Updated ordered subtasks.</returns>
+    global::System.Threading.Tasks.Task<List<DomainTask>> ReorderSubTasksAsync(Guid parentTaskId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes project assignment from a task.

@@ -103,4 +103,33 @@ public class TaskDomainTests
         Assert.Equal(TaskReminderMode.DateOnlyFallbackTime, reminder.Mode);
         Assert.Equal(new TimeOnly(9, 0), reminder.FallbackLocalTime);
     }
+
+    /// <summary>
+    /// Verifies new subtasks receive incremental sibling sort order.
+    /// </summary>
+    [Fact]
+    public void AddSubTask_AppendsWithIncrementalSortOrder()
+    {
+        var subscriptionId = Guid.NewGuid();
+        var parent = new DomainTask(subscriptionId, "Parent", Guid.NewGuid());
+        var first = new DomainTask(subscriptionId, "First", parent.ProjectId);
+        var second = new DomainTask(subscriptionId, "Second", parent.ProjectId);
+
+        parent.AddSubTask(first);
+        parent.AddSubTask(second);
+
+        Assert.Equal(0, first.SortOrder);
+        Assert.Equal(1, second.SortOrder);
+    }
+
+    /// <summary>
+    /// Verifies sort order cannot be negative.
+    /// </summary>
+    [Fact]
+    public void SetSortOrder_Negative_ThrowsArgumentException()
+    {
+        var task = new DomainTask(Guid.NewGuid(), "Ordered", Guid.NewGuid());
+
+        Assert.Throws<ArgumentException>(() => task.SetSortOrder(-1));
+    }
 }

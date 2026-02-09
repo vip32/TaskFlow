@@ -15,6 +15,8 @@ All notable updates to TaskFlow are documented here.
 - Task reminder domain support with multiple reminders per task and two modes (`RelativeToDueDateTime`, `DateOnlyFallbackTime`).
 - New My Task Flow and task domain test coverage (`TaskDomainTests`, `MyTaskFlowSectionTests`, `MyTaskFlowSectionOrchestratorTests`).
 - Additional local tool manifest entry for `csharp-ls` in `dotnet-tools.json`.
+- Persisted ordering support for project tasks and subtasks with new reorder use cases (`FR2.10`, `FR3.6`) and traceability updates.
+- EF Core migration `AddTaskOrdering` for persisted `Task.SortOrder` and ordering index improvements.
 
 ### Changed
 - Subscription schedules now use `DateOnly` to avoid UTC date boundary issues.
@@ -28,6 +30,9 @@ All notable updates to TaskFlow are documented here.
 - Task orchestrator and repository interfaces were expanded for My Task Flow retrieval (`Recent`, `Today`, `This Week`, `Upcoming`) and due-date based queries.
 - EF Core model and migration snapshot now include My Task Flow section tables, reminder table, and additional task scheduling indexes.
 - Unit test suite increased to 26 passing tests after new domain/orchestrator coverage.
+- Task aggregate now includes persisted `SortOrder`; task and subtask creation paths assign next sibling order value.
+- Task orchestration and repository contracts now support project/subtask reordering and ordered retrieval.
+- Unit test suite increased to 31 passing tests after ordering coverage and domain invariant checks.
 
 ## [1.0.1] - 2026-02-09
 

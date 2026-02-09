@@ -35,6 +35,12 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
+    public global::System.Threading.Tasks.Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
+    {
+        return this.taskRepository.GetSubTasksAsync(parentTaskId, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public global::System.Threading.Tasks.Task<List<DomainTask>> SearchAsync(Guid projectId, string query, CancellationToken cancellationToken = default)
     {
         return this.taskRepository.SearchAsync(query, projectId, cancellationToken);
@@ -51,6 +57,8 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var task = new DomainTask(subscriptionId, title, projectId);
+        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(projectId, Guid.Empty, cancellationToken);
+        task.SetSortOrder(nextSortOrder);
         task.SetPriority(priority);
         task.UpdateNote(note);
         var created = await this.taskRepository.AddAsync(task, cancellationToken);
@@ -63,6 +71,8 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var task = new DomainTask(subscriptionId, title, Guid.Empty);
+        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(Guid.Empty, Guid.Empty, cancellationToken);
+        task.SetSortOrder(nextSortOrder);
         task.SetPriority(priority);
         task.UpdateNote(note);
         var created = await this.taskRepository.AddAsync(task, cancellationToken);
@@ -116,15 +126,43 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     public async global::System.Threading.Tasks.Task<DomainTask> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
+        if (task.ParentTaskId != Guid.Empty)
+        {
+            throw new InvalidOperationException("Subtasks inherit parent project assignment and cannot be moved directly.");
+        }
+
+        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(newProjectId, Guid.Empty, cancellationToken);
         task.MoveToProject(newProjectId);
+        task.SetSortOrder(nextSortOrder);
         return await this.taskRepository.UpdateAsync(task, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> ReorderProjectTasksAsync(Guid projectId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default)
+    {
+        var tasks = await this.taskRepository.GetByProjectIdAsync(projectId, cancellationToken);
+        return await ReorderAsync(tasks, orderedTaskIds, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> ReorderSubTasksAsync(Guid parentTaskId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default)
+    {
+        var tasks = await this.taskRepository.GetSubTasksAsync(parentTaskId, cancellationToken);
+        return await ReorderAsync(tasks, orderedTaskIds, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async global::System.Threading.Tasks.Task<DomainTask> UnassignFromProjectAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
+        if (task.ParentTaskId != Guid.Empty)
+        {
+            throw new InvalidOperationException("Subtasks inherit parent project assignment and cannot be unassigned directly.");
+        }
+
+        var nextSortOrder = await this.taskRepository.GetNextSortOrderAsync(Guid.Empty, Guid.Empty, cancellationToken);
         task.UnassignFromProject();
+        task.SetSortOrder(nextSortOrder);
         return await this.taskRepository.UpdateAsync(task, cancellationToken);
     }
 
@@ -244,5 +282,49 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     {
         var subscription = this.currentSubscriptionAccessor.GetCurrentSubscription();
         return TimeZoneInfo.FindSystemTimeZoneById(subscription.TimeZoneId);
+    }
+
+    private async global::System.Threading.Tasks.Task<List<DomainTask>> ReorderAsync(List<DomainTask> tasks, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(orderedTaskIds);
+
+        if (orderedTaskIds.Count == 0)
+        {
+            return tasks.OrderBy(task => task.SortOrder).ThenBy(task => task.CreatedAt).ToList();
+        }
+
+        var duplicate = orderedTaskIds.GroupBy(id => id).FirstOrDefault(group => group.Count() > 1);
+        if (duplicate is not null)
+        {
+            throw new ArgumentException($"Task id '{duplicate.Key}' appears more than once in requested order.", nameof(orderedTaskIds));
+        }
+
+        var byId = tasks.ToDictionary(task => task.Id);
+        foreach (var taskId in orderedTaskIds)
+        {
+            if (!byId.ContainsKey(taskId))
+            {
+                throw new ArgumentException($"Task id '{taskId}' is not part of the target list.", nameof(orderedTaskIds));
+            }
+        }
+
+        var ordered = new List<DomainTask>(tasks.Count);
+        foreach (var taskId in orderedTaskIds)
+        {
+            ordered.Add(byId[taskId]);
+        }
+
+        var remaining = tasks
+            .Where(task => !orderedTaskIds.Contains(task.Id))
+            .OrderBy(task => task.SortOrder)
+            .ThenBy(task => task.CreatedAt);
+        ordered.AddRange(remaining);
+
+        for (var index = 0; index < ordered.Count; index++)
+        {
+            ordered[index].SetSortOrder(index);
+        }
+
+        return await this.taskRepository.UpdateRangeAsync(ordered, cancellationToken);
     }
 }
