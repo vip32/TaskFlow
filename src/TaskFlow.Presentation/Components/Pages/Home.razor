@@ -43,8 +43,10 @@
                        Color="@(isActive ? Color.Primary : Color.Default)"
                        Class="tf-sidebar-button"
                        OnClick="() => SelectProjectAsync(project.Id)">
+                <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
                 <span class="tf-project-dot" style="@($"background:{project.Color};")"></span>
-                @project.Name
+                <span class="tf-project-name">@project.Name</span>
+                <MudBadge Class="tf-project-count" Color="Color.Info" Content="@GetProjectTaskCount(project.Id)" />
             </MudButton>
         }
 
@@ -71,13 +73,30 @@
                 @if (selectedProject is not null)
                 {
                     <MudButton Variant="Variant.Outlined" OnClick="ToggleProjectViewAsync">@ViewToggleLabel</MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteProjectAsync">Delete Project</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteProjectDialog">Delete Project</MudButton>
                 }
             </MudStack>
         </header>
 
+        @if (selectedProject is not null)
+        {
+            <MudPaper Class="tf-project-editor" Elevation="0">
+                <MudTextField @bind-Value="editProjectName" Label="Project name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudTextField @bind-Value="editProjectColor" Label="Color" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudSelect T="string" @bind-Value="editProjectIcon" Label="Icon" Variant="Variant.Outlined" Dense="true">
+                    <MudSelectItem Value="@("folder")">Folder</MudSelectItem>
+                    <MudSelectItem Value="@("inbox")">Inbox</MudSelectItem>
+                    <MudSelectItem Value="@("work")">Work</MudSelectItem>
+                    <MudSelectItem Value="@("code")">Code</MudSelectItem>
+                    <MudSelectItem Value="@("flag")">Flag</MudSelectItem>
+                </MudSelect>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveProjectEditsAsync">Save Project</MudButton>
+            </MudPaper>
+        }
+
         <MudPaper Class="tf-filters" Elevation="0">
             <MudTextField @bind-Value="searchQuery"
+                          @ref="searchInputRef"
                           Placeholder="Search tasks"
                           Immediate="true"
                           DebounceInterval="150"
@@ -87,23 +106,23 @@
                           AdornmentIcon="@Icons.Material.Filled.Search" />
             <MudSelect T="TaskPriority?" @bind-Value="priorityFilter" Label="Priority" Variant="Variant.Outlined" Dense="true">
                 <MudSelectItem T="TaskPriority?" Value="null">All</MudSelectItem>
-                <MudSelectItem T="TaskPriority?" Value="TaskPriority.High">High</MudSelectItem>
-                <MudSelectItem T="TaskPriority?" Value="TaskPriority.Medium">Medium</MudSelectItem>
-                <MudSelectItem T="TaskPriority?" Value="TaskPriority.Low">Low</MudSelectItem>
+                <MudSelectItem T="TaskPriority?" Value="@TaskPriority.High">High</MudSelectItem>
+                <MudSelectItem T="TaskPriority?" Value="@TaskPriority.Medium">Medium</MudSelectItem>
+                <MudSelectItem T="TaskPriority?" Value="@TaskPriority.Low">Low</MudSelectItem>
             </MudSelect>
             <MudSelect T="DomainTaskStatus?" @bind-Value="statusFilter" Label="Status" Variant="Variant.Outlined" Dense="true">
                 <MudSelectItem T="DomainTaskStatus?" Value="null">All</MudSelectItem>
-                <MudSelectItem T="DomainTaskStatus?" Value="DomainTaskStatus.New">New</MudSelectItem>
-                <MudSelectItem T="DomainTaskStatus?" Value="DomainTaskStatus.InProgress">In Progress</MudSelectItem>
-                <MudSelectItem T="DomainTaskStatus?" Value="DomainTaskStatus.Paused">Paused</MudSelectItem>
-                <MudSelectItem T="DomainTaskStatus?" Value="DomainTaskStatus.Done">Done</MudSelectItem>
-                <MudSelectItem T="DomainTaskStatus?" Value="DomainTaskStatus.Cancelled">Cancelled</MudSelectItem>
+                <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.New">New</MudSelectItem>
+                <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.InProgress">In Progress</MudSelectItem>
+                <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.Paused">Paused</MudSelectItem>
+                <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.Done">Done</MudSelectItem>
+                <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.Cancelled">Cancelled</MudSelectItem>
             </MudSelect>
             <MudSelect T="SortMode" @bind-Value="sortMode" Label="Sort" Variant="Variant.Outlined" Dense="true">
-                <MudSelectItem Value="SortMode.CreatedDesc">Newest</MudSelectItem>
-                <MudSelectItem Value="SortMode.CreatedAsc">Oldest</MudSelectItem>
-                <MudSelectItem Value="SortMode.Priority">Priority</MudSelectItem>
-                <MudSelectItem Value="SortMode.Focused">Focused</MudSelectItem>
+                <MudSelectItem Value="@SortMode.CreatedDesc">Newest</MudSelectItem>
+                <MudSelectItem Value="@SortMode.CreatedAsc">Oldest</MudSelectItem>
+                <MudSelectItem Value="@SortMode.Priority">Priority</MudSelectItem>
+                <MudSelectItem Value="@SortMode.Focused">Focused</MudSelectItem>
             </MudSelect>
             <MudSwitch @bind-Value="showCompleted" Label="Show completed" Color="Color.Primary" />
             <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ClearCompletedAsync">Clear Completed</MudButton>
@@ -111,14 +130,15 @@
 
         <MudPaper Class="tf-create-row" Elevation="0">
             <MudTextField @bind-Value="newTaskTitle"
+                          @ref="newTaskInputRef"
                           Label="Create task"
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           OnKeyDown="HandleCreateTaskKeyDown" />
             <MudSelect T="TaskPriority" @bind-Value="newTaskPriority" Label="Priority" Variant="Variant.Outlined" Dense="true">
-                <MudSelectItem Value="TaskPriority.High">High</MudSelectItem>
-                <MudSelectItem Value="TaskPriority.Medium">Medium</MudSelectItem>
-                <MudSelectItem Value="TaskPriority.Low">Low</MudSelectItem>
+                <MudSelectItem Value="@TaskPriority.High">High</MudSelectItem>
+                <MudSelectItem Value="@TaskPriority.Medium">Medium</MudSelectItem>
+                <MudSelectItem Value="@TaskPriority.Low">Low</MudSelectItem>
             </MudSelect>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateTaskAsync">Add</MudButton>
         </MudPaper>
@@ -203,9 +223,23 @@
             <MudText Typo="Typo.h6">Keyboard shortcuts</MudText>
             <p>Ctrl/Cmd + Enter: complete selected task</p>
             <p>Delete: delete selected task</p>
-            <p>Ctrl/Cmd + N: create task</p>
+            <p>Ctrl/Cmd + N: focus new task</p>
             <p>Ctrl/Cmd + F: focus search</p>
             <p>Ctrl/Cmd + /: toggle this help</p>
+        </MudPaper>
+    </div>
+}
+
+@if (showDeleteProjectDialog)
+{
+    <div class="tf-shortcuts-backdrop" @onclick="CloseDeleteProjectDialog">
+        <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true">
+            <MudText Typo="Typo.h6">Delete this project?</MudText>
+            <p>This will remove the project and its tasks.</p>
+            <MudStack Row="true" Spacing="1" Class="mt-3">
+                <MudButton Variant="Variant.Outlined" OnClick="CloseDeleteProjectDialog">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteProjectAsync">Delete</MudButton>
+            </MudStack>
         </MudPaper>
     </div>
 }
@@ -222,6 +256,7 @@
     private readonly DomainTaskStatus[] boardStatuses = [DomainTaskStatus.New, DomainTaskStatus.InProgress, DomainTaskStatus.Paused, DomainTaskStatus.Done, DomainTaskStatus.Cancelled];
     private readonly Dictionary<Guid, List<TaskFlow.Domain.Task>> subTasksByParent = [];
     private readonly Dictionary<Guid, string> newSubTaskTitles = [];
+    private readonly Dictionary<Guid, int> projectTaskCounts = [];
 
     private List<Project> projects = [];
     private List<MyTaskFlowSection> myTaskFlowSections = [];
@@ -230,6 +265,9 @@
     private Guid? selectedSectionId;
     private Guid? selectedTaskId;
     private string newProjectName = string.Empty;
+    private string editProjectName = string.Empty;
+    private string editProjectColor = "#2D9CFF";
+    private string editProjectIcon = "folder";
     private string newTaskTitle = string.Empty;
     private TaskPriority newTaskPriority = TaskPriority.Medium;
     private string searchQuery = string.Empty;
@@ -237,11 +275,14 @@
     private DomainTaskStatus? statusFilter;
     private bool showCompleted;
     private bool showShortcuts;
+    private bool showDeleteProjectDialog;
     private SortMode sortMode = SortMode.CreatedDesc;
     private TimeSpan timerRemaining = TimeSpan.FromMinutes(25);
     private bool timerRunning;
     private PeriodicTimer timer = null!;
     private CancellationTokenSource timerCts = null!;
+    private MudTextField<string> newTaskInputRef;
+    private MudTextField<string> searchInputRef;
 
     private Project selectedProject => this.selectedProjectId.HasValue ? this.projects.FirstOrDefault(p => p.Id == this.selectedProjectId.Value) : null;
 
@@ -288,7 +329,7 @@
             {
                 SortMode.CreatedAsc => query.OrderBy(task => task.CreatedAt),
                 SortMode.Priority => query.OrderByDescending(task => task.Priority).ThenByDescending(task => task.CreatedAt),
-                SortMode.Focused => query.OrderByDescending(task => task.IsFocused).ThenBy(task => task.SortOrder).ThenByDescending(task => task.CreatedAt),
+                SortMode.Focused => query.Where(task => task.IsFocused).OrderByDescending(task => task.CreatedAt),
                 _ => query.OrderByDescending(task => task.CreatedAt),
             };
 
@@ -303,8 +344,9 @@
 
     private async Task ReloadAllAsync()
     {
-        this.projects = await this.ProjectOrchestrator.GetAllAsync();
+        this.projects = (await this.ProjectOrchestrator.GetAllAsync()).OrderBy(project => project.CreatedAt).ToList();
         this.myTaskFlowSections = await this.MyTaskFlowSectionOrchestrator.GetAllAsync();
+        await RecalculateProjectTaskCountsAsync();
 
         if (!this.selectedProjectId.HasValue && !this.selectedSectionId.HasValue)
         {
@@ -314,6 +356,11 @@
         if (this.selectedProjectId.HasValue)
         {
             await LoadProjectTasksAsync(this.selectedProjectId.Value);
+            var currentProject = this.projects.FirstOrDefault(project => project.Id == this.selectedProjectId.Value);
+            if (currentProject is not null)
+            {
+                SetProjectEditor(currentProject);
+            }
         }
         else if (this.selectedSectionId.HasValue)
         {
@@ -325,6 +372,12 @@
     {
         this.selectedProjectId = projectId;
         this.selectedSectionId = null;
+        var project = this.projects.FirstOrDefault(item => item.Id == projectId);
+        if (project is not null)
+        {
+            SetProjectEditor(project);
+        }
+
         await LoadProjectTasksAsync(projectId);
     }
 
@@ -369,6 +422,29 @@
         this.Snackbar.Add("Project created.", Severity.Success);
     }
 
+    private async Task SaveProjectEditsAsync()
+    {
+        if (this.selectedProject is null)
+        {
+            return;
+        }
+
+        await this.ProjectOrchestrator.UpdateNameAsync(this.selectedProject.Id, this.editProjectName);
+        await this.ProjectOrchestrator.UpdateVisualsAsync(this.selectedProject.Id, this.editProjectColor, this.editProjectIcon);
+        await ReloadAllAsync();
+        this.Snackbar.Add("Project updated.", Severity.Success);
+    }
+
+    private void OpenDeleteProjectDialog()
+    {
+        this.showDeleteProjectDialog = true;
+    }
+
+    private void CloseDeleteProjectDialog()
+    {
+        this.showDeleteProjectDialog = false;
+    }
+
     private async Task DeleteProjectAsync()
     {
         if (this.selectedProject is null || this.selectedProject.IsDefault)
@@ -379,6 +455,7 @@
 
         await this.ProjectOrchestrator.DeleteAsync(this.selectedProject.Id);
         this.selectedProjectId = null;
+        this.showDeleteProjectDialog = false;
         await ReloadAllAsync();
         this.Snackbar.Add("Project deleted.", Severity.Info);
     }
@@ -549,6 +626,78 @@
         return this.FilteredTasks.Where(task => task.Status == status).ToList();
     }
 
+    private async Task RecalculateProjectTaskCountsAsync()
+    {
+        this.projectTaskCounts.Clear();
+        foreach (var project in this.projects)
+        {
+            var projectTasks = await this.TaskOrchestrator.GetByProjectIdAsync(project.Id);
+            var count = projectTasks.Count(task => !task.IsCompleted);
+            foreach (var task in projectTasks)
+            {
+                var subtasks = await this.TaskOrchestrator.GetSubTasksAsync(task.Id);
+                count += subtasks.Count(subTask => !subTask.IsCompleted);
+            }
+
+            this.projectTaskCounts[project.Id] = count;
+        }
+    }
+
+    private int GetProjectTaskCount(Guid projectId)
+    {
+        return this.projectTaskCounts.TryGetValue(projectId, out var count) ? count : 0;
+    }
+
+    private void SetProjectEditor(Project project)
+    {
+        this.editProjectName = project.Name;
+        this.editProjectColor = project.Color;
+        this.editProjectIcon = project.Icon;
+    }
+
+    private string ResolveProjectIcon(string icon)
+    {
+        return icon?.ToLowerInvariant() switch
+        {
+            "inbox" => Icons.Material.Filled.Inbox,
+            "work" => Icons.Material.Filled.Work,
+            "code" => Icons.Material.Filled.Code,
+            "flag" => Icons.Material.Filled.Flag,
+            _ => Icons.Material.Filled.Folder,
+        };
+    }
+
+    private static string PriorityColor(TaskPriority priority)
+    {
+        return priority switch
+        {
+            TaskPriority.High => "#FF6B6B",
+            TaskPriority.Medium => "#F57C00",
+            _ => "#10B981",
+        };
+    }
+
+    private static string RelativeTime(DateTime value)
+    {
+        var delta = DateTime.UtcNow - value;
+        if (delta.TotalMinutes < 1)
+        {
+            return "just now";
+        }
+
+        if (delta.TotalHours < 1)
+        {
+            return $"{Math.Floor(delta.TotalMinutes)}m ago";
+        }
+
+        if (delta.TotalDays < 1)
+        {
+            return $"{Math.Floor(delta.TotalHours)}h ago";
+        }
+
+        return $"{Math.Floor(delta.TotalDays)}d ago";
+    }
+
     private string GetNewSubTaskTitle(Guid parentTaskId)
     {
         return this.newSubTaskTitles.TryGetValue(parentTaskId, out var value) ? value : string.Empty;
@@ -579,14 +728,14 @@
             contentBuilder.OpenComponent<MudIconButton>(contentSequence++);
             contentBuilder.AddAttribute(contentSequence++, "Icon", task.IsFocused ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin);
             contentBuilder.AddAttribute(contentSequence++, "Color", task.IsFocused ? Color.Success : Color.Default);
-            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create(this, async () => await ToggleFocusAsync(task)));
+            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ToggleFocusAsync(task)));
             contentBuilder.CloseComponent();
 
             contentBuilder.OpenComponent<MudTextField<string>>(contentSequence++);
             contentBuilder.AddAttribute(contentSequence++, "Value", task.Title);
             contentBuilder.AddAttribute(contentSequence++, "ValueChanged", EventCallback.Factory.Create<string>(this, async value => await UpdateTitleAsync(task, value)));
             contentBuilder.AddAttribute(contentSequence++, "Variant", Variant.Text);
-            contentBuilder.AddAttribute(contentSequence++, "Class", "tf-task-title");
+            contentBuilder.AddAttribute(contentSequence++, "Class", task.IsCompleted ? "tf-task-title tf-task-title-done" : "tf-task-title");
             contentBuilder.CloseComponent();
 
             contentBuilder.OpenComponent<MudSelect<TaskPriority>>(contentSequence++);
@@ -635,18 +784,18 @@
             contentBuilder.OpenComponent<MudIconButton>(contentSequence++);
             contentBuilder.AddAttribute(contentSequence++, "Icon", Icons.Material.Filled.Today);
             contentBuilder.AddAttribute(contentSequence++, "Color", task.IsMarkedForToday ? Color.Warning : Color.Default);
-            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create(this, async () => await ToggleTodayMarkAsync(task)));
+            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ToggleTodayMarkAsync(task)));
             contentBuilder.CloseComponent();
 
             contentBuilder.OpenComponent<MudIconButton>(contentSequence++);
             contentBuilder.AddAttribute(contentSequence++, "Icon", Icons.Material.Filled.ContentCopy);
-            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create(this, async () => await DuplicateTaskAsync(task)));
+            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await DuplicateTaskAsync(task)));
             contentBuilder.CloseComponent();
 
             contentBuilder.OpenComponent<MudIconButton>(contentSequence++);
             contentBuilder.AddAttribute(contentSequence++, "Icon", Icons.Material.Filled.Delete);
             contentBuilder.AddAttribute(contentSequence++, "Color", Color.Error);
-            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create(this, async () => await DeleteTaskAsync(task)));
+            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await DeleteTaskAsync(task)));
             contentBuilder.CloseComponent();
         }));
         builder.CloseComponent();
@@ -658,6 +807,27 @@
         builder.AddAttribute(sequence++, "Lines", 2);
         builder.AddAttribute(sequence++, "ValueChanged", EventCallback.Factory.Create<string>(this, async value => await UpdateNoteAsync(task, value)));
         builder.CloseComponent();
+
+        builder.OpenElement(sequence++, "div");
+        builder.AddAttribute(sequence++, "class", "tf-task-meta");
+        builder.OpenElement(sequence++, "span");
+        builder.AddAttribute(sequence++, "class", "tf-task-meta-dot");
+        builder.AddAttribute(sequence++, "style", $"background:{PriorityColor(task.Priority)}");
+        builder.CloseElement();
+        builder.OpenElement(sequence++, "span");
+        builder.AddContent(sequence++, task.Priority.ToString());
+        builder.CloseElement();
+        builder.OpenElement(sequence++, "span");
+        builder.AddContent(sequence++, $"Created {RelativeTime(task.CreatedAt)}");
+        builder.CloseElement();
+        if (task.CompletedAt.HasValue)
+        {
+            builder.OpenElement(sequence++, "span");
+            builder.AddContent(sequence++, $"Completed {RelativeTime(task.CompletedAt.Value)}");
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
 
         builder.OpenComponent<MudSelect<Guid?>>(sequence++);
         builder.AddAttribute(sequence++, "Value", task.ProjectId);
@@ -714,7 +884,18 @@
 
         if ((args.CtrlKey || args.MetaKey) && args.Key.Equals("n", StringComparison.OrdinalIgnoreCase))
         {
-            await CreateTaskAsync();
+            if (this.newTaskInputRef is not null)
+            {
+                await this.newTaskInputRef.FocusAsync();
+            }
+        }
+
+        if ((args.CtrlKey || args.MetaKey) && args.Key.Equals("f", StringComparison.OrdinalIgnoreCase))
+        {
+            if (this.searchInputRef is not null)
+            {
+                await this.searchInputRef.FocusAsync();
+            }
         }
 
         if ((args.CtrlKey || args.MetaKey) && args.Key == "/")

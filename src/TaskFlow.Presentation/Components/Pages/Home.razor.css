@@ -50,6 +50,15 @@
     min-height: 44px;
 }
 
+.tf-project-name {
+    flex: 1;
+    text-align: left;
+}
+
+.tf-project-count {
+    margin-left: auto;
+}
+
 .tf-project-dot {
     width: 10px;
     height: 10px;
@@ -62,10 +71,11 @@
 }
 
 .tf-main {
-    padding: 1.2rem;
+    padding: 1.5rem;
     display: grid;
     align-content: start;
-    gap: 0.9rem;
+    gap: 1rem;
+    max-width: 1320px;
 }
 
 .tf-toolbar {
@@ -81,11 +91,12 @@
 
 .tf-filters,
 .tf-create-row,
+.tf-project-editor,
 .tf-focus-timer {
     display: grid;
-    grid-template-columns: repeat(6, minmax(120px, 1fr));
+    grid-template-columns: repeat(6, minmax(140px, 1fr));
     gap: 0.75rem;
-    padding: 0.85rem;
+    padding: 1rem;
     border: 1px solid #3b404a;
     border-radius: 12px;
     background: rgba(27, 30, 36, 0.85);
@@ -93,6 +104,10 @@
 
 .tf-create-row {
     grid-template-columns: 1fr 180px 96px;
+}
+
+.tf-project-editor {
+    grid-template-columns: 1fr 180px 180px 140px;
 }
 
 .tf-list {
@@ -104,7 +119,7 @@
 .tf-subtask {
     border: 1px solid #3b404a;
     border-radius: 12px;
-    padding: 0.65rem;
+    padding: 0.85rem;
     background: rgba(42, 46, 54, 0.72);
 }
 
@@ -117,6 +132,26 @@
 
 .tf-task-title {
     min-width: 200px;
+}
+
+.tf-task-title-done {
+    opacity: 0.65;
+    text-decoration: line-through;
+}
+
+.tf-task-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: #b7bdc8;
+    font-size: 0.76rem;
+    margin-top: 0.35rem;
+}
+
+.tf-task-meta-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
 }
 
 .tf-subtask-input {
@@ -162,6 +197,11 @@
     background: #1b1e24;
 }
 
+.tf-shortcuts-dialog p {
+    margin: 0.45rem 0;
+    color: #c7ccd5;
+}
+
 .tf-shortcuts-backdrop {
     position: fixed;
     inset: 0;
@@ -184,6 +224,10 @@
     }
 
     .tf-create-row {
+        grid-template-columns: 1fr;
+    }
+
+    .tf-project-editor {
         grid-template-columns: 1fr;
     }
 

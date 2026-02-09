@@ -388,8 +388,8 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 1.35 | Update `Layout/MainLayout.razor` with dark theme + sidebar layout | 20 min | 0.17 | Done |
 | 1.36 | Create `Presentation/Components/Sidebar/ProjectSidebar.razor` with project list | 25 min | 0.35, 1.29 | Done |
 | 1.37 | Add project color badges in sidebar items | 10 min | 1.36 | Done |
-| 1.38 | Add project icon support (MudBlazor icons) | 10 min | 1.36 | Pending |
-| 1.39 | Add task count badge on each project item | 10 min | 1.36, 1.31 | Pending |
+| 1.38 | Add project icon support (MudBlazor icons) | 10 min | 1.36 | Done |
+| 1.39 | Add task count badge on each project item | 10 min | 1.36, 1.31 | Done |
 | 1.40 | Implement active project highlighting | 5 min | 1.36 | Done |
 | 1.41 | Add "Add Project" button in sidebar | 5 min | 1.36 | Done |
 | 1.42 | Make sidebar responsive (collapsible on mobile, 250px on desktop) | 15 min | 1.36 | Done |
@@ -403,8 +403,8 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [x] MainLayout with dark theme and sidebar
 - [x] ProjectSidebar with project list
 - [x] Project color badges displayed
-- [ ] Project icons displayed
-- [ ] Task count badges working
+- [x] Project icons displayed
+- [x] Task count badges working
 - [x] Active project highlighted
 - [x] Add Project button functional
 - [x] Sidebar responsive (mobile hamburger, desktop 250px)
@@ -434,7 +434,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 1.62 | Implement duplicate task action | 10 min | 1.56, 1.28 | Done |
 | 1.63 | Implement move to project selector | 10 min | 1.56, 1.29 | Done |
 | 1.64 | Implement focus pin button | 5 min | 1.56, 1.32 | Done |
-| 1.65 | Add CreatedAt and CompletedAt timestamps | 10 min | 1.56 | Pending |
+| 1.65 | Add CreatedAt and CompletedAt timestamps | 10 min | 1.56 | Done |
 | 1.66 | Add visual indicator for recently completed tasks | 5 min | 1.56 | Pending |
 | 1.67 | Implement empty state component | 10 min | 1.56 | Done |
 
@@ -456,7 +456,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [x] Duplicate task working
 - [x] Move to project working
 - [x] Focus pin working
-- [ ] Timestamps displayed
+- [x] Timestamps displayed
 - [x] Empty state displayed
 
 #### Phase 1F: Keyboard Shortcuts (8 tasks)
@@ -466,8 +466,8 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 1.68 | Implement keyboard shortcut handler service | 10 min | 1.33 | Done |
 | 1.69 | Add Ctrl/Cmd + Enter shortcut (complete selected task) | 5 min | 1.68, 1.30 | Done |
 | 1.70 | Add Delete shortcut (delete selected task) | 5 min | 1.68, 1.61 | Done |
-| 1.71 | Add Ctrl/Cmd + N shortcut (focus new task input) | 5 min | 1.68, 1.55 | Pending |
-| 1.72 | Add Ctrl/Cmd + F shortcut (focus search input) | 5 min | 1.68, 1.50 | Pending |
+| 1.71 | Add Ctrl/Cmd + N shortcut (focus new task input) | 5 min | 1.68, 1.55 | Done |
+| 1.72 | Add Ctrl/Cmd + F shortcut (focus search input) | 5 min | 1.68, 1.50 | Done |
 | 1.73 | Add Ctrl/Cmd + P shortcut (toggle focus pin) | 5 min | 1.68, 1.64 | Pending |
 | 1.74 | Add Ctrl/Cmd + Z shortcut (undo last action) | 10 min | 1.68 | Pending |
 | 1.75 | Add Ctrl/Cmd + / shortcut (show keyboard shortcuts help) | 10 min | 1.68 | Done |
@@ -476,8 +476,8 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [x] Keyboard shortcut handler implemented
 - [x] Ctrl/Cmd + Enter: Complete task
 - [x] Delete: Delete task
-- [ ] Ctrl/Cmd + N: Focus new task
-- [ ] Ctrl/Cmd + F: Focus search
+- [x] Ctrl/Cmd + N: Focus new task
+- [x] Ctrl/Cmd + F: Focus search
 - [ ] Ctrl/Cmd + P: Toggle focus pin
 - [ ] Ctrl/Cmd + Z: Undo
 - [x] Ctrl/Cmd + /: Show help
@@ -725,10 +725,10 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
 | 3.11 | Create `Domain/Entities/FocusSession.cs` aggregate | 10 min | Phase 1B | Done |
-| 3.12 | Update `Infrastructure/Data/AppDbContext.cs` - Add FocusSession DbSet | 5 min | 3.11 | Pending |
-| 3.13 | Create `Domain/Interfaces/IFocusSessionRepository.cs` | 5 min | 3.11 | Pending |
-| 3.14 | Create `Infrastructure/Data/Repositories/FocusSessionRepository.cs` | 10 min | 3.13 | Pending |
-| 3.15 | Create `Application/Orchestrators/FocusTimerOrchestrator.cs` | 15 min | 3.14 | Pending |
+| 3.12 | Update `Infrastructure/Data/AppDbContext.cs` - Add FocusSession DbSet | 5 min | 3.11 | Done |
+| 3.13 | Create `Domain/Interfaces/IFocusSessionRepository.cs` | 5 min | 3.11 | Done |
+| 3.14 | Create `Infrastructure/Data/Repositories/FocusSessionRepository.cs` | 10 min | 3.13 | Done |
+| 3.15 | Create `Application/Orchestrators/FocusTimerOrchestrator.cs` | 15 min | 3.14 | Done |
 | 3.16 | Implement Pomodoro timer logic (25/5/15/5 cycles) | 15 min | 3.15 | Pending |
 | 3.17 | Add timer configuration (custom durations, sounds) | 10 min | 3.15 | Pending |
 | 3.18 | Implement sound notifications for timer events | 10 min | 3.15 | Pending |
@@ -737,10 +737,10 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 **Phase 3B Checklist**:
 - [x] FocusSession aggregate created
-- [ ] DbContext includes FocusSession
-- [ ] IFocusSessionRepository created
-- [ ] FocusSessionRepository implemented
-- [ ] FocusTimerOrchestrator created
+- [x] DbContext includes FocusSession
+- [x] IFocusSessionRepository created
+- [x] FocusSessionRepository implemented
+- [x] FocusTimerOrchestrator created
 - [ ] Pomodoro timer logic working
 - [ ] Timer configuration functional
 - [ ] Sound notifications working
