@@ -4,6 +4,18 @@ All notable updates to TaskFlow are documented here.
 
 ## [Unreleased]
 
+### Added
+- Subscription domain model baseline with schedules and tiers (`Free`, `Plus`, `Pro`) plus current subscription accessor.
+- Infrastructure persistence baseline: `AppDbContext`, repositories, initial migration, and initial data seeding.
+- Application orchestration baseline: `IProjectOrchestrator` and `ITaskOrchestrator` with immediate-persistence operations.
+- New domain and orchestrator unit tests (13 tests total passing).
+
+### Changed
+- Subscription schedules now use `DateOnly` to avoid UTC date boundary issues.
+- Repository contracts and implementations are scoped through current subscription context accessor.
+- Presentation startup now wires both application and infrastructure dependency registration.
+- Presentation logging switched to Serilog with console and rolling file outputs.
+
 ## [1.0.1] - 2026-02-09
 
 ### Added

@@ -55,9 +55,9 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [x] Shared build settings centralized (`Directory.Build.props`).
 
 #### In Progress / Deferred
-- [ ] Phase 0C Infrastructure implementation (DbContext, repositories, seeding).
-- [ ] Phase 0D Application orchestrators.
-- [ ] Phase 0E DI registration and startup composition.
+- [x] Phase 0C Infrastructure implementation (DbContext, repositories, migrations, seeding).
+- [x] Phase 0D Application orchestrators.
+- [x] Phase 0E DI registration and startup composition baseline (application and infrastructure registrations wired in `Program.cs`).
 - [ ] Tailscale-related deployment steps are intentionally deferred for now.
 
 ---

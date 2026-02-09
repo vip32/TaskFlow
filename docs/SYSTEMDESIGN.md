@@ -35,17 +35,21 @@ TaskFlow is a task management application built with Blazor Server, providing us
 
 ### Current Implementation Snapshot (2026-02-09)
 
-The repository currently contains the foundational architecture and build pipeline:
+The repository currently contains the foundational architecture, persistence baseline, and application orchestration baseline:
 
 - **Solution and projects created**: `TaskFlow.sln` with `TaskFlow.Domain`, `TaskFlow.Application`, `TaskFlow.Infrastructure`, `TaskFlow.Presentation`, and `TaskFlow.UnitTests`.
 - **Project references wired**: `Presentation -> Application, Infrastructure`, `Application -> Domain`, `Infrastructure -> Domain`, tests reference `Domain` and `Application`.
-- **Domain baseline implemented**: `Project`, `Task`, and `FocusSession` aggregates plus value enums and repository interfaces.
+- **Domain baseline implemented**: `Project`, `Task`, `FocusSession`, `Subscription`, and `SubscriptionSchedule` aggregates plus value enums and repository interfaces.
+- **Subscription model baseline**: each user is expected to operate within one current subscription context, with subscription schedules and tiers (`Free`, `Plus`, `Pro`).
+- **Infrastructure baseline implemented (0C)**: `AppDbContext`, EF Core mappings, repositories using `IDbContextFactory`, migration baseline, and initial data seeding.
+- **Application baseline implemented (0D)**: project and task orchestrators provide immediate-persistence use-case methods for create/update operations.
 - **Nullable annotations policy in code**: Nullable reference type annotations are disabled for this codebase; public APIs avoid nullable reference annotations.
 - **Build configuration centralized**: `Directory.Build.props` configures language/features, warning policy, and MinVer integration.
 - **NuGet versions centralized**: `Directory.Packages.props` enables central package management.
 - **Versioning baseline set**: Local tool manifest (`dotnet-tools.json`) includes `minver-cli`; build integrates MinVer for tag-based versioning.
 - **CI baseline added**: `.github/workflows/build.yml` restores, builds, tests, and builds the container image (without push).
 - **Container build baseline added**: Root `Dockerfile` publishes and runs `TaskFlow.Presentation`.
+- **Logging baseline added**: Serilog is configured for console and rolling file sinks in presentation app settings.
 
 ---
 

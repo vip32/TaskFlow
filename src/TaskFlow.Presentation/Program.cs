@@ -1,4 +1,5 @@
 using Serilog;
+using TaskFlow.Application;
 using TaskFlow.Presentation.Components;
 using TaskFlow.Infrastructure;
 
@@ -15,6 +16,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddTaskFlowApplication();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
