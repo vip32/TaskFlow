@@ -53,6 +53,9 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [x] MinVer local tool manifest added and MinVer wired into build.
 - [x] Central package management enabled (`Directory.Packages.props`).
 - [x] Shared build settings centralized (`Directory.Build.props`).
+- [x] Domain refinements added: subscription deactivation, expanded task statuses, project note, and tags on projects/tasks/subtasks.
+- [x] Task history model/repository added for fast title autocomplete and autofill scenarios.
+- [x] Injectio integrated for attribute-driven DI registration of obvious services.
 
 #### In Progress / Deferred
 - [x] Phase 0C Infrastructure implementation (DbContext, repositories, migrations, seeding).
