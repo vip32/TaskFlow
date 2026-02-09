@@ -81,6 +81,20 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
+    public async Task<DomainTask> CreateSubTaskAsync(Guid parentTaskId, string title, TaskPriority priority, string note, CancellationToken cancellationToken = default)
+    {
+        var parent = await this.taskRepository.GetByIdAsync(parentTaskId, cancellationToken);
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        var subTask = new DomainTask(subscriptionId, title, parent.ProjectId);
+        parent.AddSubTask(subTask);
+        subTask.SetPriority(priority);
+        subTask.UpdateNote(note);
+        var created = await this.taskRepository.AddAsync(subTask, cancellationToken);
+        await this.taskHistoryRepository.RegisterUsageAsync(created.Title, true, cancellationToken);
+        return created;
+    }
+
+    /// <inheritdoc/>
     public async Task<DomainTask> UpdateTitleAsync(Guid taskId, string newTitle, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);

@@ -66,6 +66,17 @@ public interface ITaskOrchestrator
     Task<DomainTask> CreateUnassignedAsync(string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Creates a direct subtask under a parent task.
+    /// </summary>
+    /// <param name="parentTaskId">Parent task identifier.</param>
+    /// <param name="title">Subtask title.</param>
+    /// <param name="priority">Subtask priority.</param>
+    /// <param name="note">Optional subtask note.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created subtask.</returns>
+    Task<DomainTask> CreateSubTaskAsync(Guid parentTaskId, string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Updates task title and persists immediately.
     /// </summary>
     /// <param name="taskId">Task identifier.</param>

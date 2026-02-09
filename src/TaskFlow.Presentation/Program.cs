@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using MudBlazor.Services;
 using Serilog;
 using TaskFlow.Application;
 using TaskFlow.Presentation.Components;
@@ -19,6 +20,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
 
 builder.Services.AddTaskFlowApplicationServices();
 

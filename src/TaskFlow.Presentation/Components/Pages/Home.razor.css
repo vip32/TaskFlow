@@ -1,0 +1,193 @@
+.tf-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    background:
+        radial-gradient(circle at 15% 15%, rgba(91, 30, 207, 0.28), transparent 40%),
+        radial-gradient(circle at 85% 15%, rgba(31, 134, 255, 0.22), transparent 42%),
+        #111317;
+    color: #e9ecf1;
+}
+
+.tf-sidebar {
+    border-right: 1px solid #3b404a;
+    background: linear-gradient(180deg, rgba(42, 46, 54, 0.9), rgba(27, 30, 36, 0.95));
+    padding: 1.25rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.tf-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.tf-brand-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.tf-brand-subtitle {
+    font-size: 0.78rem;
+    color: #9fa6b2;
+}
+
+.tf-sidebar-caption {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9fa6b2;
+    margin-bottom: 0.5rem;
+}
+
+.tf-sidebar-button {
+    justify-content: flex-start;
+    margin-bottom: 0.35rem;
+    text-transform: none;
+    min-height: 44px;
+}
+
+.tf-project-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    margin-right: 0.6rem;
+}
+
+.tf-sidebar-input {
+    width: 100%;
+}
+
+.tf-main {
+    padding: 1.2rem;
+    display: grid;
+    align-content: start;
+    gap: 0.9rem;
+}
+
+.tf-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: rgba(27, 30, 36, 0.88);
+    border: 1px solid #3b404a;
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+}
+
+.tf-filters,
+.tf-create-row,
+.tf-focus-timer {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+    gap: 0.75rem;
+    padding: 0.85rem;
+    border: 1px solid #3b404a;
+    border-radius: 12px;
+    background: rgba(27, 30, 36, 0.85);
+}
+
+.tf-create-row {
+    grid-template-columns: 1fr 180px 96px;
+}
+
+.tf-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.tf-task,
+.tf-subtask {
+    border: 1px solid #3b404a;
+    border-radius: 12px;
+    padding: 0.65rem;
+    background: rgba(42, 46, 54, 0.72);
+}
+
+.tf-subtasks {
+    margin-top: 0.5rem;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.45rem;
+}
+
+.tf-task-title {
+    min-width: 200px;
+}
+
+.tf-subtask-input {
+    min-width: 180px;
+}
+
+.tf-empty {
+    border: 1px dashed #3b404a;
+    border-radius: 14px;
+    padding: 1.2rem;
+    text-align: center;
+    background: rgba(27, 30, 36, 0.62);
+}
+
+.tf-board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.tf-board-column {
+    border: 1px solid #3b404a;
+    border-radius: 12px;
+    background: rgba(27, 30, 36, 0.8);
+    padding: 0.6rem;
+    min-height: 260px;
+    display: grid;
+    gap: 0.55rem;
+    align-content: start;
+}
+
+.tf-focus-timer {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+}
+
+.tf-shortcuts-dialog {
+    width: min(560px, 92vw);
+    margin: 12vh auto;
+    padding: 1rem;
+    border: 1px solid #3b404a;
+    border-radius: 12px;
+    background: #1b1e24;
+}
+
+.tf-shortcuts-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 12, 16, 0.75);
+    z-index: 1200;
+}
+
+@media (max-width: 1024px) {
+    .tf-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .tf-sidebar {
+        position: relative;
+        height: auto;
+    }
+
+    .tf-filters {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .tf-create-row {
+        grid-template-columns: 1fr;
+    }
+
+    .tf-board {
+        grid-template-columns: 1fr;
+    }
+}

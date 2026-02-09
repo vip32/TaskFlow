@@ -20,7 +20,9 @@ public class MyTaskFlowSectionOrchestratorTests
 
         var todaySection = MyTaskFlowSection.CreateSystem(subscription.Id, "Today", 1, TaskFlowDueBucket.Today);
         var dueTask = new DomainTask(subscription.Id, "Due", Guid.NewGuid());
-        dueTask.SetDueDate(DateOnly.FromDateTime(DateTime.UtcNow));
+        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(subscription.TimeZoneId);
+        var todayLocal = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
+        dueTask.SetDueDate(todayLocal);
 
         var manualTask = new DomainTask(subscription.Id, "Manual", null);
         todaySection.IncludeTask(manualTask.Id);

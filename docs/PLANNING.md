@@ -248,14 +248,14 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 0.39 | Configure DI container - register application services as scoped | 10 min | 0.32, 0.33 | Done |
 | 0.40 | Configure DbContextFactory in DI container | 5 min | 0.27 | Done |
 | 0.41 | Configure Blazor Server with SignalR | 5 min | 0.27, 0.40 | Done |
-| 0.42 | Configure MudBlazor services in `Program.cs` | 10 min | 0.3, 0.40 | Pending |
+| 0.42 | Configure MudBlazor services in `Program.cs` | 10 min | 0.3, 0.40 | Done |
 
 **Phase 0E Checklist**:
 - [x] Repositories registered as scoped
 - [x] Application services registered as scoped
 - [x] DbContextFactory registered
 - [x] Blazor Server configured with SignalR
-- [ ] MudBlazor theme configured with custom Turquoise colors
+- [x] MudBlazor theme configured with custom Turquoise colors
 
 #### Phase 0F: Test Architecture Setup (5 tasks)
 
@@ -334,7 +334,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 1.14 | Register DbContext and services in `Program.cs` | 10 min | 1.11, 1.13 | Done |
 | 1.15 | Configure Blazor Server with SignalR | 5 min | 1.14 | Done |
 | 1.16 | Ensure database auto-creates on startup | 5 min | 1.14 | Done |
-| 1.17 | Configure MudBlazor services in `Program.cs` | 10 min | 1.3 | Pending |
+| 1.17 | Configure MudBlazor services in `Program.cs` | 10 min | 1.3 | Done |
 | 1.18 | Add keyboard shortcut handler service | 10 min | 1.17 | Pending |
 | 1.19 | Test database seeding on startup | 5 min | 1.16 | Pending |
 
@@ -348,7 +348,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [x] Services registered in DI container
 - [x] Blazor Server configured with SignalR
 - [x] Database auto-creates on first run
-- [ ] MudBlazor theme configured with custom Turquoise colors
+- [x] MudBlazor theme configured with custom Turquoise colors
 - [ ] Keyboard service added
 
 #### Phase 1C: Services Layer (15 tasks)
@@ -385,14 +385,14 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 1.35 | Update `Layout/MainLayout.razor` with dark theme + sidebar layout | 20 min | 0.17 | Pending |
-| 1.36 | Create `Presentation/Components/Sidebar/ProjectSidebar.razor` with project list | 25 min | 0.35, 1.29 | Pending |
-| 1.37 | Add project color badges in sidebar items | 10 min | 1.36 | Pending |
+| 1.35 | Update `Layout/MainLayout.razor` with dark theme + sidebar layout | 20 min | 0.17 | Done |
+| 1.36 | Create `Presentation/Components/Sidebar/ProjectSidebar.razor` with project list | 25 min | 0.35, 1.29 | Done |
+| 1.37 | Add project color badges in sidebar items | 10 min | 1.36 | Done |
 | 1.38 | Add project icon support (MudBlazor icons) | 10 min | 1.36 | Pending |
 | 1.39 | Add task count badge on each project item | 10 min | 1.36, 1.31 | Pending |
-| 1.40 | Implement active project highlighting | 5 min | 1.36 | Pending |
-| 1.41 | Add "Add Project" button in sidebar | 5 min | 1.36 | Pending |
-| 1.42 | Make sidebar responsive (collapsible on mobile, 250px on desktop) | 15 min | 1.36 | Pending |
+| 1.40 | Implement active project highlighting | 5 min | 1.36 | Done |
+| 1.41 | Add "Add Project" button in sidebar | 5 min | 1.36 | Done |
+| 1.42 | Make sidebar responsive (collapsible on mobile, 250px on desktop) | 15 min | 1.36 | Done |
 | 1.43 | Create `Presentation/Pages/Index.razor` for project management | 20 min | 1.35 | Pending |
 | 1.44 | Implement project list with edit/delete in Index.razor | 15 min | 1.43, 1.29 | Pending |
 | 1.45 | Implement add new project form | 15 min | 1.43, 1.29 | Pending |
@@ -400,14 +400,14 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 1.47 | Test project CRUD operations | 10 min | 1.44-1.46 | Pending |
 
 **Phase 1D Checklist**:
-- [ ] MainLayout with dark theme and sidebar
-- [ ] ProjectSidebar with project list
-- [ ] Project color badges displayed
+- [x] MainLayout with dark theme and sidebar
+- [x] ProjectSidebar with project list
+- [x] Project color badges displayed
 - [ ] Project icons displayed
 - [ ] Task count badges working
-- [ ] Active project highlighted
-- [ ] Add Project button functional
-- [ ] Sidebar responsive (mobile hamburger, desktop 250px)
+- [x] Active project highlighted
+- [x] Add Project button functional
+- [x] Sidebar responsive (mobile hamburger, desktop 250px)
 - [ ] Index page with project list
 - [ ] Project edit/delete working
 - [ ] Add project form functional
@@ -417,87 +417,87 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 1.48 | Create `Pages/Tasks.razor` with project tasks view | 20 min | 1.35, 1.22 | Pending |
-| 1.49 | Add project header with name and stats | 10 min | 1.48, 1.21 | Pending |
-| 1.50 | Implement search input with real-time filtering | 15 min | 1.48, 1.25 | Pending |
-| 1.51 | Implement sort dropdown (Created date / Priority / Focused) | 15 min | 1.48, 1.26 | Pending |
-| 1.52 | Implement show/hide completed toggle | 5 min | 1.48 | Pending |
-| 1.53 | Implement filter by priority dropdown | 10 min | 1.48 | Pending |
-| 1.54 | Implement "Clear All Completed" button | 10 min | 1.48, 1.27 | Pending |
-| 1.55 | Implement add new task input | 10 min | 1.48, 1.22 | Pending |
-| 1.56 | Create task list component in Todos.razor | 15 min | 1.48, 1.22 | Pending |
-| 1.57 | Implement in-line editing for task titles | 20 min | 1.56, 1.22 | Pending |
-| 1.58 | Implement priority dropdown with color coding | 10 min | 1.56 | Pending |
-| 1.59 | Implement task note display (expandable) | 15 min | 1.56 | Pending |
-| 1.60 | Implement complete checkbox | 5 min | 1.56, 1.30 | Pending |
-| 1.61 | Implement delete task button | 5 min | 1.56, 1.22 | Pending |
-| 1.62 | Implement duplicate task action | 10 min | 1.56, 1.28 | Pending |
-| 1.63 | Implement move to project selector | 10 min | 1.56, 1.29 | Pending |
-| 1.64 | Implement focus pin button | 5 min | 1.56, 1.32 | Pending |
+| 1.48 | Create `Pages/Tasks.razor` with project tasks view | 20 min | 1.35, 1.22 | Done |
+| 1.49 | Add project header with name and stats | 10 min | 1.48, 1.21 | Done |
+| 1.50 | Implement search input with real-time filtering | 15 min | 1.48, 1.25 | Done |
+| 1.51 | Implement sort dropdown (Created date / Priority / Focused) | 15 min | 1.48, 1.26 | Done |
+| 1.52 | Implement show/hide completed toggle | 5 min | 1.48 | Done |
+| 1.53 | Implement filter by priority dropdown | 10 min | 1.48 | Done |
+| 1.54 | Implement "Clear All Completed" button | 10 min | 1.48, 1.27 | Done |
+| 1.55 | Implement add new task input | 10 min | 1.48, 1.22 | Done |
+| 1.56 | Create task list component in Todos.razor | 15 min | 1.48, 1.22 | Done |
+| 1.57 | Implement in-line editing for task titles | 20 min | 1.56, 1.22 | Done |
+| 1.58 | Implement priority dropdown with color coding | 10 min | 1.56 | Done |
+| 1.59 | Implement task note display (expandable) | 15 min | 1.56 | Done |
+| 1.60 | Implement complete checkbox | 5 min | 1.56, 1.30 | Done |
+| 1.61 | Implement delete task button | 5 min | 1.56, 1.22 | Done |
+| 1.62 | Implement duplicate task action | 10 min | 1.56, 1.28 | Done |
+| 1.63 | Implement move to project selector | 10 min | 1.56, 1.29 | Done |
+| 1.64 | Implement focus pin button | 5 min | 1.56, 1.32 | Done |
 | 1.65 | Add CreatedAt and CompletedAt timestamps | 10 min | 1.56 | Pending |
 | 1.66 | Add visual indicator for recently completed tasks | 5 min | 1.56 | Pending |
-| 1.67 | Implement empty state component | 10 min | 1.56 | Pending |
+| 1.67 | Implement empty state component | 10 min | 1.56 | Done |
 
 **Phase 1E Checklist**:
 - [ ] Todos.razor created with task list
 - [ ] Project header with name and stats
-- [ ] Search input working with real-time filtering
-- [ ] Sort dropdown working (Created date, Priority, Focused)
-- [ ] Show/hide completed toggle working
-- [ ] Filter by priority working
-- [ ] "Clear All Completed" button working
-- [ ] Add new task input functional
-- [ ] Task list displaying tasks
-- [ ] In-line editing for titles working
-- [ ] Priority dropdown with color codes working
-- [ ] Task note display and editing working
-- [ ] Complete checkbox working
-- [ ] Delete button working
-- [ ] Duplicate task working
-- [ ] Move to project working
-- [ ] Focus pin working
+- [x] Search input working with real-time filtering
+- [x] Sort dropdown working (Created date, Priority, Focused)
+- [x] Show/hide completed toggle working
+- [x] Filter by priority working
+- [x] "Clear All Completed" button working
+- [x] Add new task input functional
+- [x] Task list displaying tasks
+- [x] In-line editing for titles working
+- [x] Priority dropdown with color codes working
+- [x] Task note display and editing working
+- [x] Complete checkbox working
+- [x] Delete button working
+- [x] Duplicate task working
+- [x] Move to project working
+- [x] Focus pin working
 - [ ] Timestamps displayed
-- [ ] Empty state displayed
+- [x] Empty state displayed
 
 #### Phase 1F: Keyboard Shortcuts (8 tasks)
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 1.68 | Implement keyboard shortcut handler service | 10 min | 1.33 | Pending |
-| 1.69 | Add Ctrl/Cmd + Enter shortcut (complete selected task) | 5 min | 1.68, 1.30 | Pending |
-| 1.70 | Add Delete shortcut (delete selected task) | 5 min | 1.68, 1.61 | Pending |
+| 1.68 | Implement keyboard shortcut handler service | 10 min | 1.33 | Done |
+| 1.69 | Add Ctrl/Cmd + Enter shortcut (complete selected task) | 5 min | 1.68, 1.30 | Done |
+| 1.70 | Add Delete shortcut (delete selected task) | 5 min | 1.68, 1.61 | Done |
 | 1.71 | Add Ctrl/Cmd + N shortcut (focus new task input) | 5 min | 1.68, 1.55 | Pending |
 | 1.72 | Add Ctrl/Cmd + F shortcut (focus search input) | 5 min | 1.68, 1.50 | Pending |
 | 1.73 | Add Ctrl/Cmd + P shortcut (toggle focus pin) | 5 min | 1.68, 1.64 | Pending |
 | 1.74 | Add Ctrl/Cmd + Z shortcut (undo last action) | 10 min | 1.68 | Pending |
-| 1.75 | Add Ctrl/Cmd + / shortcut (show keyboard shortcuts help) | 10 min | 1.68 | Pending |
+| 1.75 | Add Ctrl/Cmd + / shortcut (show keyboard shortcuts help) | 10 min | 1.68 | Done |
 
 **Phase 1F Checklist**:
-- [ ] Keyboard shortcut handler implemented
-- [ ] Ctrl/Cmd + Enter: Complete task
-- [ ] Delete: Delete task
+- [x] Keyboard shortcut handler implemented
+- [x] Ctrl/Cmd + Enter: Complete task
+- [x] Delete: Delete task
 - [ ] Ctrl/Cmd + N: Focus new task
 - [ ] Ctrl/Cmd + F: Focus search
 - [ ] Ctrl/Cmd + P: Toggle focus pin
 - [ ] Ctrl/Cmd + Z: Undo
-- [ ] Ctrl/Cmd + /: Show help
+- [x] Ctrl/Cmd + /: Show help
 
 #### Phase 1G: Toast Notifications (6 tasks)
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 1.76 | Implement toast notification system | 15 min | 1.35 | Pending |
-| 1.77 | Add success toast for completed tasks | 5 min | 1.76 | Pending |
-| 1.78 | Add info toast for duplicated/moved tasks | 5 min | 1.76, 1.62, 1.63 | Pending |
-| 1.79 | Add confirmation toast for deleted tasks | 5 min | 1.76, 1.61 | Pending |
-| 1.80 | Add toast for "Clear All Completed" | 5 min | 1.76, 1.54 | Pending |
+| 1.76 | Implement toast notification system | 15 min | 1.35 | Done |
+| 1.77 | Add success toast for completed tasks | 5 min | 1.76 | Done |
+| 1.78 | Add info toast for duplicated/moved tasks | 5 min | 1.76, 1.62, 1.63 | Done |
+| 1.79 | Add confirmation toast for deleted tasks | 5 min | 1.76, 1.61 | Done |
+| 1.80 | Add toast for "Clear All Completed" | 5 min | 1.76, 1.54 | Done |
 | 1.81 | Test all toast notifications and undo functionality | 10 min | 1.77-1.80 | Pending |
 
 **Phase 1G Checklist**:
-- [ ] Toast notification system implemented
-- [ ] Success toasts showing
-- [ ] Info toasts showing
-- [ ] Confirmation toasts showing
+- [x] Toast notification system implemented
+- [x] Success toasts showing
+- [x] Info toasts showing
+- [x] Confirmation toasts showing
 - [ ] Undo buttons working
 - [ ] Toast auto-dismissing after 5 seconds
 
@@ -576,7 +576,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 |----|------|-----------|--------------|--------|
 | 2.7 | Update `Services/TaskService.cs` - Add GetByStatusAsync | 5 min | 2.2 | Pending |
 | 2.8 | Update `Services/TaskService.cs` - Add GetSubTasksAsync | 5 min | 2.3 | Pending |
-| 2.9 | Update `Services/TaskService.cs` - Add CreateSubTaskAsync | 10 min | 2.8 | Pending |
+| 2.9 | Update `Services/TaskService.cs` - Add CreateSubTaskAsync | 10 min | 2.8 | Done |
 | 2.10 | Update `Services/TaskService.cs` - Add UpdateStatusAsync | 5 min | 2.2 | Pending |
 | 2.11 | Update `Services/TaskService.cs` - Add ToggleCompleteWithSubTasksAsync | 10 min | 2.8, 2.10 | Pending |
 | 2.12 | Update `Services/ProjectService.cs` - Add UpdateViewTypeAsync | 5 min | 2.1 | Pending |
@@ -600,11 +600,11 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 2.15 | Create `Components/BoardView.razor` - Kanban board component | 20 min | 2.12 | Pending |
 | 2.16 | Create `Components/BoardColumn.razor` - Individual column component | 15 min | 2.15 | Pending |
 | 2.17 | Implement drag-and-drop for moving tasks between columns | 25 min | 2.16 | Pending |
-| 2.18 | Add view switcher toggle (List ↔ Board) in Todos.razor | 10 min | 2.15 | Pending |
+| 2.18 | Add view switcher toggle (List ↔ Board) in Todos.razor | 10 min | 2.15 | Done |
 | 2.19 | Style board columns with proper spacing and colors | 10 min | 2.16 | Pending |
 | 2.20 | Implement add task button on each board column | 10 min | 2.16 | Pending |
 | 2.21 | Add visual indicators for tasks with SubTasks | 5 min | 2.16, 2.8 | Pending |
-| 2.22 | Implement task count badges per column | 5 min | 2.16 | Pending |
+| 2.22 | Implement task count badges per column | 5 min | 2.16 | Done |
 | 2.23 | Ensure board view is responsive (stack columns on mobile) | 10 min | 2.16 | Pending |
 | 2.24 | Test drag-and-drop interactions | 10 min | 2.17 | Pending |
 
@@ -612,11 +612,11 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [ ] BoardView component created
 - [ ] BoardColumn component created
 - [ ] Drag-and-drop implemented between columns
-- [ ] View switcher functional
+- [x] View switcher functional
 - [ ] Board columns styled
 - [ ] Add task button on each column
 - [ ] Visual indicators for SubTasks
-- [ ] Task count badges working
+- [x] Task count badges working
 - [ ] Responsive design (stack on mobile)
 - [ ] Drag-and-drop tested
 
@@ -626,39 +626,39 @@ TaskFlow is a personal task management web application built with Blazor Server,
 |----|------|-----------|--------------|--------|
 | 2.25 | Create `Components/SubTaskList.razor` - SubTasks display component | 15 min | 2.8 | Pending |
 | 2.26 | Implement in-line editing for SubTask titles | 10 min | 2.25 | Pending |
-| 2.27 | Implement add SubTask input under parent Task | 10 min | 2.25 | Pending |
+| 2.27 | Implement add SubTask input under parent Task | 10 min | 2.25 | Done |
 | 2.28 | Implement delete SubTask with toast + undo | 5 min | 2.25, 1.79 | Pending |
 | 2.29 | Add SubTask count badge on parent Task cards | 5 min | 2.25, 2.8 | Pending |
 | 2.30 | Implement expand/collapse SubTasks on parent Task | 10 min | 2.25 | Pending |
-| 2.31 | Style SubTasks with indentation hierarchy | 5 min | 2.25 | Pending |
+| 2.31 | Style SubTasks with indentation hierarchy | 5 min | 2.25 | Done |
 | 2.32 | Test auto-complete SubTasks when parent completes | 10 min | 2.11 | Pending |
 
 **Phase 2D Checklist**:
 - [ ] SubTaskList component created
 - [ ] In-line editing for SubTasks
-- [ ] Add SubTask input working
+- [x] Add SubTask input working
 - [ ] Delete SubTask with toast + undo
 - [ ] SubTask count badge on parent
 - [ ] Expand/collapse SubTasks working
-- [ ] Indentation styling applied
+- [x] Indentation styling applied
 - [ ] Auto-complete SubTasks tested
 
 #### Phase 2E: UI Integration (6 tasks)
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 2.33 | Update `Pages/Todos.razor` - Integrate view switcher (List/Board) | 10 min | 2.18 | Pending |
-| 2.34 | Update `Pages/Todos.razor` - Show SubTasks in List view | 15 min | 2.30 | Pending |
+| 2.33 | Update `Pages/Todos.razor` - Integrate view switcher (List/Board) | 10 min | 2.18 | Done |
+| 2.34 | Update `Pages/Todos.razor` - Show SubTasks in List view | 15 min | 2.30 | Done |
 | 2.35 | Update `Pages/Index.razor` - Add view type selector per project | 10 min | 2.12 | Pending |
-| 2.36 | Add status filter dropdown (ToDo/InProgress/Done/All) | 10 min | 2.7 | Pending |
+| 2.36 | Add status filter dropdown (ToDo/InProgress/Done/All) | 10 min | 2.7 | Done |
 | 2.37 | Update empty state for each board column | 5 min | 2.16 | Pending |
 | 2.38 | Ensure all interactions work in both List and Board views | 15 min | 2.33, 2.34 | Pending |
 
 **Phase 2E Checklist**:
-- [ ] Todos.razor integrates view switcher
-- [ ] SubTasks shown in List view
+- [x] Todos.razor integrates view switcher
+- [x] SubTasks shown in List view
 - [ ] Index has view type selector
-- [ ] Status filter working
+- [x] Status filter working
 - [ ] Empty states updated for board columns
 - [ ] All interactions tested in both views
 
@@ -698,11 +698,11 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
 | 3.1 | Update Task model to add IsTodayMarked property | 5 min | Phase 2A | Done |
-| 3.2 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add GetTodayTasksAsync | 10 min | 3.1 | Pending |
-| 3.3 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add GetUpcomingTasksAsync | 10 min | 3.1 | Pending |
-| 3.4 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add GetRecentTasksAsync | 10 min | 3.1 | Pending |
-| 3.5 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add ToggleTodayMarkAsync | 5 min | 3.1 | Pending |
-| 3.6 | Update ProjectSidebar to include My Task Flow section | 10 min | 1.36 | Pending |
+| 3.2 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add GetTodayTasksAsync | 10 min | 3.1 | Done |
+| 3.3 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add GetUpcomingTasksAsync | 10 min | 3.1 | Done |
+| 3.4 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add GetRecentTasksAsync | 10 min | 3.1 | Done |
+| 3.5 | Update `Application/Orchestrators/TaskOrchestrator.cs` - Add ToggleTodayMarkAsync | 5 min | 3.1 | Done |
+| 3.6 | Update ProjectSidebar to include My Task Flow section | 10 min | 1.36 | Done |
 | 3.7 | Create `Pages/Today.razor` view | 15 min | 3.2 | Pending |
 | 3.8 | Create `Pages/Upcoming.razor` view | 15 min | 3.3 | Pending |
 | 3.9 | Create `Pages/Recent.razor` view | 10 min | 3.4 | Pending |
@@ -710,11 +710,11 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 **Phase 3A Checklist**:
 - [x] Task model has IsTodayMarked property
-- [ ] GetTodayTasksAsync implemented
-- [ ] GetUpcomingTasksAsync implemented
-- [ ] GetRecentTasksAsync implemented
-- [ ] ToggleTodayMarkAsync implemented
-- [ ] Sidebar updated with My Task Flow section
+- [x] GetTodayTasksAsync implemented
+- [x] GetUpcomingTasksAsync implemented
+- [x] GetRecentTasksAsync implemented
+- [x] ToggleTodayMarkAsync implemented
+- [x] Sidebar updated with My Task Flow section
 - [ ] Today view created
 - [ ] Upcoming view created
 - [ ] Recent view created
