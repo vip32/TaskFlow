@@ -21,7 +21,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - **Framework**: .NET 10.0 (ASP.NET Core)
 - **Runtime**: Blazor Server
 - **Database**: SQLite with Entity Framework Core
-- **UI Framework**: MudBlazor 7.x
+- **UI Framework**: MudBlazor 8.x
 - **Deployment**: Docker containers on Raspberry Pi 5 (ARM64)
 - **Network**: Tailscale VPN for private access
 - **Architecture**: Domain-Driven Design (DDD) with Rich Domain Model
