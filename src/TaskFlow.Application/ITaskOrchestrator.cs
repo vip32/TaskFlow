@@ -48,6 +48,16 @@ public interface ITaskOrchestrator
     global::System.Threading.Tasks.Task<DomainTask> CreateAsync(Guid projectId, string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Creates an unassigned task and persists it immediately.
+    /// </summary>
+    /// <param name="title">Task title.</param>
+    /// <param name="priority">Task priority.</param>
+    /// <param name="note">Task note.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created task.</returns>
+    global::System.Threading.Tasks.Task<DomainTask> CreateUnassignedAsync(string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Updates task title and persists immediately.
     /// </summary>
     /// <param name="taskId">Task identifier.</param>
@@ -99,6 +109,105 @@ public interface ITaskOrchestrator
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
     global::System.Threading.Tasks.Task<DomainTask> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes project assignment from a task.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    global::System.Threading.Tasks.Task<DomainTask> UnassignFromProjectAsync(Guid taskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sets date-only due date.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="dueDateLocal">Local due date.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    global::System.Threading.Tasks.Task<DomainTask> SetDueDateAsync(Guid taskId, DateOnly dueDateLocal, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sets due date and due time.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="dueDateLocal">Local due date.</param>
+    /// <param name="dueTimeLocal">Local due time.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    global::System.Threading.Tasks.Task<DomainTask> SetDueDateTimeAsync(Guid taskId, DateOnly dueDateLocal, TimeOnly dueTimeLocal, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Clears due date settings.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    global::System.Threading.Tasks.Task<DomainTask> ClearDueDateAsync(Guid taskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Toggles today marker on task.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    global::System.Threading.Tasks.Task<DomainTask> ToggleTodayMarkAsync(Guid taskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Adds reminder relative to due date-time.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="minutesBefore">Minutes before due instant.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    global::System.Threading.Tasks.Task<DomainTask> AddRelativeReminderAsync(Guid taskId, int minutesBefore, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Adds date-only fallback reminder.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="fallbackLocalTime">Fallback local time.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    global::System.Threading.Tasks.Task<DomainTask> AddDateOnlyReminderAsync(Guid taskId, TimeOnly fallbackLocalTime, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes reminder from task.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="reminderId">Reminder identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    global::System.Threading.Tasks.Task<DomainTask> RemoveReminderAsync(Guid taskId, Guid reminderId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tasks in recent bucket.
+    /// </summary>
+    /// <param name="days">Recent day window.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Recent tasks.</returns>
+    global::System.Threading.Tasks.Task<List<DomainTask>> GetRecentAsync(int days = 7, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tasks in today bucket.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Today tasks.</returns>
+    global::System.Threading.Tasks.Task<List<DomainTask>> GetTodayAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tasks in this-week bucket.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>This-week tasks.</returns>
+    global::System.Threading.Tasks.Task<List<DomainTask>> GetThisWeekAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tasks in upcoming bucket.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Upcoming tasks.</returns>
+    global::System.Threading.Tasks.Task<List<DomainTask>> GetUpcomingAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a task.

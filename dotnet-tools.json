@@ -29,6 +29,13 @@
         "dotnet-inspect"
       ],
       "rollForward": false
+    },
+    "csharp-ls": {
+      "version": "0.22.0",
+      "commands": [
+        "csharp-ls"
+      ],
+      "rollForward": false
     }
   }
 }

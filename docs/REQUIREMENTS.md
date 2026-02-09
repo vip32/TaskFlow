@@ -22,13 +22,16 @@ TaskFlow provides task and project management with:
 - Subscription schedules with active windows (from/to, open-ended end date supported)
 - Subscription can be explicitly deactivated regardless of schedule
 - Subscription tiers: Free (limited), Plus (less limited), Pro (full)
+- Subscription timezone-aware time behavior (default timezone: Europe/Berlin)
 - Project organization
+- Optional project assignment (tasks can exist without belonging to a project)
 - Task prioritization
+- Due dates and multiple reminders per task
 - SubTask support
 - Tags on projects, tasks, and subtasks (zero or more)
 - Task/subtask title history for autocomplete and autofill
 - Kanban board views
-- My Task Flow smart views (Today, Upcoming, Recent)
+- My Task Flow smart views and customizable sections (Recent, Today, This Week, Upcoming by default)
 - Focus pin for highlighting important tasks
 - Advanced UX features (search, sort, keyboard shortcuts)
 - Private network access via Tailscale
@@ -40,7 +43,7 @@ TaskFlow provides task and project management with:
 - **Scale**: Per subscription, 10-50 projects and 100-1000 tasks in baseline usage
 
 ### Version
-- **Version**: 1.0
+- **Version**: 2.1
 - **Date**: February 9, 2026
 - **Status**: Approved for Implementation
 
@@ -133,18 +136,19 @@ TaskFlow provides task and project management with:
 ### FR2: Task Management
 
 #### FR2.1 Create Task
-**Description**: User must be able to create new tasks within a project.
+**Description**: User must be able to create new tasks either inside a project or as unassigned tasks.
 
 **Requirements**:
 - User enters task title (string, 1-500 characters)
-- Task is automatically assigned to current project
+- Task can be created with or without a project assignment
+- If created from a project view, task defaults to that project unless user chooses unassigned
 - System generates unique GUID for task ID
 - System sets Priority to Medium (2) by default
 - System sets IsCompleted to false
 - System sets IsFocused to false
 - System sets Status to New
 - System sets CreatedAt to current timestamp
-- System sets ProjectId to current project ID
+- System sets ProjectId only when a project is selected
 - System initializes task tags as empty
 - System stores created title in task name history for future autocomplete
 - Task appears immediately in list via SignalR
@@ -267,7 +271,7 @@ TaskFlow provides task and project management with:
 **Requirements**:
 - User can add SubTask to any task
 - SubTask is a Task entity with ParentTaskId set
-- SubTask inherits project from parent
+- SubTask inherits project assignment from parent (including unassigned when parent has no project)
 - SubTasks are 1-level only (no nested sub-subtasks)
 - Add SubTask input appears under parent task
 - SubTask count badge shows on parent task
@@ -572,61 +576,131 @@ TaskFlow provides task and project management with:
 ### FR10: My Task Flow Views
 
 #### FR10.1 My Task Flow Today View
-**Description**: User must be able to see tasks that are due or marked for today.
+**Description**: User must be able to see tasks that require attention today, independent of project hierarchy.
 
 **Requirements**:
-- System displays tasks with due date = today
-- System displays tasks marked as focused (IsFocused=true)
-- Tasks shown from all projects or filtered by current project
-- Tasks sorted by priority then due time
-- View updates in real-time as time changes
+- System displays tasks due on the current local day of the subscription timezone
+- System displays tasks explicitly marked for today
+- Tasks from assigned and unassigned contexts are shown together
+- Tasks are sorted by priority then due time
+- View updates in real-time as local time changes
 
 **Priority**: Must Have
 
-#### FR10.2 My Task Flow Upcoming View
-**Description**: User must be able to see tasks due in the future.
+#### FR10.2 My Task Flow This Week and Upcoming Views
+**Description**: User must be able to see tasks due this week and in future periods.
 
 **Requirements**:
-- System displays tasks with due date > today
-- System displays tasks without due dates (indefinite future)
-- Tasks shown from all projects or filtered by current project
-- Tasks sorted by due date ascending
-- Tasks grouped by date (Today, Tomorrow, This Week, Later)
+- System provides a dedicated "This Week" section for tasks due within the current local week
+- System provides an "Upcoming" section for tasks due after this week
+- Tasks are sorted by due date ascending
+- Grouping labels use subscription-local buckets (Today, Tomorrow, This Week, Later)
+- Tasks with no due date can be included by custom section rules
 
 **Priority**: Must Have
 
 #### FR10.3 My Task Flow Recent View
-**Description**: User must be able to see recently created tasks.
+**Description**: User must be able to see recently created tasks for triage and assignment.
 
 **Requirements**:
 - System displays recently created tasks (last 7 days)
+- Unassigned tasks appear in Recent by default
 - Tasks shown from all projects or filtered by current project
 - Tasks sorted by CreatedAt descending (newest first)
 - Badge shows "X new tasks added this week"
 
 **Priority**: Must Have
 
-#### FR10.4 View Switching
+#### FR10.4 Custom Section Management
+**Description**: User must be able to create and manage custom sections in My Task Flow.
+
+**Requirements**:
+- User can create, rename, reorder, and delete custom sections
+- Sections support hybrid population: rule-based filters and manual task curation
+- Rule-based sections auto-update as task data changes
+- Manual curation allows explicit add/remove of any task
+- Built-in sections exist by default: Recent, Today, This Week, Upcoming
+
+**Priority**: Must Have
+
+#### FR10.5 Unassigned Task Triage Actions
+**Description**: User must be able to process unassigned tasks directly from My Task Flow.
+
+**Requirements**:
+- User can assign an unassigned task to any project from My Task Flow
+- User can complete or cancel tasks directly from My Task Flow
+- Assignment and status actions persist immediately
+- Only delete actions require explicit confirmation
+
+**Priority**: Must Have
+
+#### FR10.6 View Switching
 **Description**: User must be able to switch between project views and My Task Flow views.
 
 **Requirements**:
-- Sidebar includes "My Task Flow" section with Today, Upcoming, Recent options
-- Clicking project shows that project's tasks
-- Clicking My Task Flow section shows smart view
-- Active view highlighted in sidebar
+- Sidebar includes "My Task Flow" section with built-in and custom sections
+- Clicking a project shows that project's tasks
+- Clicking a My Task Flow section shows cross-project smart view
+- Active view is highlighted in sidebar
 - View selection persists across sessions
 
 **Priority**: Must Have
 
-#### FR10.5 Task Mark for Today
-**Description**: User must be able to mark any task for "today" without changing due date.
+#### FR10.7 Subscription Timezone Behavior
+**Description**: Time-based My Task Flow grouping must use subscription-local time.
 
 **Requirements**:
-- Tasks can be marked as "due today" without specific due time
-- Marked tasks appear in Today view
-- Visual indicator shows task is marked for today
-- Today mark is separate from specific due date/time
-- Toggle on/off today mark
+- Subscription stores timezone identifier (IANA)
+- Default timezone for new subscriptions is Europe/Berlin
+- Today/This Week/Upcoming grouping uses subscription-local calendar boundaries
+- Reminder and due-date evaluation uses the same subscription timezone
+
+**Priority**: Must Have
+
+---
+
+### FR15: Due Dates and Reminders
+
+#### FR15.1 Due Date and Time
+**Description**: User must be able to set due dates on tasks with optional due time.
+
+**Requirements**:
+- Task due date is optional
+- Due date can be date-only or date-time
+- Due values are interpreted in subscription timezone
+- Due fields can be edited inline and persist immediately
+
+**Priority**: Must Have
+
+#### FR15.2 Multiple Reminders per Task
+**Description**: User must be able to define multiple reminders for the same task.
+
+**Requirements**:
+- Task supports zero or more reminders
+- Common presets are available (for example: 15 minutes before, on time)
+- User can add and remove reminders independently
+- Reminder list updates immediately after changes
+
+**Priority**: Must Have
+
+#### FR15.3 Reminder Modes for Date-Only and Date-Time Tasks
+**Description**: Reminder behavior must support strict and fallback modes.
+
+**Requirements**:
+- For date-time tasks, reminders can trigger relative to exact due time
+- For date-only tasks, user can choose a fallback reminder time in subscription timezone
+- User can also choose strict mode requiring explicit due date-time
+- Reminder configuration clearly indicates which mode is active
+
+**Priority**: Must Have
+
+#### FR15.4 Reminder Delivery and De-duplication
+**Description**: System must deliver reminders reliably without duplicates.
+
+**Requirements**:
+- Reminders are evaluated against UTC trigger timestamps derived from subscription-local values
+- Each reminder is delivered at most once
+- Delivered reminders are tracked with sent timestamp metadata
 
 **Priority**: Must Have
 
@@ -1276,13 +1350,31 @@ TaskFlow provides task and project management with:
 
 **US11.1**: As a user, I want to see a "Today" view so that I can focus on tasks due today.
 
-**US11.2**: As a user, I want to see an "Upcoming" view so that I can plan for the future.
+**US11.2**: As a user, I want to see "This Week" and "Upcoming" views so that I can plan near-term and future work.
 
 **US11.3**: As a user, I want to see a "Recent" view so that I can quickly access new tasks.
 
 **US11.4**: As a user, I want to switch between project views and My Task Flow views so that I can choose the best perspective.
 
-**US11.5**: As a user, I want to mark tasks for "today" without setting a specific time so that I can quickly organize my day.
+**US11.5**: As a user, I want to create tasks without assigning a project so that I can capture work quickly and triage later.
+
+**US11.6**: As a user, I want to manage custom My Task Flow sections so that I can organize tasks the way I think.
+
+**US11.7**: As a user, I want custom sections to support both saved rules and manual curation so that I can mix automation and intent.
+
+**US11.8**: As a user, I want to assign, complete, or cancel tasks directly from My Task Flow so that triage is fast.
+
+**US11.9**: As a user, I want Today/This Week grouping to respect my subscription timezone so dates always feel correct.
+
+---
+
+### Epic 15: Due Dates and Reminders
+
+**US15.1**: As a user, I want to add due dates to tasks so that time-sensitive work is visible.
+
+**US15.2**: As a user, I want to add multiple reminders per task (for example 15 minutes before and on time) so I do not miss deadlines.
+
+**US15.3**: As a user, I want reminder behavior for both date-only and date-time tasks so reminder timing matches my intent.
 
 ---
 
@@ -1548,11 +1640,10 @@ TaskFlow provides task and project management with:
 - Activity feed
 
 ### FE3: Due Dates & Reminders
-- Add due date field to tasks
-- Due date picker
-- Date-based filtering
-- Notifications for due tasks
-- Recurring tasks
+- Recurring reminders and recurring due schedules
+- Escalation reminders (multiple channels)
+- Reminder snooze workflows
+- Calendar-aware reminder suppression (holidays/weekends)
 
 ### FE4: Attachments
 - File attachments to tasks
@@ -1687,7 +1778,13 @@ TaskFlow provides task and project management with:
 | FR10.2 | US11.2 | - | Must Have |
 | FR10.3 | US11.3 | - | Must Have |
 | FR10.4 | US11.4 | - | Must Have |
-| FR10.5 | US11.5 | - | Must Have |
+| FR10.5 | US11.8 | - | Must Have |
+| FR10.6 | US11.4 | - | Must Have |
+| FR10.7 | US11.9 | - | Must Have |
+| FR15.1 | US15.1 | - | Must Have |
+| FR15.2 | US15.2 | - | Must Have |
+| FR15.3 | US15.3 | - | Must Have |
+| FR15.4 | US15.2 | - | Must Have |
 | FR11.1 | US12.1 | - | Must Have |
 | FR11.2 | US12.2 | - | Must Have |
 | FR11.3 | US12.3 | - | Must Have |
@@ -1708,10 +1805,14 @@ TaskFlow provides task and project management with:
 - **Status**: Workflow state (New, InProgress, Paused, Done, Cancelled)
 - **Board View**: Kanban-style layout with status columns
 - **List View**: Traditional vertical list layout
-- **My Task Flow**: Smart task views (Today, Upcoming, Recent) that aggregate tasks across all projects
-- **Today View**: Tasks due today or marked for today (independent of projects)
-- **Upcoming View**: Tasks with due dates in future, grouped by time periods
-- **Recent View**: Recently created tasks (last 7 days), sorted by creation date
+- **My Task Flow**: Smart and custom section-based views that aggregate tasks across projects and unassigned work
+- **Today View**: Tasks due today or marked for today, based on subscription-local date
+- **This Week View**: Tasks due within the current local week
+- **Upcoming View**: Tasks due after this week, grouped by time periods
+- **Recent View**: Recently created tasks (last 7 days), including unassigned tasks for triage
+- **Unassigned Task**: A task that has no project association yet
+- **Reminder**: A time-based notification linked to a task; multiple reminders are allowed per task
+- **Subscription Timezone**: IANA timezone used to evaluate due buckets and reminder triggers (default Europe/Berlin)
 - **Focus Pin**: Marker to highlight and prioritize important tasks
 - **Toast Notification**: Temporary popup notification with auto-dismiss
 - **In-Line Editing**: Editing content directly in place without dialogs
@@ -1741,6 +1842,7 @@ TaskFlow provides task and project management with:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 2.1 | 2026-02-09 | System | Expanded My Task Flow requirements with unassigned task triage, custom hybrid sections, subscription-timezone behavior (default Europe/Berlin), and formalized due date/reminder requirements |
 | 2.0 | 2025-02-09 | System | Added FR13 Clean Architecture (8 requirements), added FR14 Code Quality Standards (5 requirements), updated NFR5 to include code quality standards, updated system design with clean architecture 4-layer onion |
 | 1.2 | 2025-02-09 | System | Added My Task Flow concept (Today, Upcoming, Recent), added Focus Timer as Phase 3, updated terminology (Todo→Task, subtask→SubTask), added Note and IsFocused fields |
 | 1.1 | 2025-02-09 | System | Updated terminology (Todo→Task, subtask→SubTask), added Note and IsFocused fields |

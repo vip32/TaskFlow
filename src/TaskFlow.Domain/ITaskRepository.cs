@@ -40,6 +40,62 @@ public interface ITaskRepository
     global::System.Threading.Tasks.Task<List<Task>> GetFocusedAsync(Guid projectId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets all tasks for the current subscription.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>All tasks.</returns>
+    global::System.Threading.Tasks.Task<List<Task>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets recently created tasks in the current subscription.
+    /// </summary>
+    /// <param name="days">Recent day window.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>Recent tasks ordered by creation descending.</returns>
+    global::System.Threading.Tasks.Task<List<Task>> GetRecentAsync(int days, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets recently created unassigned tasks in the current subscription.
+    /// </summary>
+    /// <param name="days">Recent day window.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>Recent unassigned tasks ordered by creation descending.</returns>
+    global::System.Threading.Tasks.Task<List<Task>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tasks due on a specific local date.
+    /// </summary>
+    /// <param name="localDate">Local due date in subscription timezone.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>Tasks due on that date.</returns>
+    global::System.Threading.Tasks.Task<List<Task>> GetDueOnDateAsync(DateOnly localDate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tasks due in local date range.
+    /// </summary>
+    /// <param name="localStartInclusive">Range start date inclusive.</param>
+    /// <param name="localEndInclusive">Range end date inclusive.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>Tasks due in range.</returns>
+    global::System.Threading.Tasks.Task<List<Task>> GetDueInRangeAsync(DateOnly localStartInclusive, DateOnly localEndInclusive, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tasks due after a local date.
+    /// </summary>
+    /// <param name="localDateExclusive">Exclusive local date boundary.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>Tasks due after the boundary.</returns>
+    global::System.Threading.Tasks.Task<List<Task>> GetDueAfterDateAsync(DateOnly localDateExclusive, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets tasks by identifiers.
+    /// </summary>
+    /// <param name="taskIds">Task identifiers.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>Matching tasks.</returns>
+    global::System.Threading.Tasks.Task<List<Task>> GetByIdsAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Adds a task.
     /// </summary>
     /// <param name="task">Task to add.</param>

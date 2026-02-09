@@ -11,6 +11,7 @@ namespace TaskFlow.Infrastructure;
 public sealed class CurrentSubscriptionAccessor : ICurrentSubscriptionAccessor
 {
     private const string DEFAULT_SUBSCRIPTION_ID = "00000000-0000-0000-0000-000000000001";
+    private const string DEFAULT_TIME_ZONE_ID = "Europe/Berlin";
     private readonly Subscription subscription;
 
     /// <summary>
@@ -46,7 +47,13 @@ public sealed class CurrentSubscriptionAccessor : ICurrentSubscriptionAccessor
             isEnabled = parsedEnabled;
         }
 
-        this.subscription = new Subscription(subscriptionId, name, tier, isEnabled);
+        var timeZoneId = configuration["Subscription:TimeZoneId"];
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            timeZoneId = DEFAULT_TIME_ZONE_ID;
+        }
+
+        this.subscription = new Subscription(subscriptionId, name, tier, isEnabled, timeZoneId);
 
         var startsOn = DateOnly.FromDateTime(DateTime.UtcNow);
         var configuredStartsOn = configuration["Subscription:Schedule:StartsOn"];

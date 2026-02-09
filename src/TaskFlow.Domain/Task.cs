@@ -7,6 +7,7 @@ public class Task
 {
     private readonly List<Task> subTasks = [];
     private readonly List<string> tags = [];
+    private readonly List<TaskReminder> reminders = [];
 
     /// <summary>
     /// Gets the subscription identifier that owns this task.
@@ -54,6 +55,11 @@ public class Task
     public Guid ProjectId { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether this task is currently unassigned.
+    /// </summary>
+    public bool IsUnassigned => this.ProjectId == Guid.Empty;
+
+    /// <summary>
     /// Gets the parent task identifier when this task is a subtask.
     /// </summary>
     public Guid ParentTaskId { get; private set; }
@@ -70,6 +76,39 @@ public class Task
     public DateTime CompletedAt { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether task has a due date.
+    /// </summary>
+    public bool HasDueDate { get; private set; }
+
+    /// <summary>
+    /// Gets local due date in subscription timezone.
+    /// DateOnly.MinValue indicates no due date.
+    /// </summary>
+    public DateOnly DueDateLocal { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether task has a due time.
+    /// </summary>
+    public bool HasDueTime { get; private set; }
+
+    /// <summary>
+    /// Gets local due time in subscription timezone.
+    /// TimeOnly.MinValue indicates no due time.
+    /// </summary>
+    public TimeOnly DueTimeLocal { get; private set; }
+
+    /// <summary>
+    /// Gets UTC due instant when due time is set.
+    /// DateTime.MinValue indicates no due date-time.
+    /// </summary>
+    public DateTime DueAtUtc { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether task is explicitly marked for today.
+    /// </summary>
+    public bool IsMarkedForToday { get; private set; }
+
+    /// <summary>
     /// Gets read-only subtasks that belong to this task.
     /// </summary>
     public IReadOnlyCollection<Task> SubTasks => this.subTasks.AsReadOnly();
@@ -78,6 +117,11 @@ public class Task
     /// Gets tags assigned to this task.
     /// </summary>
     public IReadOnlyCollection<string> Tags => this.tags.AsReadOnly();
+
+    /// <summary>
+    /// Gets reminders configured for this task.
+    /// </summary>
+    public IReadOnlyCollection<TaskReminder> Reminders => this.reminders.AsReadOnly();
 
     private Task()
     {
@@ -90,7 +134,7 @@ public class Task
     /// </summary>
     /// <param name="subscriptionId">Owning subscription identifier.</param>
     /// <param name="title">Task title.</param>
-    /// <param name="projectId">Owning project identifier.</param>
+    /// <param name="projectId">Owning project identifier. Use Guid.Empty for unassigned task.</param>
     public Task(Guid subscriptionId, string title, Guid projectId)
     {
         if (subscriptionId == Guid.Empty)
@@ -103,11 +147,6 @@ public class Task
             throw new ArgumentException("Task title cannot be empty.", nameof(title));
         }
 
-        if (projectId == Guid.Empty)
-        {
-            throw new ArgumentException("Project id cannot be empty.", nameof(projectId));
-        }
-
         this.SubscriptionId = subscriptionId;
         this.Id = Guid.NewGuid();
         this.Title = title.Trim();
@@ -118,6 +157,12 @@ public class Task
         this.Status = TaskStatus.New;
         this.CreatedAt = DateTime.UtcNow;
         this.CompletedAt = DateTime.MinValue;
+        this.HasDueDate = false;
+        this.DueDateLocal = DateOnly.MinValue;
+        this.HasDueTime = false;
+        this.DueTimeLocal = TimeOnly.MinValue;
+        this.DueAtUtc = DateTime.MinValue;
+        this.IsMarkedForToday = false;
     }
 
     /// <summary>
@@ -183,7 +228,15 @@ public class Task
         }
 
         subTask.SetParent(this.Id);
-        subTask.MoveToProject(this.ProjectId);
+        if (this.ProjectId == Guid.Empty)
+        {
+            subTask.UnassignFromProject();
+        }
+        else
+        {
+            subTask.AssignToProject(this.ProjectId);
+        }
+
         this.subTasks.Add(subTask);
     }
 
@@ -193,16 +246,37 @@ public class Task
     /// <param name="newProjectId">Target project identifier.</param>
     public void MoveToProject(Guid newProjectId)
     {
-        if (newProjectId == Guid.Empty)
+        this.AssignToProject(newProjectId);
+    }
+
+    /// <summary>
+    /// Assigns task and all subtasks to a project.
+    /// </summary>
+    /// <param name="projectId">Target project identifier.</param>
+    public void AssignToProject(Guid projectId)
+    {
+        if (projectId == Guid.Empty)
         {
-            throw new ArgumentException("Project id cannot be empty.", nameof(newProjectId));
+            throw new ArgumentException("Project id cannot be empty.", nameof(projectId));
         }
 
-        this.ProjectId = newProjectId;
+        this.ProjectId = projectId;
 
         foreach (var subTask in this.subTasks)
         {
-            subTask.MoveToProject(newProjectId);
+            subTask.AssignToProject(projectId);
+        }
+    }
+
+    /// <summary>
+    /// Removes project assignment from this task and all subtasks.
+    /// </summary>
+    public void UnassignFromProject()
+    {
+        this.ProjectId = Guid.Empty;
+        foreach (var subTask in this.subTasks)
+        {
+            subTask.UnassignFromProject();
         }
     }
 
@@ -276,6 +350,127 @@ public class Task
             this.IsCompleted = false;
             this.CompletedAt = DateTime.MinValue;
         }
+    }
+
+    /// <summary>
+    /// Sets a date-only due date.
+    /// </summary>
+    /// <param name="dueDateLocal">Due date in subscription local timezone.</param>
+    public void SetDueDate(DateOnly dueDateLocal)
+    {
+        if (dueDateLocal == DateOnly.MinValue)
+        {
+            throw new ArgumentException("Due date must be a valid date.", nameof(dueDateLocal));
+        }
+
+        this.HasDueDate = true;
+        this.DueDateLocal = dueDateLocal;
+        this.HasDueTime = false;
+        this.DueTimeLocal = TimeOnly.MinValue;
+        this.DueAtUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    /// Sets a due date and time.
+    /// </summary>
+    /// <param name="dueDateLocal">Due date in subscription local timezone.</param>
+    /// <param name="dueTimeLocal">Due time in subscription local timezone.</param>
+    /// <param name="timeZone">Subscription timezone.</param>
+    public void SetDueDateTime(DateOnly dueDateLocal, TimeOnly dueTimeLocal, TimeZoneInfo timeZone)
+    {
+        ArgumentNullException.ThrowIfNull(timeZone);
+
+        if (dueDateLocal == DateOnly.MinValue)
+        {
+            throw new ArgumentException("Due date must be a valid date.", nameof(dueDateLocal));
+        }
+
+        var dueLocalDateTime = dueDateLocal.ToDateTime(dueTimeLocal, DateTimeKind.Unspecified);
+
+        this.HasDueDate = true;
+        this.DueDateLocal = dueDateLocal;
+        this.HasDueTime = true;
+        this.DueTimeLocal = dueTimeLocal;
+        this.DueAtUtc = TimeZoneInfo.ConvertTimeToUtc(dueLocalDateTime, timeZone);
+    }
+
+    /// <summary>
+    /// Clears due date and due time.
+    /// </summary>
+    public void ClearDueDate()
+    {
+        this.HasDueDate = false;
+        this.DueDateLocal = DateOnly.MinValue;
+        this.HasDueTime = false;
+        this.DueTimeLocal = TimeOnly.MinValue;
+        this.DueAtUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    /// Toggles explicit Today marker.
+    /// </summary>
+    public void ToggleTodayMark()
+    {
+        this.IsMarkedForToday = !this.IsMarkedForToday;
+    }
+
+    /// <summary>
+    /// Adds a reminder that triggers relative to due date-time.
+    /// </summary>
+    /// <param name="minutesBefore">Minutes before due instant.</param>
+    /// <returns>The created reminder.</returns>
+    public TaskReminder AddRelativeReminder(int minutesBefore)
+    {
+        var reminder = TaskReminder.CreateRelative(this.Id, minutesBefore, this.DueAtUtc);
+        this.reminders.Add(reminder);
+        return reminder;
+    }
+
+    /// <summary>
+    /// Adds an on-time reminder for due date-time tasks.
+    /// </summary>
+    /// <returns>The created reminder.</returns>
+    public TaskReminder AddOnTimeReminder()
+    {
+        return this.AddRelativeReminder(0);
+    }
+
+    /// <summary>
+    /// Adds a reminder for a date-only task using fallback local time.
+    /// </summary>
+    /// <param name="fallbackLocalTime">Fallback local reminder time.</param>
+    /// <param name="timeZone">Subscription timezone.</param>
+    /// <returns>The created reminder.</returns>
+    public TaskReminder AddDateOnlyReminder(TimeOnly fallbackLocalTime, TimeZoneInfo timeZone)
+    {
+        var reminder = TaskReminder.CreateDateOnlyFallback(this.Id, this.DueDateLocal, fallbackLocalTime, timeZone);
+        this.reminders.Add(reminder);
+        return reminder;
+    }
+
+    /// <summary>
+    /// Removes a reminder from this task.
+    /// </summary>
+    /// <param name="reminderId">Reminder identifier.</param>
+    public void RemoveReminder(Guid reminderId)
+    {
+        this.reminders.RemoveAll(x => x.Id == reminderId);
+    }
+
+    /// <summary>
+    /// Marks reminder as sent.
+    /// </summary>
+    /// <param name="reminderId">Reminder identifier.</param>
+    /// <param name="sentAtUtc">UTC send timestamp.</param>
+    public void MarkReminderSent(Guid reminderId, DateTime sentAtUtc)
+    {
+        var reminder = this.reminders.FirstOrDefault(x => x.Id == reminderId);
+        if (reminder is null)
+        {
+            throw new KeyNotFoundException($"Reminder with id '{reminderId}' was not found.");
+        }
+
+        reminder.MarkSent(sentAtUtc);
     }
 
     /// <summary>

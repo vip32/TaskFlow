@@ -15,9 +15,7 @@ public class TaskOrchestratorTests
     [Fact]
     public async global::System.Threading.Tasks.Task CreateAsync_ValidInput_PersistsTask()
     {
-        var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true);
-        subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
-
+        var subscription = CreateSubscription();
         var accessor = new FakeCurrentSubscriptionAccessor(subscription);
         var repository = new FakeTaskRepository();
         var historyRepository = new FakeTaskHistoryRepository();
@@ -31,14 +29,31 @@ public class TaskOrchestratorTests
     }
 
     /// <summary>
+    /// Verifies unassigned task create stores empty project id.
+    /// </summary>
+    [Fact]
+    public async global::System.Threading.Tasks.Task CreateUnassignedAsync_ValidInput_PersistsUnassignedTask()
+    {
+        var subscription = CreateSubscription();
+        var accessor = new FakeCurrentSubscriptionAccessor(subscription);
+        var repository = new FakeTaskRepository();
+        var historyRepository = new FakeTaskHistoryRepository();
+        var orchestrator = new TaskOrchestrator(repository, historyRepository, accessor);
+
+        var created = await orchestrator.CreateUnassignedAsync("Inbox idea", TaskPriority.Medium, string.Empty);
+
+        Assert.Equal(Guid.Empty, created.ProjectId);
+        Assert.True(created.IsUnassigned);
+        Assert.Equal(1, repository.AddCallCount);
+    }
+
+    /// <summary>
     /// Verifies title updates persist immediately.
     /// </summary>
     [Fact]
     public async global::System.Threading.Tasks.Task UpdateTitleAsync_ExistingTask_PersistsChange()
     {
-        var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true);
-        subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
-
+        var subscription = CreateSubscription();
         var existing = new DomainTask(subscription.Id, "Old", Guid.NewGuid());
         var accessor = new FakeCurrentSubscriptionAccessor(subscription);
         var repository = new FakeTaskRepository(existing);
@@ -49,6 +64,41 @@ public class TaskOrchestratorTests
 
         Assert.Equal("New", updated.Title);
         Assert.Equal(1, repository.UpdateCallCount);
+    }
+
+    /// <summary>
+    /// Verifies today bucket includes due-today and today-marked tasks.
+    /// </summary>
+    [Fact]
+    public async global::System.Threading.Tasks.Task GetTodayAsync_DueAndMarkedTasks_ReturnsMergedUniqueList()
+    {
+        var subscription = CreateSubscription();
+        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(subscription.TimeZoneId);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
+
+        var dueToday = new DomainTask(subscription.Id, "Due today", Guid.NewGuid());
+        dueToday.SetDueDate(today);
+
+        var markedToday = new DomainTask(subscription.Id, "Marked today", Guid.Empty);
+        markedToday.ToggleTodayMark();
+
+        var accessor = new FakeCurrentSubscriptionAccessor(subscription);
+        var repository = new FakeTaskRepository(dueToday, markedToday);
+        var historyRepository = new FakeTaskHistoryRepository();
+        var orchestrator = new TaskOrchestrator(repository, historyRepository, accessor);
+
+        var tasks = await orchestrator.GetTodayAsync();
+
+        Assert.Equal(2, tasks.Count);
+        Assert.Contains(tasks, task => task.Id == dueToday.Id);
+        Assert.Contains(tasks, task => task.Id == markedToday.Id);
+    }
+
+    private static Subscription CreateSubscription()
+    {
+        var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true, "Europe/Berlin");
+        subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
+        return subscription;
     }
 
     private sealed class FakeCurrentSubscriptionAccessor : ICurrentSubscriptionAccessor
@@ -70,13 +120,12 @@ public class TaskOrchestratorTests
     {
         private readonly Dictionary<Guid, DomainTask> store = [];
 
-        public FakeTaskRepository()
+        public FakeTaskRepository(params DomainTask[] existing)
         {
-        }
-
-        public FakeTaskRepository(DomainTask existing)
-        {
-            this.store[existing.Id] = existing;
+            foreach (var task in existing)
+            {
+                this.store[task.Id] = task;
+            }
         }
 
         public int AddCallCount { get; private set; }
@@ -85,13 +134,13 @@ public class TaskOrchestratorTests
 
         public global::System.Threading.Tasks.Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
         {
-            var result = this.store.Values.Where(x => x.ProjectId == projectId).ToList();
+            var result = this.store.Values.Where(task => task.ProjectId == projectId).ToList();
             return global::System.Threading.Tasks.Task.FromResult(result);
         }
 
         public global::System.Threading.Tasks.Task<List<DomainTask>> GetByPriorityAsync(TaskPriority priority, Guid projectId, CancellationToken cancellationToken = default)
         {
-            var result = this.store.Values.Where(x => x.ProjectId == projectId && x.Priority == priority).ToList();
+            var result = this.store.Values.Where(task => task.ProjectId == projectId && task.Priority == priority).ToList();
             return global::System.Threading.Tasks.Task.FromResult(result);
         }
 
@@ -99,15 +148,59 @@ public class TaskOrchestratorTests
         {
             var normalized = query.Trim().ToLowerInvariant();
             var result = this.store.Values
-                .Where(x => x.ProjectId == projectId)
-                .Where(x => x.Title.ToLowerInvariant().Contains(normalized) || x.Note.ToLowerInvariant().Contains(normalized))
+                .Where(task => task.ProjectId == projectId)
+                .Where(task => task.Title.ToLowerInvariant().Contains(normalized) || task.Note.ToLowerInvariant().Contains(normalized))
                 .ToList();
             return global::System.Threading.Tasks.Task.FromResult(result);
         }
 
         public global::System.Threading.Tasks.Task<List<DomainTask>> GetFocusedAsync(Guid projectId, CancellationToken cancellationToken = default)
         {
-            var result = this.store.Values.Where(x => x.ProjectId == projectId && x.IsFocused).ToList();
+            var result = this.store.Values.Where(task => task.ProjectId == projectId && task.IsFocused).ToList();
+            return global::System.Threading.Tasks.Task.FromResult(result);
+        }
+
+        public global::System.Threading.Tasks.Task<List<DomainTask>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            return global::System.Threading.Tasks.Task.FromResult(this.store.Values.ToList());
+        }
+
+        public global::System.Threading.Tasks.Task<List<DomainTask>> GetRecentAsync(int days, CancellationToken cancellationToken = default)
+        {
+            var threshold = DateTime.UtcNow.AddDays(-Math.Abs(days));
+            var result = this.store.Values.Where(task => task.CreatedAt >= threshold).OrderByDescending(task => task.CreatedAt).ToList();
+            return global::System.Threading.Tasks.Task.FromResult(result);
+        }
+
+        public global::System.Threading.Tasks.Task<List<DomainTask>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default)
+        {
+            var threshold = DateTime.UtcNow.AddDays(-Math.Abs(days));
+            var result = this.store.Values.Where(task => task.ProjectId == Guid.Empty && task.CreatedAt >= threshold).OrderByDescending(task => task.CreatedAt).ToList();
+            return global::System.Threading.Tasks.Task.FromResult(result);
+        }
+
+        public global::System.Threading.Tasks.Task<List<DomainTask>> GetDueOnDateAsync(DateOnly localDate, CancellationToken cancellationToken = default)
+        {
+            var result = this.store.Values.Where(task => task.HasDueDate && task.DueDateLocal == localDate).ToList();
+            return global::System.Threading.Tasks.Task.FromResult(result);
+        }
+
+        public global::System.Threading.Tasks.Task<List<DomainTask>> GetDueInRangeAsync(DateOnly localStartInclusive, DateOnly localEndInclusive, CancellationToken cancellationToken = default)
+        {
+            var result = this.store.Values.Where(task => task.HasDueDate && task.DueDateLocal >= localStartInclusive && task.DueDateLocal <= localEndInclusive).ToList();
+            return global::System.Threading.Tasks.Task.FromResult(result);
+        }
+
+        public global::System.Threading.Tasks.Task<List<DomainTask>> GetDueAfterDateAsync(DateOnly localDateExclusive, CancellationToken cancellationToken = default)
+        {
+            var result = this.store.Values.Where(task => task.HasDueDate && task.DueDateLocal > localDateExclusive).ToList();
+            return global::System.Threading.Tasks.Task.FromResult(result);
+        }
+
+        public global::System.Threading.Tasks.Task<List<DomainTask>> GetByIdsAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default)
+        {
+            var ids = taskIds.ToHashSet();
+            var result = this.store.Values.Where(task => ids.Contains(task.Id)).ToList();
             return global::System.Threading.Tasks.Task.FromResult(result);
         }
 

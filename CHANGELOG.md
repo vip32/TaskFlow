@@ -11,6 +11,10 @@ All notable updates to TaskFlow are documented here.
 - New domain and orchestrator unit tests (13 tests total passing).
 - Task history (`TaskHistory`) and repository for autocomplete/autofill of previously used task and subtask names.
 - Tagging support in domain aggregates for projects and tasks (subtasks inherit task behavior).
+- My Task Flow domain foundation with section aggregates, due-date buckets, manual section membership links, and section orchestration contracts.
+- Task reminder domain support with multiple reminders per task and two modes (`RelativeToDueDateTime`, `DateOnlyFallbackTime`).
+- New My Task Flow and task domain test coverage (`TaskDomainTests`, `MyTaskFlowSectionTests`, `MyTaskFlowSectionOrchestratorTests`).
+- Additional local tool manifest entry for `csharp-ls` in `dotnet-tools.json`.
 
 ### Changed
 - Subscription schedules now use `DateOnly` to avoid UTC date boundary issues.
@@ -19,6 +23,11 @@ All notable updates to TaskFlow are documented here.
 - Presentation logging switched to Serilog with console and rolling file outputs.
 - Task workflow statuses now include `New`, `InProgress`, `Paused`, `Done`, and `Cancelled`.
 - Dependency injection for obvious services is now attribute-driven with Injectio source generation.
+- Subscription now stores timezone (`TimeZoneId`) with default `Europe/Berlin`; current subscription accessor and seed data align to this default.
+- Task aggregate now supports unassigned tasks, assign/unassign behaviors, due date/date-time fields, Today marker, and reminder lifecycle operations.
+- Task orchestrator and repository interfaces were expanded for My Task Flow retrieval (`Recent`, `Today`, `This Week`, `Upcoming`) and due-date based queries.
+- EF Core model and migration snapshot now include My Task Flow section tables, reminder table, and additional task scheduling indexes.
+- Unit test suite increased to 26 passing tests after new domain/orchestrator coverage.
 
 ## [1.0.1] - 2026-02-09
 

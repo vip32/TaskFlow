@@ -22,7 +22,7 @@ public static class TaskFlowDataSeeder
             return;
         }
 
-        var subscription = new Subscription(DefaultSubscriptionId, "Default", SubscriptionTier.Free, true);
+        var subscription = new Subscription(DefaultSubscriptionId, "Default", SubscriptionTier.Free, true, "Europe/Berlin");
         subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
 
         var backlog = new Project(subscription.Id, "Backlog", "#40E0D0", "inbox", note: "General engineering backlog.", isDefault: true);
@@ -53,9 +53,19 @@ public static class TaskFlowDataSeeder
         task4.SetPriority(TaskPriority.Low);
         task4.SetTags(["Read", "Study"]);
 
+        var task5 = new DomainTask(subscription.Id, "Triage incoming feature requests", Guid.Empty);
+        task5.SetPriority(TaskPriority.Medium);
+        task5.SetTags(["Study"]);
+
         db.Subscriptions.Add(subscription);
         db.Projects.AddRange(backlog, apiProject, webProject);
-        db.Tasks.AddRange(task1, task2, task3, task4);
+        db.Tasks.AddRange(task1, task2, task3, task4, task5);
+
+        db.MyTaskFlowSections.AddRange(
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Recent", 0, TaskFlowDueBucket.Recent),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Today", 1, TaskFlowDueBucket.Today),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "This Week", 2, TaskFlowDueBucket.ThisWeek),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Upcoming", 3, TaskFlowDueBucket.Upcoming));
 
         db.SaveChanges();
     }
@@ -73,7 +83,7 @@ public static class TaskFlowDataSeeder
             return;
         }
 
-        var subscription = new Subscription(DefaultSubscriptionId, "Default", SubscriptionTier.Free, true);
+        var subscription = new Subscription(DefaultSubscriptionId, "Default", SubscriptionTier.Free, true, "Europe/Berlin");
         subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
 
         var backlog = new Project(subscription.Id, "Backlog", "#40E0D0", "inbox", note: "General engineering backlog.", isDefault: true);
@@ -104,9 +114,19 @@ public static class TaskFlowDataSeeder
         task4.SetPriority(TaskPriority.Low);
         task4.SetTags(["Read", "Study"]);
 
+        var task5 = new DomainTask(subscription.Id, "Triage incoming feature requests", Guid.Empty);
+        task5.SetPriority(TaskPriority.Medium);
+        task5.SetTags(["Study"]);
+
         db.Subscriptions.Add(subscription);
         db.Projects.AddRange(backlog, apiProject, webProject);
-        db.Tasks.AddRange(task1, task2, task3, task4);
+        db.Tasks.AddRange(task1, task2, task3, task4, task5);
+
+        db.MyTaskFlowSections.AddRange(
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Recent", 0, TaskFlowDueBucket.Recent),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Today", 1, TaskFlowDueBucket.Today),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "This Week", 2, TaskFlowDueBucket.ThisWeek),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Upcoming", 3, TaskFlowDueBucket.Upcoming));
 
         await db.SaveChangesAsync(cancellationToken);
     }
