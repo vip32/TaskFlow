@@ -1,0 +1,80 @@
+name: Release
+run-name: Release ${{ github.ref_name }}
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      is_stable: ${{ steps.tag_check.outputs.is_stable }}
+      version: ${{ steps.minver.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore local tools
+        run: dotnet tool restore
+
+      - name: Resolve version (MinVer)
+        id: minver
+        run: echo "version=$(dotnet minver)" >> "$GITHUB_OUTPUT"
+
+      - name: Check stable semver tag
+        id: tag_check
+        run: |
+          if [[ "${GITHUB_REF_NAME}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "is_stable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_stable=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Show resolved release metadata
+        run: |
+          echo "tag=${GITHUB_REF_NAME}"
+          echo "version=${{ steps.minver.outputs.version }}"
+          echo "stable=${{ steps.tag_check.outputs.is_stable }}"
+
+  release:
+    needs: prepare
+    if: needs.prepare.outputs.is_stable == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore TaskFlow.sln
+
+      - name: Build
+        run: dotnet build TaskFlow.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test TaskFlow.sln --configuration Release --no-build --verbosity normal
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: TaskFlow ${{ needs.prepare.outputs.version }}
+          generate_release_notes: true
+          prerelease: false
