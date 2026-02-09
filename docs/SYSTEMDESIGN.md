@@ -112,6 +112,7 @@ flowchart TB
 
 #### Why Repository Pattern?
 - **Data Access Abstraction**: Database access abstracted through interfaces
+- **Blazor Server Safety**: Repositories create short-lived DbContext instances via `IDbContextFactory<AppDbContext>`
 
 #### Why Value Objects?
 - **Type Safety**: Encapsulate related concepts (Priority, Status) in types
@@ -294,6 +295,84 @@ flowchart TB
 - Handles database-specific concerns
 - No business logic
 
+### Repository + EF Core rule (Blazor Server)
+
+**Use `IDbContextFactory<TContext>` inside repositories. Do not inject `DbContext` directly.**
+
+#### Mandatory rules
+
+1. **Repositories MUST depend on `IDbContextFactory<TContext>`**
+   - Repositories create and dispose DbContexts.
+   - DbContext lifetime is per repository method call.
+
+2. **One repository method = one DbContext**
+   - Create DbContext at the start of each method.
+   - Dispose DbContext at method end (`await using`).
+   - Never store DbContext in fields.
+
+3. **Repositories MUST be stateless**
+   - No cached entities.
+   - No shared DbContext.
+   - No cross-call tracking.
+
+4. **Reads are `AsNoTracking()` by default**
+   - Tracking is only used when explicitly required for updates.
+
+5. **Repository methods represent a single unit of work**
+   - CRUD-style operations only.
+   - No multi-repository orchestration inside repositories.
+
+#### Required registration pattern
+
+```csharp
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    options.UseSqlite("Data Source=app.db"));
+
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+```
+
+#### Required repository pattern
+
+```csharp
+public sealed class TaskRepository : ITaskRepository
+{
+    private readonly IDbContextFactory<AppDbContext> _factory;
+
+    public TaskRepository(IDbContextFactory<AppDbContext> factory)
+        => _factory = factory;
+
+    public async Task<IReadOnlyList<TaskItem>> GetAllAsync(CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        return await db.Tasks
+            .AsNoTracking()
+            .ToListAsync(ct);
+    }
+
+    public async Task AddAsync(TaskItem item, CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        db.Tasks.Add(item);
+        await db.SaveChangesAsync(ct);
+    }
+}
+```
+
+#### Explicit non-goals
+
+- No long-lived DbContext (especially not per Blazor circuit).
+- No DbContext injected into components.
+- No repositories calling other repositories.
+- No implicit transactions across methods.
+
+#### Escalation rule
+
+If an operation requires multiple repository calls in one transaction:
+
+- Create an application service/orchestrator method that uses `IDbContextFactory<AppDbContext>`.
+- Own one DbContext and transaction in that method.
+- Keep repositories simple and single-purpose.
+
 ---
 
 ## Dependency Inversion Flow
@@ -406,7 +485,7 @@ Components extracted for reuse across List and Board views:
 ## Technology Stack
 
 ### Backend
-- **Framework**: .NET 10.0 (ASP.NET Core)
+- **Framework**: .NET 10.0 (ASP.NET Core) with C# 14
 - **Runtime**: Blazor Server
 - **Data Access**: Entity Framework Core 10
 - **Database**: SQLite
@@ -414,7 +493,7 @@ Components extracted for reuse across List and Board views:
 
 ### Frontend
 - **UI Framework**: Razor Components
-- **Component Library**: MudBlazor 7.x
+- **Component Library**: MudBlazor 8.x
 - **Styling**: CSS with MudBlazor theming
 - **Icons**: Material Design Icons (via MudBlazor)
 
@@ -770,98 +849,57 @@ public class TaskOrchestrator : ITaskOrchestrator
 }
 ```
 
-### Service Lifetime
-All services are **Scoped** to match Blazor Server's per-circuit lifecycle:
+### Dependency Registration and Lifetimes
+
+Application orchestrators and repositories are `Scoped` per Blazor circuit, while EF Core contexts are created per repository method via `IDbContextFactory<AppDbContext>`.
+
 ```csharp
 builder.Services.AddScoped<IProjectOrchestrator, ProjectOrchestrator>();
 builder.Services.AddScoped<ITaskOrchestrator, TaskOrchestrator>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<KeyboardService>();
+
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
-```mermaid
-flowchart TD
-    A["Architecture Diagram"] --> B["Replaced from ASCII"]
 ```
 
-### Service Interfaces
+### Repository Pattern Example
 
-#### ProjectService
 ```csharp
-public class ProjectService
+public sealed class TaskRepository : ITaskRepository
 {
-    private readonly AppDbContext _context;
+    private readonly IDbContextFactory<AppDbContext> _factory;
 
-    // CRUD Operations
-    public async Task<List<Project>> GetAllAsync();
-    public async Task<Project?> GetByIdAsync(Guid id);
-    public async Task<Project> CreateAsync(Project project);
-    public async Task<Project?> UpdateAsync(Project project);
-    public async Task<bool> DeleteAsync(Guid id);
+    public TaskRepository(IDbContextFactory<AppDbContext> factory)
+    {
+        this._factory = factory;
+    }
 
-    // Query Operations
-    public async Task<int> GetTaskCountAsync(Guid projectId);
-    public async Task<Project?> UpdateViewTypeAsync(Guid projectId, ProjectViewType viewType);
+    public async Task<List<Task>> GetByProjectIdAsync(Guid projectId)
+    {
+        await using var db = await this._factory.CreateDbContextAsync();
+        return await db.Tasks
+            .Where(t => t.ProjectId == projectId)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<Task?> GetByIdAsync(Guid id)
+    {
+        await using var db = await this._factory.CreateDbContextAsync();
+        return await db.Tasks
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task<Task> AddAsync(Task task)
+    {
+        await using var db = await this._factory.CreateDbContextAsync();
+        db.Tasks.Add(task);
+        await db.SaveChangesAsync();
+        return task;
+    }
 }
-```
-
-#### TaskService
-```csharp
-public class TaskService
-{
-    private readonly AppDbContext _context;
-
-    // CRUD Operations
-    public async Task<List<Task>> GetByProjectAsync(Guid projectId, bool includeCompleted = true);
-    public async Task<Task?> GetByIdAsync(Guid id);
-    public async Task<Task> CreateAsync(Task task);
-    public async Task<Task?> UpdateAsync(Task task);
-    public async Task<bool> DeleteAsync(Guid id);
-    public async Task<Task?> ToggleCompleteAsync(Guid id);
-
-    // Filter Operations
-    public async Task<List<Task>> GetByPriorityAsync(int priority, Guid projectId);
-    public async Task<List<Task>> GetByStatusAsync(TaskStatus status, Guid projectId);
-    public async Task<List<Task>> SearchAsync(string query, Guid projectId);
-
-    // Sort Operations
-    public async Task<List<Task>> GetSortedAsync(Guid projectId, string sortBy);
-
-    // Focus Operations
-    public async Task<List<Task>> GetFocusedAsync(Guid projectId);
-    public async Task<bool> ToggleFocusAsync(Guid taskId);
-
-    // Bulk Operations
-    public async Task<int> ClearCompletedAsync(Guid projectId);
-    public async Task<Task?> DuplicateAsync(Guid taskId);
-    public async Task<bool> MoveToProjectAsync(Guid taskId, Guid newProjectId);
-
-    // SubTask Operations
-    public async Task<List<Task>> GetSubTasksAsync(Guid parentTaskId);
-    public async Task<Task> CreateSubTaskAsync(Guid parentId, Task subTask);
-    public async Task<bool> UpdateStatusAsync(Guid taskId, TaskStatus status);
-    public async Task<Task?> ToggleCompleteWithSubTasksAsync(Guid taskId);
-}
-```
-
-#### KeyboardService
-```csharp
-public class KeyboardService
-{
-    // Global keyboard shortcuts
-    public void RegisterShortcut(string key, Action action);
-    public void UnregisterShortcut(string key);
-    public event Action<string> OnKeyPressed;
-}
-```
-
-### Service Lifetime
-All services are **Scoped** to match Blazor Server's per-circuit lifecycle:
-```csharp
-builder.Services.AddScoped<ProjectService>();
-builder.Services.AddScoped<TaskService>();
-builder.Services.AddScoped<KeyboardService>();
-builder.Services.AddDbContextFactory<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 ```
 
 ---
