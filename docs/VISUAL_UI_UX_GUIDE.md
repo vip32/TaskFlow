@@ -5,8 +5,42 @@ It is the baseline for a responsive web app experience across mobile and desktop
 
 ## Source Visuals
 
-- Desktop reference set: `docs/visuals/Screenshot-mac-*.png` (2880x1800)
+- Desktop reference set: `docs/visuals/Screenshot-desktop-*.png` (2880x1800)
 - Mobile reference set: `docs/visuals/Screenshot-phone-*.png` (1242x2688)
+- Local folder: `docs/visuals`
+
+## Visual Reference Map
+
+Use these files as concrete references while implementing UI in Blazor + MudBlazor.
+
+### Hero and Positioning
+
+- Desktop hero composition: [Screenshot-desktop-1-Task-Flow.png](./visuals/Screenshot-desktop-1-Task-Flow.png)
+- Mobile hero composition: [Screenshot-phone-Export-1.png](./visuals/Screenshot-phone-Export-1.png)
+- Multi-device framing: [Screenshot-phone-All-Devices.png](./visuals/Screenshot-phone-All-Devices.png)
+
+### Information Architecture and Flow
+
+- Cross-project flow concept: [Screenshot-desktop-2-My-Task-Flow.png](./visuals/Screenshot-desktop-2-My-Task-Flow.png)
+- Board/list behavior: [Screenshot-desktop-3-Project-layouts.png](./visuals/Screenshot-desktop-3-Project-layouts.png)
+- Mobile board/list variant: [Screenshot-phone-Project-Layouts.png](./visuals/Screenshot-phone-Project-Layouts.png)
+
+### Task Detail and Content Density
+
+- Desktop task detail panel: [Screenshot-desktop-4-Task.png](./visuals/Screenshot-desktop-4-Task.png)
+- Subtasks and attachments: [Screenshot-phone-Subtasks-and-Attachments.png](./visuals/Screenshot-phone-Subtasks-and-Attachments.png)
+- Multi-window productivity context: [Screenshot-desktop-5-Multiple-Windows.png](./visuals/Screenshot-desktop-5-Multiple-Windows.png)
+
+### Search, Widgets, and Focus
+
+- Search and widgets context: [Screenshot-desktop-6-Search-and-Widgets.png](./visuals/Screenshot-desktop-6-Search-and-Widgets.png)
+- My Task Flow mobile emphasis: [Screenshot-phone-My-Task-Flow.png](./visuals/Screenshot-phone-My-Task-Flow.png)
+- Focus timer context: [Screenshot-desktop-8-Focus-Timer.png](./visuals/Screenshot-desktop-8-Focus-Timer.png)
+
+### Dark Mode
+
+- Desktop dark mode: [Screenshot-desktop-7-Dark-mode.png](./visuals/Screenshot-desktop-7-Dark-mode.png)
+- Mobile dark mode: [Screenshot-phone-Dark-Mode.png](./visuals/Screenshot-phone-Dark-Mode.png)
 
 ## Visual Direction
 

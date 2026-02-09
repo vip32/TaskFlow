@@ -18,6 +18,10 @@ The codebase follows DDD with a rich domain model and clean architecture. Busine
 - Deployment: Docker (Raspberry Pi ARM64 target), private Tailscale network
 - Testing: xUnit
 
+## Design References
+
+- Visual UI/UX guide based on current brand/product screenshots: `docs/VISUAL_UI_UX_GUIDE.md`
+
 ## Layering Details
 
 - **Dependency direction**: `Presentation -> Application -> Domain` and `Infrastructure -> Domain`
