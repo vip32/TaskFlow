@@ -89,6 +89,113 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        return await db.Tasks
+            .AsNoTracking()
+            .Where(t => t.SubscriptionId == subscriptionId)
+            .OrderBy(t => t.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetRecentAsync(int days, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        var minCreatedAt = DateTime.UtcNow.AddDays(-Math.Abs(days));
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        return await db.Tasks
+            .AsNoTracking()
+            .Where(t => t.SubscriptionId == subscriptionId && t.CreatedAt >= minCreatedAt)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        var minCreatedAt = DateTime.UtcNow.AddDays(-Math.Abs(days));
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        return await db.Tasks
+            .AsNoTracking()
+            .Where(t => t.SubscriptionId == subscriptionId && t.ProjectId == Guid.Empty && t.CreatedAt >= minCreatedAt)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetDueOnDateAsync(DateOnly localDate, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        return await db.Tasks
+            .AsNoTracking()
+            .Where(t => t.SubscriptionId == subscriptionId && t.HasDueDate && t.DueDateLocal == localDate)
+            .OrderBy(t => t.DueTimeLocal)
+            .ThenBy(t => t.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetDueInRangeAsync(DateOnly localStartInclusive, DateOnly localEndInclusive, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        return await db.Tasks
+            .AsNoTracking()
+            .Where(t =>
+                t.SubscriptionId == subscriptionId &&
+                t.HasDueDate &&
+                t.DueDateLocal >= localStartInclusive &&
+                t.DueDateLocal <= localEndInclusive)
+            .OrderBy(t => t.DueDateLocal)
+            .ThenBy(t => t.DueTimeLocal)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetDueAfterDateAsync(DateOnly localDateExclusive, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        return await db.Tasks
+            .AsNoTracking()
+            .Where(t => t.SubscriptionId == subscriptionId && t.HasDueDate && t.DueDateLocal > localDateExclusive)
+            .OrderBy(t => t.DueDateLocal)
+            .ThenBy(t => t.DueTimeLocal)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetByIdsAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(taskIds);
+
+        var ids = taskIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+
+        await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
+        return await db.Tasks
+            .AsNoTracking()
+            .Where(t => t.SubscriptionId == subscriptionId && ids.Contains(t.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public async global::System.Threading.Tasks.Task<DomainTask> AddAsync(DomainTask task, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(task);

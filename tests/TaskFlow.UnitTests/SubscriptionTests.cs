@@ -53,4 +53,26 @@ public class SubscriptionTests
 
         Assert.True(isActive);
     }
+
+    /// <summary>
+    /// Verifies default timezone is Europe/Berlin.
+    /// </summary>
+    [Fact]
+    public void Constructor_DefaultTimezone_IsEuropeBerlin()
+    {
+        var subscription = new Subscription("Starter", SubscriptionTier.Free);
+
+        Assert.Equal("Europe/Berlin", subscription.TimeZoneId);
+    }
+
+    /// <summary>
+    /// Verifies timezone update rejects unknown ids.
+    /// </summary>
+    [Fact]
+    public void SetTimeZone_UnknownTimeZone_ThrowsArgumentException()
+    {
+        var subscription = new Subscription("Starter", SubscriptionTier.Free);
+
+        Assert.Throws<ArgumentException>(() => subscription.SetTimeZone("invalid/timezone"));
+    }
 }

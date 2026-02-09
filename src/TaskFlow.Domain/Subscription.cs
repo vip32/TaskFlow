@@ -6,6 +6,7 @@ namespace TaskFlow.Domain;
 public class Subscription
 {
     private readonly List<SubscriptionSchedule> schedules = [];
+    private const string DEFAULT_TIME_ZONE_ID = "Europe/Berlin";
 
     /// <summary>
     /// Gets the unique identifier of the subscription.
@@ -33,6 +34,11 @@ public class Subscription
     public DateTime CreatedAt { get; private set; }
 
     /// <summary>
+    /// Gets the IANA time zone identifier used for date bucketing and reminders.
+    /// </summary>
+    public string TimeZoneId { get; private set; }
+
+    /// <summary>
     /// Gets all schedules attached to this subscription.
     /// </summary>
     public IReadOnlyCollection<SubscriptionSchedule> Schedules => this.schedules.AsReadOnly();
@@ -40,6 +46,7 @@ public class Subscription
     private Subscription()
     {
         this.Name = string.Empty;
+        this.TimeZoneId = DEFAULT_TIME_ZONE_ID;
     }
 
     /// <summary>
@@ -48,7 +55,7 @@ public class Subscription
     /// <param name="name">Display name of the subscription.</param>
     /// <param name="tier">Commercial tier of the subscription.</param>
     public Subscription(string name, SubscriptionTier tier)
-        : this(Guid.NewGuid(), name, tier, true)
+        : this(Guid.NewGuid(), name, tier, true, DEFAULT_TIME_ZONE_ID)
     {
     }
 
@@ -59,7 +66,8 @@ public class Subscription
     /// <param name="name">Display name of the subscription.</param>
     /// <param name="tier">Commercial tier of the subscription.</param>
     /// <param name="isEnabled">Whether the subscription is enabled.</param>
-    public Subscription(Guid id, string name, SubscriptionTier tier, bool isEnabled)
+    /// <param name="timeZoneId">IANA time zone identifier.</param>
+    public Subscription(Guid id, string name, SubscriptionTier tier, bool isEnabled, string timeZoneId = DEFAULT_TIME_ZONE_ID)
     {
         if (id == Guid.Empty)
         {
@@ -76,6 +84,16 @@ public class Subscription
         this.Tier = tier;
         this.IsEnabled = isEnabled;
         this.CreatedAt = DateTime.UtcNow;
+        this.TimeZoneId = ValidateTimeZoneId(timeZoneId);
+    }
+
+    /// <summary>
+    /// Updates the subscription timezone.
+    /// </summary>
+    /// <param name="timeZoneId">Target IANA time zone identifier.</param>
+    public void SetTimeZone(string timeZoneId)
+    {
+        this.TimeZoneId = ValidateTimeZoneId(timeZoneId);
     }
 
     /// <summary>
@@ -152,5 +170,29 @@ public class Subscription
         }
 
         return this.schedules.Any(schedule => schedule.IsActiveAt(currentDate));
+    }
+
+    private static string ValidateTimeZoneId(string timeZoneId)
+    {
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            throw new ArgumentException("Time zone id cannot be empty.", nameof(timeZoneId));
+        }
+
+        var normalized = timeZoneId.Trim();
+        try
+        {
+            _ = TimeZoneInfo.FindSystemTimeZoneById(normalized);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            throw new ArgumentException($"Unknown timezone id '{normalized}'.", nameof(timeZoneId));
+        }
+        catch (InvalidTimeZoneException)
+        {
+            throw new ArgumentException($"Invalid timezone id '{normalized}'.", nameof(timeZoneId));
+        }
+
+        return normalized;
     }
 }
