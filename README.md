@@ -2,29 +2,40 @@
 
 TaskFlow is a focused productivity app built to help people do more than collect tasks - it helps them act on what matters and finish meaningful work.
 
-It is designed around one core idea: move from task hoarding to task completion. It does that with project-based planning, rich task details, and My Task Flow views that highlight what to do now, next, and soon.
+It is designed around one core idea: move from task hoarding to task completion. The centerpiece is **My Task Flow** - a cross-project execution surface where tasks are triaged, scheduled, and completed.
 
 ## TL;DR
 
-TaskFlow turns your task list into an execution system. Instead of burying tasks in static lists, it helps you prioritize, focus, and complete work through practical flows like Today, Upcoming, and Recent.
+TaskFlow turns your task list into an execution system. Instead of burying tasks in static project lists, it helps you prioritize, triage, and complete work through **My Task Flow** sections like Recent, Today, This Week, and Upcoming.
 
 ## Concept
 
-The core concept is **My Task Flow**: a cross-project execution view that helps users decide what to do now, what to schedule next, and what to process later. Instead of being locked inside individual projects, important tasks can be surfaced into focused views so users can act with clarity.
+The core concept is **My Task Flow**: a cross-project execution view that helps users decide what to do now, what to schedule next, and what to process later.
+
+Tasks can be created without a project, appear in Recent for triage, and be assigned/completed/cancelled directly from My Task Flow. Users can also create custom sections with hybrid behavior (rule-based + manual curation), so the view adapts to how they think and work.
+
+Time-based grouping (Today, This Week, Upcoming) and reminders are evaluated in the subscription timezone (default `Europe/Berlin`) to keep planning behavior predictable.
 
 ## How Users Take Advantage
 
 - Keep project structure for planning, while using My Task Flow for daily execution
-- Prioritize with rich task context: priority, notes, subtasks, and focus markers
+- Capture fast with unassigned tasks, then triage in Recent
+- Prioritize with rich task context: priority, notes, subtasks, tags, and focus markers
+- Use built-in sections (Recent, Today, This Week, Upcoming) and custom hybrid sections
+- Add multiple reminders per task (for example: 15 minutes before and on time)
 - Switch between list and board views depending on workflow style
-- Use Today, Upcoming, and Recent views to keep momentum and reduce overwhelm
 - Move and maintain selected projects via JSON import/export with ID-based add/update
 
 ## Features Overview
 
+- **My Task Flow (primary feature)**
+  - Cross-project execution surface with built-in sections: Recent, Today, This Week, Upcoming
+  - Custom user-managed sections with hybrid population (rules + manual curation)
+  - Unassigned task triage directly from flow (assign, complete, cancel)
 - Project-based task organization with clear ownership and context
-- Rich tasks with priority, notes, subtasks, and focus markers
-- "My Task Flow" views for Today, Upcoming, and Recent
+- Rich tasks with priority, notes, subtasks, tags, and focus markers
+- Due dates and multiple reminders per task
+- Subscription-timezone aware scheduling (default `Europe/Berlin`)
 - List and board workflows to match different planning styles
 - Focus-oriented workflow support for action and momentum
 - Import/export for selected projects using JSON (ID-based add/update)

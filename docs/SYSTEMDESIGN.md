@@ -16,13 +16,17 @@
 
 ## Overview
 
-TaskFlow is a task management application built with Blazor Server, providing users with the ability to organize tasks into projects, manage priorities, and visualize workflows using Kanban boards.
+TaskFlow is a task management application built with Blazor Server, providing users with project-based and time-based workflows, including unassigned task capture, customizable My Task Flow sections, and reminder-driven execution.
 
 ### Key Features
 - **Project Management**: Create, edit, and organize tasks into projects
 - **Task Management**: Create, edit, delete, and complete tasks with priorities
+- **Unassigned Task Capture**: Tasks can be created without project assignment and triaged later
 - **Subtasks**: 1-level nested subtasks with auto-completion
 - **Multiple Views**: List view and Kanban board view per project
+- **My Task Flow**: Cross-project sections (Recent, Today, This Week, Upcoming) plus custom hybrid sections
+- **Reminders**: Multiple reminders per task with date-time and date-only fallback behavior
+- **Timezone-Aware Scheduling**: Subscription-local date bucketing and reminder evaluation (default Europe/Berlin)
 - **Advanced UX**: In-line editing, keyboard shortcuts, search, sort, filters
 - **Real-time Updates**: Blazor Server SignalR for live UI updates
 - **Mobile-First**: Fully responsive design with desktop-first approach
@@ -41,6 +45,8 @@ The repository currently contains the foundational architecture, persistence bas
 - **Project references wired**: `Presentation -> Application, Infrastructure`, `Application -> Domain`, `Infrastructure -> Domain`, tests reference `Domain` and `Application`.
 - **Domain baseline implemented**: `Project`, `Task`, `FocusSession`, `Subscription`, and `SubscriptionSchedule` aggregates plus value enums and repository interfaces.
 - **Domain refinements implemented**: project/task tagging support, optional project note, expanded task statuses (`New`, `InProgress`, `Paused`, `Done`, `Cancelled`), and task title history entity for autocomplete.
+- **My Task Flow extension planned**: optional project assignment for tasks, custom section management (rule + manual hybrid), and due/reminder support aligned with requirements.
+- **Timezone model planned**: subscription timezone persisted as IANA id; default value `Europe/Berlin` used for local-day and local-week bucketing.
 - **Subscription model baseline**: each user is expected to operate within one current subscription context, with subscription schedules and tiers (`Free`, `Plus`, `Pro`).
 - **Infrastructure baseline implemented (0C)**: `AppDbContext`, EF Core mappings, repositories using `IDbContextFactory`, migration baseline, and initial data seeding.
 - **Application baseline implemented (0D)**: project and task orchestrators provide immediate-persistence use-case methods for create/update operations.
@@ -409,11 +415,11 @@ If an operation requires multiple repository calls in one transaction:
 public interface IProjectOrchestrator
 {
     Task<List<Project>> GetAllProjectsAsync();
-    Task<Project?> GetProjectByIdAsync(Guid id);
+    Task<Project> GetProjectByIdAsync(Guid id);
     Task<Project> CreateProjectAsync(string name, string color, string icon);
-    Task<Project?> UpdateProjectAsync(Guid id, string name, string color, string icon);
+    Task<Project> UpdateProjectAsync(Guid id, string name, string color, string icon);
     Task<bool> DeleteProjectAsync(Guid id);
-    Task<Project?> UpdateViewTypeAsync(Guid projectId, ProjectViewType viewType);
+    Task<Project> UpdateViewTypeAsync(Guid projectId, ProjectViewType viewType);
     Task<int> GetTaskCountAsync(Guid projectId);
 }
 ```
@@ -422,21 +428,26 @@ public interface IProjectOrchestrator
 ```csharp
 public interface ITaskOrchestrator
 {
-    Task<List<Task>> GetTasksByProjectAsync(Guid projectId);
-    Task<Task?> GetTaskByIdAsync(Guid id);
-    Task<Task> CreateTaskAsync(string title, Guid projectId);
-    Task<bool> UpdateTaskAsync(Task task);
-    Task<bool> DeleteTaskAsync(Guid id);
-    Task<bool> CompleteTaskAsync(Guid id);
-    Task<bool> ToggleFocusAsync(Guid id);
-    Task<bool> MoveTaskToProjectAsync(Guid taskId, Guid newProjectId);
-    Task<Task?> DuplicateTaskAsync(Guid taskId);
-    Task<int> ClearCompletedAsync(Guid projectId);
-    Task<List<Task>> SearchTasksAsync(string query, Guid projectId);
-    Task<List<Task>> GetTasksByPriorityAsync(TaskPriority priority, Guid projectId);
-    Task<List<Task>> GetFocusedTasksAsync(Guid projectId);
-    Task<Task> CreateSubTaskAsync(Guid parentTaskId, string title);
-    Task<bool> SetTaskStatusAsync(Guid taskId, TaskStatus status);
+    Task<List<Task>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default);
+    Task<List<Task>> SearchAsync(Guid projectId, string query, CancellationToken cancellationToken = default);
+    Task<List<string>> GetNameSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default);
+
+    Task<Task> CreateAsync(Guid projectId, string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
+    Task<Task> CreateUnassignedAsync(string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
+    Task<Task> UpdateTitleAsync(Guid taskId, string newTitle, CancellationToken cancellationToken = default);
+    Task<Task> UpdateNoteAsync(Guid taskId, string newNote, CancellationToken cancellationToken = default);
+    Task<Task> SetPriorityAsync(Guid taskId, TaskPriority priority, CancellationToken cancellationToken = default);
+    Task<Task> SetStatusAsync(Guid taskId, TaskStatus status, CancellationToken cancellationToken = default);
+    Task<Task> ToggleFocusAsync(Guid taskId, CancellationToken cancellationToken = default);
+    Task<Task> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default);
+    Task<Task> UnassignFromProjectAsync(Guid taskId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid taskId, CancellationToken cancellationToken = default);
+
+    // My Task Flow
+    Task<List<Task>> GetRecentAsync(CancellationToken cancellationToken = default);
+    Task<List<Task>> GetTodayAsync(CancellationToken cancellationToken = default);
+    Task<List<Task>> GetThisWeekAsync(CancellationToken cancellationToken = default);
+    Task<List<Task>> GetUpcomingAsync(CancellationToken cancellationToken = default);
 }
 ```
 
@@ -445,7 +456,7 @@ public interface ITaskOrchestrator
 public interface IProjectRepository
 {
     Task<List<Project>> GetAllAsync();
-    Task<Project?> GetByIdAsync(Guid id);
+    Task<Project> GetByIdAsync(Guid id);
     Task<Project> AddAsync(Project project);
     Task<Project> UpdateAsync(Project project);
     Task<bool> DeleteAsync(Guid id);
@@ -456,14 +467,17 @@ public interface IProjectRepository
 ```csharp
 public interface ITaskRepository
 {
-    Task<List<Task>> GetByProjectIdAsync(Guid projectId);
-    Task<List<Task>> GetByPriorityAsync(TaskPriority priority, Guid projectId);
-    Task<List<Task>> SearchAsync(string query, Guid projectId);
-    Task<List<Task>> GetFocusedAsync(Guid projectId);
-    Task<Task> AddAsync(Task task);
-    Task<Task> UpdateAsync(Task task);
-    Task<bool> DeleteAsync(Guid id);
-    Task<Task?> GetByIdAsync(Guid id);
+    Task<List<Task>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default);
+    Task<List<Task>> GetByPriorityAsync(TaskPriority priority, Guid projectId, CancellationToken cancellationToken = default);
+    Task<List<Task>> SearchAsync(string query, Guid projectId, CancellationToken cancellationToken = default);
+    Task<List<Task>> GetFocusedAsync(Guid projectId, CancellationToken cancellationToken = default);
+    Task<List<Task>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default);
+    Task<List<Task>> GetDueOnDateAsync(DateOnly localDate, CancellationToken cancellationToken = default);
+    Task<List<Task>> GetDueInRangeAsync(DateOnly localStartInclusive, DateOnly localEndInclusive, CancellationToken cancellationToken = default);
+    Task<Task> AddAsync(Task task, CancellationToken cancellationToken = default);
+    Task<Task> UpdateAsync(Task task, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Task> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 }
 ```
 
@@ -493,12 +507,12 @@ Components extracted for reuse across List and Board views:
 **EmptyState.razor**
 - Displays empty state with icon and message
 - Customizable for different contexts
-- Used in: Todos.razor, Today.razor, Upcoming.razor, Recent.razor
+- Used in: Tasks.razor, MyTaskFlow.razor, section views
 
 **FilterDropdown.razor**
 - Reusable filter dropdown component
 - Supports different filter types
-- Used in: Todos.razor, Today.razor, Upcoming.razor
+- Used in: Tasks.razor, MyTaskFlow.razor
 
 ---
 
@@ -612,18 +626,19 @@ public class Task
 {
     public Guid Id { get; private set; }                    // Primary Key
     public string Title { get; private set; }              // Task title
-    public string? Note { get; private set; }             // Additional notes (optional, nullable)
+    public string Note { get; private set; }               // Additional notes (optional, empty when not set)
     public TaskPriority Priority { get; private set; }     // 1=Low, 2=Medium, 3=High
     public bool IsCompleted { get; private set; }          // Completion status
     public bool IsFocused { get; private set; }            // Focus pin for prioritized display
-    public TaskStatus Status { get; private set; }         // ToDo, InProgress, Done
-    public Guid ProjectId { get; private set; }            // Foreign Key to Project
-    public Project Project { get; private set; }           // Navigation property
-    public Guid? ParentTaskId { get; private set; }       // For SubTasks (nullable)
-    public Task ParentTask { get; private set; }           // Navigation property (parent)
+    public TaskStatus Status { get; private set; }         // New, InProgress, Paused, Done, Cancelled
+    public Guid ProjectId { get; private set; }            // Optional association; Guid.Empty means unassigned
+    public Guid ParentTaskId { get; private set; }         // Guid.Empty when not a subtask
     public List<Task> SubTasks { get; private set; } = new(); // Navigation property (children)
     public DateTime CreatedAt { get; private set; }        // Creation timestamp
-    public DateTime? CompletedAt { get; private set; }      // Completion timestamp
+    public DateTime CompletedAt { get; private set; }      // DateTime.MinValue when not completed
+    public DateTime DueAtUtc { get; private set; }         // DateTime.MinValue when no due date/time
+    public DateOnly DueDateLocal { get; private set; }     // DateOnly.MinValue when no due date
+    public bool IsMarkedForToday { get; private set; }     // Explicit Today marker independent of due date
 
     // Business Logic Methods
     public void Complete()
@@ -640,13 +655,17 @@ public class Task
     public void Uncomplete()
     {
         IsCompleted = false;
-        CompletedAt = null;
-        // Note: SubTasks stay completed per requirements
+        CompletedAt = DateTime.MinValue;
+        if (Status == TaskStatus.Done)
+        {
+            Status = TaskStatus.New;
+        }
     }
 
     public void AddSubTask(Task subTask)
     {
         subTask.ParentTaskId = Id;
+        subTask.MoveToProject(ProjectId);
         SubTasks.Add(subTask);
     }
 
@@ -663,6 +682,19 @@ public class Task
     public void MoveToProject(Guid newProjectId)
     {
         ProjectId = newProjectId;
+        foreach (var subTask in SubTasks)
+        {
+            subTask.MoveToProject(newProjectId);
+        }
+    }
+
+    public void UnassignFromProject()
+    {
+        ProjectId = Guid.Empty;
+        foreach (var subTask in SubTasks)
+        {
+            subTask.UnassignFromProject();
+        }
     }
 
     public void UpdateTitle(string newTitle)
@@ -672,9 +704,9 @@ public class Task
         Title = newTitle;
     }
 
-    public void UpdateNote(string? newNote)
+    public void UpdateNote(string newNote)
     {
-        Note = newNote;
+        Note = string.IsNullOrWhiteSpace(newNote) ? string.Empty : newNote.Trim();
     }
 
     public void SetStatus(TaskStatus status)
@@ -685,13 +717,30 @@ public class Task
             Complete();
         }
     }
+
+    public void SetDueDateLocal(DateOnly dueDateLocal)
+    {
+        DueDateLocal = dueDateLocal;
+    }
+
+    public void SetDueAtUtc(DateTime dueAtUtc)
+    {
+        DueAtUtc = dueAtUtc;
+    }
+
+    public void ToggleTodayMark()
+    {
+        IsMarkedForToday = !IsMarkedForToday;
+    }
 }
 
 public enum TaskStatus
 {
-    ToDo,
+    New,
     InProgress,
-    Done
+    Paused,
+    Done,
+    Cancelled
 }
 
 public enum TaskPriority
@@ -703,18 +752,58 @@ public enum TaskPriority
 ```
 
 ### Indexes
-- `Tasks_ProjectId`: Index on ProjectId for faster project queries
+- `Tasks_SubscriptionId_ProjectId_CreatedAt`: Composite index for project and unassigned task queries
 - `Tasks_Priority`: Index on Priority for filtering
 - `Tasks_IsCompleted`: Index on IsCompleted for filtering
 - `Tasks_IsFocused`: Index on IsFocused for focused tasks
 - `Tasks_Status`: Index on Status for board views
 - `Tasks_ParentTaskId`: Index on ParentTaskId for SubTask queries
+- `Tasks_DueDateLocal`: Index for Today/This Week/Upcoming section queries
+- `Tasks_DueAtUtc`: Index for reminder prefiltering and time-range queries
+
+### My Task Flow and Reminder Entities (Target)
+
+```csharp
+public class TaskReminder
+{
+    public Guid Id { get; private set; }
+    public Guid TaskId { get; private set; }
+    public ReminderMode Mode { get; private set; }          // RelativeToDueTime or AbsoluteLocalTime
+    public int MinutesOffset { get; private set; }          // e.g. -15, 0 for on-time
+    public TimeOnly DateOnlyFallbackLocalTime { get; private set; }
+    public DateTime TriggerAtUtc { get; private set; }
+    public DateTime SentAtUtc { get; private set; }         // DateTime.MinValue means not yet delivered
+}
+
+public class MyTaskFlowSection
+{
+    public Guid Id { get; private set; }
+    public Guid SubscriptionId { get; private set; }
+    public string Name { get; private set; }
+    public bool IsSystemSection { get; private set; }       // Recent, Today, ThisWeek, Upcoming
+    public int SortOrder { get; private set; }
+}
+
+public class MyTaskFlowSectionTask
+{
+    public Guid SectionId { get; private set; }
+    public Guid TaskId { get; private set; }
+    public bool IsManualInclude { get; private set; }
+}
+```
+
+- Built-in sections are seeded per subscription: `Recent`, `Today`, `This Week`, `Upcoming`.
+- Custom sections support hybrid population: rule-based results plus manual task curation.
+- Reminder delivery is idempotent by storing `SentAtUtc` after successful notification.
 
 ### Seeding
 Initial data:
 - 1 default project: "Inbox" (IsDefault=true, Color="#40E0D0", Icon="inbox")
 - 3 sample tasks with different priorities and notes
+- 1 sample unassigned task for My Task Flow triage
 - 1 sample task with IsFocused=true
+- Built-in My Task Flow sections: Recent, Today, This Week, Upcoming
+- Subscription timezone default set to `Europe/Berlin`
 - All with CreatedAt timestamps
 
 ---
@@ -750,121 +839,50 @@ Initial data:
 
 #### ProjectOrchestrator
 ```csharp
-public class ProjectOrchestrator : IProjectOrchestrator
+public sealed class ProjectOrchestrator : IProjectOrchestrator
 {
-    private readonly IProjectRepository _projectRepository;
-    private readonly ITaskRepository _taskRepository;
+    private readonly IProjectRepository projectRepository;
+    private readonly ICurrentSubscriptionAccessor currentSubscriptionAccessor;
 
-    public async Task<Project> CreateProjectAsync(string name, string color, string icon)
+    public ProjectOrchestrator(IProjectRepository projectRepository, ICurrentSubscriptionAccessor currentSubscriptionAccessor)
     {
-        // Domain entity creation
-        var project = new Project
-        {
-            Id = Guid.NewGuid(),
-            Name = name,
-            Color = color,
-            Icon = icon,
-            IsDefault = false,
-            ViewType = ProjectViewType.List,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        return await _projectRepository.AddAsync(project);
+        this.projectRepository = projectRepository;
+        this.currentSubscriptionAccessor = currentSubscriptionAccessor;
     }
 
-    public async Task<Project?> UpdateViewTypeAsync(Guid projectId, ProjectViewType viewType)
+    public async Task<Project> CreateProjectAsync(string name, string color, string icon, CancellationToken cancellationToken = default)
     {
-        var project = await _projectRepository.GetByIdAsync(projectId);
-        if (project == null) return null;
-
-        // Domain logic
-        project.UpdateViewType(viewType);
-
-        return await _projectRepository.UpdateAsync(project);
-    }
-
-    public async Task<int> GetTaskCountAsync(Guid projectId)
-    {
-        var project = await _projectRepository.GetByIdAsync(projectId);
-        return project?.GetTaskCount() ?? 0; // Domain logic
+        var subscription = this.currentSubscriptionAccessor.GetCurrentSubscription();
+        var project = new Project(subscription.Id, name, color, icon);
+        return await this.projectRepository.AddAsync(project, cancellationToken);
     }
 }
 ```
 
 #### TaskOrchestrator
 ```csharp
-public class TaskOrchestrator : ITaskOrchestrator
+public sealed class TaskOrchestrator : ITaskOrchestrator
 {
-    private readonly ITaskRepository _taskRepository;
-    private readonly IProjectRepository _projectRepository;
+    private readonly ITaskRepository taskRepository;
+    private readonly ITaskHistoryRepository taskHistoryRepository;
+    private readonly ICurrentSubscriptionAccessor currentSubscriptionAccessor;
 
-    public async Task<Task> CreateTaskAsync(string title, Guid projectId)
+    public async Task<Task> CreateUnassignedAsync(string title, TaskPriority priority, string note, CancellationToken cancellationToken = default)
     {
-        var project = await _projectRepository.GetByIdAsync(projectId);
-        if (project == null)
-            throw new NotFoundException("Project not found");
-
-        // Domain entity creation
-        var task = new Task
-        {
-            Id = Guid.NewGuid(),
-            Title = title,
-            Priority = TaskPriority.Medium,
-            Status = TaskStatus.ToDo,
-            IsCompleted = false,
-            IsFocused = false,
-            ProjectId = projectId,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        // Domain logic - add to project
-        project.AddTask(task);
-
-        return await _taskRepository.AddAsync(task);
+        var subscription = this.currentSubscriptionAccessor.GetCurrentSubscription();
+        var task = new Task(subscription.Id, title, Guid.Empty);
+        task.SetPriority(priority);
+        task.UpdateNote(note);
+        var created = await this.taskRepository.AddAsync(task, cancellationToken);
+        await this.taskHistoryRepository.RegisterUsageAsync(created.Title, false, cancellationToken);
+        return created;
     }
 
-    public async Task<bool> CompleteTaskAsync(Guid taskId)
+    public async Task<Task> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default)
     {
-        var task = await _taskRepository.GetByIdAsync(taskId);
-        if (task == null) return false;
-
-        // Domain logic - business rule here!
-        task.Complete();
-
-        await _taskRepository.UpdateAsync(task);
-        return true;
-    }
-
-    public async Task<bool> ToggleFocusAsync(Guid taskId)
-    {
-        var task = await _taskRepository.GetByIdAsync(taskId);
-        if (task == null) return false;
-
-        // Domain logic
-        task.ToggleFocus();
-
-        await _taskRepository.UpdateAsync(task);
-        return true;
-    }
-
-    public async Task<bool> MoveTaskToProjectAsync(Guid taskId, Guid newProjectId)
-    {
-        var task = await _taskRepository.GetByIdAsync(taskId);
-        var oldProject = await _projectRepository.GetByIdAsync(task.ProjectId);
-        var newProject = await _projectRepository.GetByIdAsync(newProjectId);
-
-        if (task == null || oldProject == null || newProject == null)
-            return false;
-
-        // Cross-aggregate coordination
-        oldProject.RemoveTask(task);
-        newProject.AddTask(task);
-
-        // Domain logic
+        var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.MoveToProject(newProjectId);
-
-        await _taskRepository.UpdateAsync(task);
-        return true;
+        return await this.taskRepository.UpdateAsync(task, cancellationToken);
     }
 }
 ```
@@ -896,27 +914,27 @@ public sealed class TaskRepository : ITaskRepository
         this._factory = factory;
     }
 
-    public async Task<List<Task>> GetByProjectIdAsync(Guid projectId)
+    public async Task<List<Task>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
-        await using var db = await this._factory.CreateDbContextAsync();
+        await using var db = await this._factory.CreateDbContextAsync(cancellationToken);
         return await db.Tasks
             .Where(t => t.ProjectId == projectId)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<Task?> GetByIdAsync(Guid id)
+    public async Task<Task> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await using var db = await this._factory.CreateDbContextAsync();
+        await using var db = await this._factory.CreateDbContextAsync(cancellationToken);
         return await db.Tasks
-            .FirstOrDefaultAsync(t => t.Id == id);
+            .FirstAsync(t => t.Id == id, cancellationToken);
     }
 
-    public async Task<Task> AddAsync(Task task)
+    public async Task<Task> AddAsync(Task task, CancellationToken cancellationToken = default)
     {
-        await using var db = await this._factory.CreateDbContextAsync();
+        await using var db = await this._factory.CreateDbContextAsync(cancellationToken);
         db.Tasks.Add(task);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
         return task;
     }
 }
@@ -935,9 +953,12 @@ flowchart TD
     Main --> Body["@Body"]
     Body --> Index["Index.razor"]
     Body --> Tasks["Tasks.razor"]
+    Body --> Flow["MyTaskFlow.razor"]
     Tasks --> Toolbar["Toolbar"]
     Tasks --> List["ListView"]
     Tasks --> Board["BoardView"]
+    Flow --> SectionList["SectionList"]
+    SectionList --> SectionCard["TaskFlowSectionCard"]
     List --> Item["TaskItem"]
     Item --> SubTasks["SubTaskList"]
     Board --> Column["BoardColumn"]
@@ -958,11 +979,23 @@ flowchart TD
 - **Responsibility**: Navigation sidebar with project list
 - **Features**:
   - Project list with icons, names, and task counts
+  - My Task Flow entries: Recent, Today, This Week, Upcoming
+  - User-created custom section entries
   - Color badges for project colors
   - Active project highlighting
   - "Add Project" button
   - Responsive collapse/expand
   - Focused Tasks section (if any tasks are pinned)
+
+#### MyTaskFlow.razor
+- **Responsibility**: Cross-project and unassigned task triage surface
+- **Features**:
+  - Section-based layout with built-in and custom sections
+  - Unassigned tasks surfaced in Recent for quick processing
+  - Inline actions: assign to project, complete, cancel
+  - Section management: create, rename, reorder, delete custom sections
+  - Hybrid section membership: rule-driven and manual curation
+  - Due buckets resolved in subscription-local timezone
 
 #### Tasks.razor
 - **Responsibility**: Main task management page
@@ -1003,9 +1036,9 @@ flowchart TD
   - Visual hierarchy
 
 #### BoardView.razor
-- **Responsibility**: Kanban board with 3 columns
+- **Responsibility**: Kanban board with status columns
 - **Features**:
-  - 3 columns: ToDo, InProgress, Done
+  - 5 columns: New, InProgress, Paused, Done, Cancelled
   - Drag-and-drop between columns
   - Add task button per column
   - Task count badges per column
@@ -1205,13 +1238,17 @@ public class TaskExportDto
 {
     public Guid Id { get; set; }
     public string Title { get; set; }
-    public string? Note { get; set; }
+    public string Note { get; set; }
     public string Priority { get; set; }
     public bool IsCompleted { get; set; }
     public bool IsFocused { get; set; }
     public string Status { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public DateTime CompletedAt { get; set; }
+    public DateOnly DueDateLocal { get; set; }
+    public DateTime DueAtUtc { get; set; }
+    public bool IsMarkedForToday { get; set; }
+    public Guid ProjectId { get; set; }
     public List<TaskExportDto> SubTasks { get; set; } = new();
 }
 ```
@@ -1546,9 +1583,11 @@ find $BACKUP_DIR -name "*.conf" -mtime +30 -delete
 ### C. Status Color Coding
 | Status | Color | Hex |
 |--------|-------|-----|
-| ToDo | Blue | #3B82F6 |
+| New | Blue | #3B82F6 |
 | In Progress | Yellow | #F59E0B |
+| Paused | Gray | #6B7280 |
 | Done | Green | #10B981 |
+| Cancelled | Red | #EF4444 |
 
 ### D. Project Icon Options
 - `folder` - Default folder icon
