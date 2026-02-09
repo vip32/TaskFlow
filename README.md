@@ -1,2 +1,51 @@
 # TaskFlow
-> Task Flow is a focused personal productivity app built to help you do more than just collect tasks — it helps you follow through and finish them. While most todo apps stop at organizing lists, Task Flow is designed around action, with project-based planning, rich task context, focus-driven workflows, and the “My Task Flow” views that surface what matters now, next, and recently completed. It brings structure, clarity, and momentum together so your task list becomes a system for getting things done, not just storing intentions.
+
+TaskFlow is a focused productivity app built to help people do more than collect tasks - it helps them act on what matters and finish meaningful work.
+
+It is designed around one core idea: move from task hoarding to task completion. It does that with project-based planning, rich task details, and My Task Flow views that highlight what to do now, next, and soon.
+
+## TL;DR
+
+TaskFlow turns your task list into an execution system. Instead of burying tasks in static lists, it helps you prioritize, focus, and complete work through practical flows like Today, Upcoming, and Recent.
+
+## Concept
+
+The core concept is **My Task Flow**: a cross-project execution view that helps users decide what to do now, what to schedule next, and what to process later. Instead of being locked inside individual projects, important tasks can be surfaced into focused views so users can act with clarity.
+
+## How Users Take Advantage
+
+- Keep project structure for planning, while using My Task Flow for daily execution
+- Prioritize with rich task context: priority, notes, subtasks, and focus markers
+- Switch between list and board views depending on workflow style
+- Use Today, Upcoming, and Recent views to keep momentum and reduce overwhelm
+- Move and maintain selected projects via JSON import/export with ID-based add/update
+
+## Features Overview
+
+- Project-based task organization with clear ownership and context
+- Rich tasks with priority, notes, subtasks, and focus markers
+- "My Task Flow" views for Today, Upcoming, and Recent
+- List and board workflows to match different planning styles
+- Focus-oriented workflow support for action and momentum
+- Import/export for selected projects using JSON (ID-based add/update)
+
+## Target Audience
+
+TaskFlow is for people who already have long task lists but struggle to consistently complete what matters most. It is especially useful for:
+
+- Solo professionals and small business owners juggling multiple priorities
+- Students managing assignments, deadlines, and research tasks
+- Parents and households coordinating many parallel responsibilities
+- Anyone who wants a practical, execution-first task system instead of a passive backlog
+
+## Architectural Overview
+
+TaskFlow follows a layered architecture with a rich domain model at its core.
+
+- `TaskFlow.Presentation`: Blazor Server UI, routing, and dependency registration
+- `TaskFlow.Application`: application services/orchestrators for use-case coordination
+- `TaskFlow.Domain`: core aggregates, value types, and business behavior
+- `TaskFlow.Infrastructure`: persistence and external integrations
+- `TaskFlow.UnitTests`: xUnit-based tests using AAA and Shouldly assertions
+
+Key principle: business rules live in the domain, while application services orchestrate and repositories handle database access.
