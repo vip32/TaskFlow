@@ -8,6 +8,27 @@
         "minver"
       ],
       "rollForward": false
+    },
+    "dotnet-ef": {
+      "version": "10.0.2",
+      "commands": [
+        "dotnet-ef"
+      ],
+      "rollForward": false
+    },
+    "dotnet-outdated-tool": {
+      "version": "4.6.9",
+      "commands": [
+        "dotnet-outdated"
+      ],
+      "rollForward": false
+    },
+    "dotnet-inspect": {
+      "version": "0.1.18",
+      "commands": [
+        "dotnet-inspect"
+      ],
+      "rollForward": false
     }
   }
 }
