@@ -25,11 +25,24 @@ if (string.IsNullOrWhiteSpace(connectionString))
     connectionString = "Data Source=taskflow.db";
 }
 
+Log.Information("Starting TaskFlow host with environment {EnvironmentName}", builder.Environment.EnvironmentName);
+Log.Information("Using SQLite connection string {ConnectionString}", connectionString);
+
 builder.Services.AddTaskFlowInfrastructure(connectionString);
 
 var app = builder.Build();
 
-await app.Services.InitializeTaskFlowDatabaseAsync();
+try
+{
+    Log.Information("Applying database migrations and seeding if required.");
+    await app.Services.InitializeTaskFlowDatabaseAsync();
+    Log.Information("Database initialization complete.");
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Database initialization failed.");
+    throw;
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -46,5 +59,13 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var urls = app.Urls.Count == 0
+        ? "(no urls configured)"
+        : string.Join(", ", app.Urls);
+    Log.Information("Startup complete. Listening on {Urls}.", urls);
+});
 
 app.Run();
