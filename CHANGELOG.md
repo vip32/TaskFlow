@@ -4,6 +4,8 @@ All notable updates to TaskFlow are documented here.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-02-09
+
 ### Added
 - Skill-driven automation support under `.agents/skills`, including workflows for development and release operations.
 - A dedicated changelog generation skill to turn commit history into user-friendly release notes.
