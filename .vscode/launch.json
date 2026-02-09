@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Blazor Server: Launch",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "dotnet: build (solution)",
+      "program": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "src/TaskFlow.Presentation/TaskFlow.Presentation.csproj"
+      ],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "Blazor Server: Attach",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    }
+  ]
+}
