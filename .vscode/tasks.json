@@ -1,0 +1,124 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dotnet: restore (solution)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "restore",
+        "TaskFlow.sln"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: build (solution)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "TaskFlow.sln",
+        "--configuration",
+        "Debug"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: build (solution, Release)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "TaskFlow.sln",
+        "--configuration",
+        "Release"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: clean (solution)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "clean",
+        "TaskFlow.sln"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: run (Blazor Server)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "src/TaskFlow.Presentation/TaskFlow.Presentation.csproj"
+      ],
+      "group": "none",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: watch (Blazor Server)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "watch",
+        "--project",
+        "src/TaskFlow.Presentation/TaskFlow.Presentation.csproj",
+        "run"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "isBackground": true,
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: restore + build (solution)",
+      "dependsOn": [
+        "dotnet: restore (solution)",
+        "dotnet: build (solution)"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}
