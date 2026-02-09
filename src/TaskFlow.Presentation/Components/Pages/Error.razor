@@ -26,11 +26,26 @@
 
 @code{
     [CascadingParameter]
-    private HttpContext? HttpContext { get; set; }
+    private HttpContext HttpContext { get; set; }
 
-    private string? RequestId { get; set; }
+    private string RequestId { get; set; } = string.Empty;
     private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
-    protected override void OnInitialized() =>
-        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+    protected override void OnInitialized()
+    {
+        var currentActivity = Activity.Current;
+        if (currentActivity is null)
+        {
+            RequestId = string.Empty;
+        }
+        else
+        {
+            RequestId = currentActivity.Id;
+        }
+
+        if (string.IsNullOrEmpty(RequestId) && HttpContext is not null)
+        {
+            RequestId = HttpContext.TraceIdentifier;
+        }
+    }
 }

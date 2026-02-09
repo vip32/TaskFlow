@@ -7,10 +7,19 @@ All notable updates to TaskFlow are documented here.
 ### Added
 - Skill-driven automation support under `.agents/skills`, including workflows for development and release operations.
 - A dedicated changelog generation skill to turn commit history into user-friendly release notes.
+- Initial solution and project structure with clean architecture layers under `src/` and tests under `tests/`.
+- New projects: `TaskFlow.Domain`, `TaskFlow.Application`, `TaskFlow.Infrastructure`, `TaskFlow.Presentation`, and `TaskFlow.UnitTests`.
+- Rich domain model baseline: `Project`, `Task`, `FocusSession`, value enums, and repository interfaces.
+- CI workflow at `.github/workflows/build.yml` for restore, build, test, and container build (no image push).
+- Root `Dockerfile` for building and running the Blazor presentation app.
+- Local tool manifest `dotnet-tools.json` with `minver-cli`.
+- Central package management via `Directory.Packages.props`.
+- Shared build settings and MinVer wiring via `Directory.Build.props`.
 
 ### Changed
 - Documentation structure was reorganized into a dedicated `docs/` area for easier navigation and maintenance.
 - README messaging was refreshed to better explain TaskFlow's value, audience, and architecture.
+- Project configuration now enforces `net10.0`, `LangVersion=latest`, nullable disabled, and warnings treated as errors.
 
 ### Documentation
 - Initial architecture and delivery plan documentation was added to establish project direction.

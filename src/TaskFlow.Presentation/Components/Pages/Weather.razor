@@ -7,7 +7,7 @@
 
 <p>This component demonstrates showing data.</p>
 
-@if (forecasts == null)
+@if (isLoading)
 {
     <p><em>Loading...</em></p>
 }
@@ -37,7 +37,8 @@ else
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private bool isLoading = true;
+    private WeatherForecast[] forecasts = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -52,13 +53,15 @@ else
             TemperatureC = Random.Shared.Next(-20, 55),
             Summary = summaries[Random.Shared.Next(summaries.Length)]
         }).ToArray();
+
+        isLoading = false;
     }
 
     private class WeatherForecast
     {
         public DateOnly Date { get; set; }
         public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
+        public string Summary { get; set; } = string.Empty;
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
     }
 }
