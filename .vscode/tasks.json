@@ -112,6 +112,210 @@
       }
     },
     {
+      "label": "docker: build (TaskFlow)",
+      "type": "process",
+      "command": "docker",
+      "args": [
+        "build",
+        "-t",
+        "taskflow:dev",
+        "."
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "docker: run (TaskFlow)",
+      "type": "process",
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-p",
+        "8080:8080",
+        "taskflow:dev"
+      ],
+      "group": "none",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: test (solution)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "TaskFlow.sln",
+        "--configuration",
+        "Debug"
+      ],
+      "group": "test",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: outdated (solution)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "outdated",
+        "TaskFlow.sln"
+      ],
+      "group": "none",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: outdated update (solution)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "outdated",
+        "TaskFlow.sln",
+        "--upgrade"
+      ],
+      "group": "none",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: tool restore",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "tool",
+        "restore"
+      ],
+      "group": "none",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: tool update (local, all)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "tool",
+        "update",
+        "--local",
+        "--all"
+      ],
+      "group": "none",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: ef (Infrastructure)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "ef",
+        "--project",
+        "src/TaskFlow.Infrastructure/TaskFlow.Infrastructure.csproj",
+        "--startup-project",
+        "src/TaskFlow.Presentation/TaskFlow.Presentation.csproj"
+      ],
+      "group": "none",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: publish (Blazor Server, Release)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "publish",
+        "src/TaskFlow.Presentation/TaskFlow.Presentation.csproj",
+        "--configuration",
+        "Release",
+        "--output",
+        "artifacts/publish"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: ef migrations add (Infrastructure)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "ef",
+        "migrations",
+        "add",
+        "${input:migrationName}",
+        "--project",
+        "src/TaskFlow.Infrastructure/TaskFlow.Infrastructure.csproj",
+        "--startup-project",
+        "src/TaskFlow.Presentation/TaskFlow.Presentation.csproj"
+      ],
+      "group": "none",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: ef database update (Infrastructure)",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "ef",
+        "database",
+        "update",
+        "--project",
+        "src/TaskFlow.Infrastructure/TaskFlow.Infrastructure.csproj",
+        "--startup-project",
+        "src/TaskFlow.Presentation/TaskFlow.Presentation.csproj"
+      ],
+      "group": "none",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
       "label": "dotnet: restore + build (solution)",
       "dependsOn": [
         "dotnet: restore (solution)",
@@ -119,6 +323,13 @@
       ],
       "dependsOrder": "sequence",
       "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "migrationName",
+      "type": "promptString",
+      "description": "Migration name"
     }
   ]
 }
