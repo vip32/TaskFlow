@@ -15,7 +15,7 @@ public interface ITaskOrchestrator
     /// <param name="projectId">Project identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Tasks for the project.</returns>
-    global::System.Threading.Tasks.Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default);
+    Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets direct subtasks for one parent task.
@@ -23,7 +23,7 @@ public interface ITaskOrchestrator
     /// <param name="parentTaskId">Parent task identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Direct subtasks in persisted order.</returns>
-    global::System.Threading.Tasks.Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default);
+    Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Searches tasks in a project.
@@ -32,7 +32,7 @@ public interface ITaskOrchestrator
     /// <param name="query">Search text.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Matching tasks.</returns>
-    global::System.Threading.Tasks.Task<List<DomainTask>> SearchAsync(Guid projectId, string query, CancellationToken cancellationToken = default);
+    Task<List<DomainTask>> SearchAsync(Guid projectId, string query, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets historical task name suggestions for autocomplete.
@@ -42,7 +42,7 @@ public interface ITaskOrchestrator
     /// <param name="take">Maximum suggestion count.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Suggested names ordered by recent usage and frequency.</returns>
-    global::System.Threading.Tasks.Task<List<string>> GetNameSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default);
+    Task<List<string>> GetNameSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a task and persists it immediately.
@@ -53,7 +53,7 @@ public interface ITaskOrchestrator
     /// <param name="note">Task note.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> CreateAsync(Guid projectId, string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
+    Task<DomainTask> CreateAsync(Guid projectId, string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates an unassigned task and persists it immediately.
@@ -63,7 +63,7 @@ public interface ITaskOrchestrator
     /// <param name="note">Task note.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> CreateUnassignedAsync(string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
+    Task<DomainTask> CreateUnassignedAsync(string title, TaskPriority priority, string note, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates task title and persists immediately.
@@ -72,7 +72,7 @@ public interface ITaskOrchestrator
     /// <param name="newTitle">New title.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> UpdateTitleAsync(Guid taskId, string newTitle, CancellationToken cancellationToken = default);
+    Task<DomainTask> UpdateTitleAsync(Guid taskId, string newTitle, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates task note and persists immediately.
@@ -81,7 +81,7 @@ public interface ITaskOrchestrator
     /// <param name="newNote">New note.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> UpdateNoteAsync(Guid taskId, string newNote, CancellationToken cancellationToken = default);
+    Task<DomainTask> UpdateNoteAsync(Guid taskId, string newNote, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sets task priority and persists immediately.
@@ -90,7 +90,7 @@ public interface ITaskOrchestrator
     /// <param name="priority">Target priority.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> SetPriorityAsync(Guid taskId, TaskPriority priority, CancellationToken cancellationToken = default);
+    Task<DomainTask> SetPriorityAsync(Guid taskId, TaskPriority priority, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sets task status and persists immediately.
@@ -99,7 +99,7 @@ public interface ITaskOrchestrator
     /// <param name="status">Target status.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> SetStatusAsync(Guid taskId, DomainTaskStatus status, CancellationToken cancellationToken = default);
+    Task<DomainTask> SetStatusAsync(Guid taskId, DomainTaskStatus status, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Toggles task focus and persists immediately.
@@ -107,7 +107,7 @@ public interface ITaskOrchestrator
     /// <param name="taskId">Task identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> ToggleFocusAsync(Guid taskId, CancellationToken cancellationToken = default);
+    Task<DomainTask> ToggleFocusAsync(Guid taskId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Moves a task to another project and persists immediately.
@@ -116,7 +116,7 @@ public interface ITaskOrchestrator
     /// <param name="newProjectId">Target project identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default);
+    Task<DomainTask> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Persists custom ordering for top-level tasks in a project.
@@ -125,7 +125,7 @@ public interface ITaskOrchestrator
     /// <param name="orderedTaskIds">Ordered list of task identifiers.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Updated ordered tasks.</returns>
-    global::System.Threading.Tasks.Task<List<DomainTask>> ReorderProjectTasksAsync(Guid projectId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default);
+    Task<List<DomainTask>> ReorderProjectTasksAsync(Guid projectId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Persists custom ordering for direct subtasks under a parent task.
@@ -134,7 +134,7 @@ public interface ITaskOrchestrator
     /// <param name="orderedTaskIds">Ordered list of subtask identifiers.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Updated ordered subtasks.</returns>
-    global::System.Threading.Tasks.Task<List<DomainTask>> ReorderSubTasksAsync(Guid parentTaskId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default);
+    Task<List<DomainTask>> ReorderSubTasksAsync(Guid parentTaskId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes project assignment from a task.
@@ -142,7 +142,7 @@ public interface ITaskOrchestrator
     /// <param name="taskId">Task identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> UnassignFromProjectAsync(Guid taskId, CancellationToken cancellationToken = default);
+    Task<DomainTask> UnassignFromProjectAsync(Guid taskId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sets date-only due date.
@@ -151,7 +151,7 @@ public interface ITaskOrchestrator
     /// <param name="dueDateLocal">Local due date.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> SetDueDateAsync(Guid taskId, DateOnly dueDateLocal, CancellationToken cancellationToken = default);
+    Task<DomainTask> SetDueDateAsync(Guid taskId, DateOnly dueDateLocal, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sets due date and due time.
@@ -161,7 +161,7 @@ public interface ITaskOrchestrator
     /// <param name="dueTimeLocal">Local due time.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> SetDueDateTimeAsync(Guid taskId, DateOnly dueDateLocal, TimeOnly dueTimeLocal, CancellationToken cancellationToken = default);
+    Task<DomainTask> SetDueDateTimeAsync(Guid taskId, DateOnly dueDateLocal, TimeOnly dueTimeLocal, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clears due date settings.
@@ -169,7 +169,7 @@ public interface ITaskOrchestrator
     /// <param name="taskId">Task identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> ClearDueDateAsync(Guid taskId, CancellationToken cancellationToken = default);
+    Task<DomainTask> ClearDueDateAsync(Guid taskId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Toggles today marker on task.
@@ -177,7 +177,7 @@ public interface ITaskOrchestrator
     /// <param name="taskId">Task identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> ToggleTodayMarkAsync(Guid taskId, CancellationToken cancellationToken = default);
+    Task<DomainTask> ToggleTodayMarkAsync(Guid taskId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds reminder relative to due date-time.
@@ -186,7 +186,7 @@ public interface ITaskOrchestrator
     /// <param name="minutesBefore">Minutes before due instant.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> AddRelativeReminderAsync(Guid taskId, int minutesBefore, CancellationToken cancellationToken = default);
+    Task<DomainTask> AddRelativeReminderAsync(Guid taskId, int minutesBefore, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds date-only fallback reminder.
@@ -195,7 +195,7 @@ public interface ITaskOrchestrator
     /// <param name="fallbackLocalTime">Fallback local time.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> AddDateOnlyReminderAsync(Guid taskId, TimeOnly fallbackLocalTime, CancellationToken cancellationToken = default);
+    Task<DomainTask> AddDateOnlyReminderAsync(Guid taskId, TimeOnly fallbackLocalTime, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes reminder from task.
@@ -204,7 +204,7 @@ public interface ITaskOrchestrator
     /// <param name="reminderId">Reminder identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated task.</returns>
-    global::System.Threading.Tasks.Task<DomainTask> RemoveReminderAsync(Guid taskId, Guid reminderId, CancellationToken cancellationToken = default);
+    Task<DomainTask> RemoveReminderAsync(Guid taskId, Guid reminderId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets tasks in recent bucket.
@@ -212,28 +212,28 @@ public interface ITaskOrchestrator
     /// <param name="days">Recent day window.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Recent tasks.</returns>
-    global::System.Threading.Tasks.Task<List<DomainTask>> GetRecentAsync(int days = 7, CancellationToken cancellationToken = default);
+    Task<List<DomainTask>> GetRecentAsync(int days = 7, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets tasks in today bucket.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Today tasks.</returns>
-    global::System.Threading.Tasks.Task<List<DomainTask>> GetTodayAsync(CancellationToken cancellationToken = default);
+    Task<List<DomainTask>> GetTodayAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets tasks in this-week bucket.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>This-week tasks.</returns>
-    global::System.Threading.Tasks.Task<List<DomainTask>> GetThisWeekAsync(CancellationToken cancellationToken = default);
+    Task<List<DomainTask>> GetThisWeekAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets tasks in upcoming bucket.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Upcoming tasks.</returns>
-    global::System.Threading.Tasks.Task<List<DomainTask>> GetUpcomingAsync(CancellationToken cancellationToken = default);
+    Task<List<DomainTask>> GetUpcomingAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a task.
@@ -241,5 +241,5 @@ public interface ITaskOrchestrator
     /// <param name="taskId">Task identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns><c>true</c> when task was deleted.</returns>
-    global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid taskId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid taskId, CancellationToken cancellationToken = default);
 }

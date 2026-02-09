@@ -10,7 +10,7 @@ public interface IMyTaskFlowSectionRepository
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Ordered sections for the current subscription.</returns>
-    global::System.Threading.Tasks.Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets one section by identifier.
@@ -18,7 +18,7 @@ public interface IMyTaskFlowSectionRepository
     /// <param name="sectionId">Section identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The matching section.</returns>
-    global::System.Threading.Tasks.Task<MyTaskFlowSection> GetByIdAsync(Guid sectionId, CancellationToken cancellationToken = default);
+    Task<MyTaskFlowSection> GetByIdAsync(Guid sectionId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds a section.
@@ -26,7 +26,7 @@ public interface IMyTaskFlowSectionRepository
     /// <param name="section">Section to add.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The added section.</returns>
-    global::System.Threading.Tasks.Task<MyTaskFlowSection> AddAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default);
+    Task<MyTaskFlowSection> AddAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates a section.
@@ -34,7 +34,7 @@ public interface IMyTaskFlowSectionRepository
     /// <param name="section">Section to update.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated section.</returns>
-    global::System.Threading.Tasks.Task<MyTaskFlowSection> UpdateAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default);
+    Task<MyTaskFlowSection> UpdateAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a section.
@@ -42,5 +42,5 @@ public interface IMyTaskFlowSectionRepository
     /// <param name="sectionId">Section identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns><c>true</c> when section was deleted; otherwise <c>false</c>.</returns>
-    global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid sectionId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid sectionId, CancellationToken cancellationToken = default);
 }

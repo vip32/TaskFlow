@@ -76,7 +76,7 @@ public static class TaskFlowDataSeeder
     /// <param name="db">Database context instance.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing async seeding completion.</returns>
-    public static async global::System.Threading.Tasks.Task SeedAsync(AppDbContext db, CancellationToken cancellationToken)
+    public static async System.Threading.Tasks.Task SeedAsync(AppDbContext db, CancellationToken cancellationToken)
     {
         if (await db.Subscriptions.AnyAsync(cancellationToken))
         {

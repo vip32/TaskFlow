@@ -13,7 +13,7 @@ public class MyTaskFlowSectionOrchestratorTests
     /// Verifies section tasks are resolved using rules and manual curation.
     /// </summary>
     [Fact]
-    public async global::System.Threading.Tasks.Task GetSectionTasksAsync_RuleAndManualMembership_ReturnsExpectedTasks()
+    public async System.Threading.Tasks.Task GetSectionTasksAsync_RuleAndManualMembership_ReturnsExpectedTasks()
     {
         var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true, "Europe/Berlin");
         subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
@@ -64,31 +64,31 @@ public class MyTaskFlowSectionOrchestratorTests
             }
         }
 
-        public global::System.Threading.Tasks.Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default)
+        public Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.sections.Values.ToList());
+            return System.Threading.Tasks.Task.FromResult(this.sections.Values.ToList());
         }
 
-        public global::System.Threading.Tasks.Task<MyTaskFlowSection> GetByIdAsync(Guid sectionId, CancellationToken cancellationToken = default)
+        public Task<MyTaskFlowSection> GetByIdAsync(Guid sectionId, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.sections[sectionId]);
+            return System.Threading.Tasks.Task.FromResult(this.sections[sectionId]);
         }
 
-        public global::System.Threading.Tasks.Task<MyTaskFlowSection> AddAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
+        public Task<MyTaskFlowSection> AddAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
         {
             this.sections[section.Id] = section;
-            return global::System.Threading.Tasks.Task.FromResult(section);
+            return System.Threading.Tasks.Task.FromResult(section);
         }
 
-        public global::System.Threading.Tasks.Task<MyTaskFlowSection> UpdateAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
+        public Task<MyTaskFlowSection> UpdateAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
         {
             this.sections[section.Id] = section;
-            return global::System.Threading.Tasks.Task.FromResult(section);
+            return System.Threading.Tasks.Task.FromResult(section);
         }
 
-        public global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid sectionId, CancellationToken cancellationToken = default)
+        public Task<bool> DeleteAsync(Guid sectionId, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.sections.Remove(sectionId));
+            return System.Threading.Tasks.Task.FromResult(this.sections.Remove(sectionId));
         }
     }
 
@@ -104,17 +104,17 @@ public class MyTaskFlowSectionOrchestratorTests
             }
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == projectId).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == projectId).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ParentTaskId == parentTaskId).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ParentTaskId == parentTaskId).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default)
+        public Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default)
         {
             var maxSortOrder = this.tasks.Values
                 .Where(task => task.ProjectId == projectId && task.ParentTaskId == parentTaskId)
@@ -122,73 +122,73 @@ public class MyTaskFlowSectionOrchestratorTests
                 .DefaultIfEmpty(null)
                 .Max();
 
-            return global::System.Threading.Tasks.Task.FromResult(maxSortOrder.HasValue ? maxSortOrder.Value + 1 : 0);
+            return System.Threading.Tasks.Task.FromResult(maxSortOrder.HasValue ? maxSortOrder.Value + 1 : 0);
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetByPriorityAsync(TaskPriority priority, Guid projectId, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetByPriorityAsync(TaskPriority priority, Guid projectId, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == projectId && task.Priority == priority).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == projectId && task.Priority == priority).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> SearchAsync(string query, Guid projectId, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> SearchAsync(string query, Guid projectId, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == projectId).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == projectId).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetFocusedAsync(Guid projectId, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetFocusedAsync(Guid projectId, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == projectId && task.IsFocused).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == projectId && task.IsFocused).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetAllAsync(CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetRecentAsync(int days, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetRecentAsync(int days, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == Guid.Empty).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.ProjectId == Guid.Empty).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetDueOnDateAsync(DateOnly localDate, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetDueOnDateAsync(DateOnly localDate, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.HasDueDate && task.DueDateLocal == localDate).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.HasDueDate && task.DueDateLocal == localDate).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetDueInRangeAsync(DateOnly localStartInclusive, DateOnly localEndInclusive, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetDueInRangeAsync(DateOnly localStartInclusive, DateOnly localEndInclusive, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.HasDueDate && task.DueDateLocal >= localStartInclusive && task.DueDateLocal <= localEndInclusive).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.HasDueDate && task.DueDateLocal >= localStartInclusive && task.DueDateLocal <= localEndInclusive).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetDueAfterDateAsync(DateOnly localDateExclusive, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetDueAfterDateAsync(DateOnly localDateExclusive, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.HasDueDate && task.DueDateLocal > localDateExclusive).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => task.HasDueDate && task.DueDateLocal > localDateExclusive).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> GetByIdsAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> GetByIdsAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default)
         {
             var ids = taskIds.ToHashSet();
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => ids.Contains(task.Id)).ToList());
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Values.Where(task => ids.Contains(task.Id)).ToList());
         }
 
-        public global::System.Threading.Tasks.Task<DomainTask> AddAsync(DomainTask task, CancellationToken cancellationToken = default)
+        public Task<DomainTask> AddAsync(DomainTask task, CancellationToken cancellationToken = default)
         {
             this.tasks[task.Id] = task;
-            return global::System.Threading.Tasks.Task.FromResult(task);
+            return System.Threading.Tasks.Task.FromResult(task);
         }
 
-        public global::System.Threading.Tasks.Task<DomainTask> UpdateAsync(DomainTask task, CancellationToken cancellationToken = default)
+        public Task<DomainTask> UpdateAsync(DomainTask task, CancellationToken cancellationToken = default)
         {
             this.tasks[task.Id] = task;
-            return global::System.Threading.Tasks.Task.FromResult(task);
+            return System.Threading.Tasks.Task.FromResult(task);
         }
 
-        public global::System.Threading.Tasks.Task<List<DomainTask>> UpdateRangeAsync(IEnumerable<DomainTask> tasks, CancellationToken cancellationToken = default)
+        public Task<List<DomainTask>> UpdateRangeAsync(IEnumerable<DomainTask> tasks, CancellationToken cancellationToken = default)
         {
             var updated = tasks.ToList();
             foreach (var task in updated)
@@ -196,17 +196,17 @@ public class MyTaskFlowSectionOrchestratorTests
                 this.tasks[task.Id] = task;
             }
 
-            return global::System.Threading.Tasks.Task.FromResult(updated);
+            return System.Threading.Tasks.Task.FromResult(updated);
         }
 
-        public global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks.Remove(id));
+            return System.Threading.Tasks.Task.FromResult(this.tasks.Remove(id));
         }
 
-        public global::System.Threading.Tasks.Task<DomainTask> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public Task<DomainTask> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.tasks[id]);
+            return System.Threading.Tasks.Task.FromResult(this.tasks[id]);
         }
     }
 }

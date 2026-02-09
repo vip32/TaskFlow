@@ -26,7 +26,7 @@ public sealed class ProjectRepository : IProjectRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -39,7 +39,7 @@ public sealed class ProjectRepository : IProjectRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<Project> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Project> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -58,7 +58,7 @@ public sealed class ProjectRepository : IProjectRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<Project> AddAsync(Project project, CancellationToken cancellationToken = default)
+    public async Task<Project> AddAsync(Project project, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(project);
         EnsureSubscriptionMatch(project.SubscriptionId);
@@ -70,7 +70,7 @@ public sealed class ProjectRepository : IProjectRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<Project> UpdateAsync(Project project, CancellationToken cancellationToken = default)
+    public async Task<Project> UpdateAsync(Project project, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(project);
         EnsureSubscriptionMatch(project.SubscriptionId);
@@ -82,7 +82,7 @@ public sealed class ProjectRepository : IProjectRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 

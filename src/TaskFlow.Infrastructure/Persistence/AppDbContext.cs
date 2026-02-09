@@ -20,22 +20,22 @@ public class AppDbContext : DbContext
     /// <summary>
     /// Gets the subscriptions set.
     /// </summary>
-    public DbSet<TaskFlow.Domain.Subscription> Subscriptions => this.Set<TaskFlow.Domain.Subscription>();
+    public DbSet<Domain.Subscription> Subscriptions => this.Set<Domain.Subscription>();
 
     /// <summary>
     /// Gets the subscription schedules set.
     /// </summary>
-    public DbSet<TaskFlow.Domain.SubscriptionSchedule> SubscriptionSchedules => this.Set<TaskFlow.Domain.SubscriptionSchedule>();
+    public DbSet<Domain.SubscriptionSchedule> SubscriptionSchedules => this.Set<Domain.SubscriptionSchedule>();
 
     /// <summary>
     /// Gets the task history set.
     /// </summary>
-    public DbSet<TaskFlow.Domain.TaskHistory> TaskHistories => this.Set<TaskFlow.Domain.TaskHistory>();
+    public DbSet<Domain.TaskHistory> TaskHistories => this.Set<Domain.TaskHistory>();
 
     /// <summary>
     /// Gets the projects set.
     /// </summary>
-    public DbSet<TaskFlow.Domain.Project> Projects => this.Set<TaskFlow.Domain.Project>();
+    public DbSet<Domain.Project> Projects => this.Set<Domain.Project>();
 
     /// <summary>
     /// Gets the tasks set.
@@ -45,22 +45,22 @@ public class AppDbContext : DbContext
     /// <summary>
     /// Gets the focus sessions set.
     /// </summary>
-    public DbSet<TaskFlow.Domain.FocusSession> FocusSessions => this.Set<TaskFlow.Domain.FocusSession>();
+    public DbSet<Domain.FocusSession> FocusSessions => this.Set<Domain.FocusSession>();
 
     /// <summary>
     /// Gets task reminders set.
     /// </summary>
-    public DbSet<TaskFlow.Domain.TaskReminder> TaskReminders => this.Set<TaskFlow.Domain.TaskReminder>();
+    public DbSet<Domain.TaskReminder> TaskReminders => this.Set<Domain.TaskReminder>();
 
     /// <summary>
     /// Gets My Task Flow sections set.
     /// </summary>
-    public DbSet<TaskFlow.Domain.MyTaskFlowSection> MyTaskFlowSections => this.Set<TaskFlow.Domain.MyTaskFlowSection>();
+    public DbSet<Domain.MyTaskFlowSection> MyTaskFlowSections => this.Set<Domain.MyTaskFlowSection>();
 
     /// <summary>
     /// Gets My Task Flow section task links set.
     /// </summary>
-    public DbSet<TaskFlow.Domain.MyTaskFlowSectionTask> MyTaskFlowSectionTasks => this.Set<TaskFlow.Domain.MyTaskFlowSectionTask>();
+    public DbSet<Domain.MyTaskFlowSectionTask> MyTaskFlowSectionTasks => this.Set<Domain.MyTaskFlowSectionTask>();
 
     /// <summary>
     /// Configures entity mappings for the TaskFlow domain model.
@@ -68,7 +68,7 @@ public class AppDbContext : DbContext
     /// <param name="modelBuilder">Model builder instance.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<TaskFlow.Domain.Subscription>(entity =>
+        modelBuilder.Entity<Domain.Subscription>(entity =>
         {
             entity.ToTable("Subscriptions");
             entity.HasKey(s => s.Id);
@@ -80,7 +80,7 @@ public class AppDbContext : DbContext
             entity.Ignore(s => s.Schedules);
         });
 
-        modelBuilder.Entity<TaskFlow.Domain.SubscriptionSchedule>(entity =>
+        modelBuilder.Entity<Domain.SubscriptionSchedule>(entity =>
         {
             entity.ToTable("SubscriptionSchedules");
             entity.HasKey(s => s.Id);
@@ -89,7 +89,7 @@ public class AppDbContext : DbContext
             entity.Property(s => s.EndsOn).IsRequired();
             entity.Ignore(s => s.IsOpenEnded);
 
-            entity.HasOne<TaskFlow.Domain.Subscription>()
+            entity.HasOne<Domain.Subscription>()
                 .WithMany()
                 .HasForeignKey(s => s.SubscriptionId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -97,7 +97,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(s => new { s.SubscriptionId, s.StartsOn });
         });
 
-        modelBuilder.Entity<TaskFlow.Domain.Project>(entity =>
+        modelBuilder.Entity<Domain.Project>(entity =>
         {
             entity.ToTable("Projects");
             entity.HasKey(p => p.Id);
@@ -112,7 +112,7 @@ public class AppDbContext : DbContext
             entity.Ignore(p => p.Tasks);
             entity.Ignore(p => p.Tags);
 
-            entity.HasOne<TaskFlow.Domain.Subscription>()
+            entity.HasOne<Domain.Subscription>()
                 .WithMany()
                 .HasForeignKey(p => p.SubscriptionId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -149,13 +149,13 @@ public class AppDbContext : DbContext
                 .HasForeignKey(r => r.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne<TaskFlow.Domain.Project>()
+            entity.HasOne<Domain.Project>()
                 .WithMany()
                 .HasForeignKey(t => t.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
 
-            entity.HasOne<TaskFlow.Domain.Subscription>()
+            entity.HasOne<Domain.Subscription>()
                 .WithMany()
                 .HasForeignKey(t => t.SubscriptionId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -166,7 +166,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(t => new { t.SubscriptionId, t.DueAtUtc });
         });
 
-        modelBuilder.Entity<TaskFlow.Domain.FocusSession>(entity =>
+        modelBuilder.Entity<Domain.FocusSession>(entity =>
         {
             entity.ToTable("FocusSessions");
             entity.HasKey(f => f.Id);
@@ -177,7 +177,7 @@ public class AppDbContext : DbContext
             entity.Ignore(f => f.IsCompleted);
             entity.Ignore(f => f.Duration);
 
-            entity.HasOne<TaskFlow.Domain.Subscription>()
+            entity.HasOne<Domain.Subscription>()
                 .WithMany()
                 .HasForeignKey(f => f.SubscriptionId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -185,7 +185,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(f => new { f.SubscriptionId, f.TaskId, f.StartedAt });
         });
 
-        modelBuilder.Entity<TaskFlow.Domain.TaskHistory>(entity =>
+        modelBuilder.Entity<Domain.TaskHistory>(entity =>
         {
             entity.ToTable("TaskHistory");
             entity.HasKey(h => h.Id);
@@ -195,7 +195,7 @@ public class AppDbContext : DbContext
             entity.Property(h => h.LastUsedAt).IsRequired();
             entity.Property(h => h.UsageCount).IsRequired();
 
-            entity.HasOne<TaskFlow.Domain.Subscription>()
+            entity.HasOne<Domain.Subscription>()
                 .WithMany()
                 .HasForeignKey(h => h.SubscriptionId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -204,7 +204,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(h => new { h.SubscriptionId, h.LastUsedAt });
         });
 
-        modelBuilder.Entity<TaskFlow.Domain.TaskReminder>(entity =>
+        modelBuilder.Entity<Domain.TaskReminder>(entity =>
         {
             entity.ToTable("TaskReminders");
             entity.HasKey(r => r.Id);
@@ -218,7 +218,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(r => new { r.TaskId, r.TriggerAtUtc, r.SentAtUtc });
         });
 
-        modelBuilder.Entity<TaskFlow.Domain.MyTaskFlowSection>(entity =>
+        modelBuilder.Entity<Domain.MyTaskFlowSection>(entity =>
         {
             entity.ToTable("MyTaskFlowSections");
             entity.HasKey(section => section.Id);
@@ -232,7 +232,7 @@ public class AppDbContext : DbContext
             entity.Property(section => section.IncludeDoneTasks).IsRequired();
             entity.Property(section => section.IncludeCancelledTasks).IsRequired();
 
-            entity.HasOne<TaskFlow.Domain.Subscription>()
+            entity.HasOne<Domain.Subscription>()
                 .WithMany()
                 .HasForeignKey(section => section.SubscriptionId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -245,7 +245,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(section => new { section.SubscriptionId, section.SortOrder });
         });
 
-        modelBuilder.Entity<TaskFlow.Domain.MyTaskFlowSectionTask>(entity =>
+        modelBuilder.Entity<Domain.MyTaskFlowSectionTask>(entity =>
         {
             entity.ToTable("MyTaskFlowSectionTasks");
             entity.HasKey(link => new { link.SectionId, link.TaskId });

@@ -12,7 +12,7 @@ public interface ITaskHistoryRepository
     /// <param name="isSubTaskName">Whether usage belongs to subtask context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing completion.</returns>
-    global::System.Threading.Tasks.Task RegisterUsageAsync(string name, bool isSubTaskName, CancellationToken cancellationToken = default);
+    System.Threading.Tasks.Task RegisterUsageAsync(string name, bool isSubTaskName, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets suggested names by prefix for the current subscription.
@@ -22,5 +22,5 @@ public interface ITaskHistoryRepository
     /// <param name="take">Maximum suggestion count.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Ordered name suggestions.</returns>
-    global::System.Threading.Tasks.Task<List<string>> GetSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default);
+    Task<List<string>> GetSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default);
 }

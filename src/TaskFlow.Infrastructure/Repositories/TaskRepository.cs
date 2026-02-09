@@ -27,7 +27,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -41,7 +41,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -55,7 +55,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default)
+    public async Task<int> GetNextSortOrderAsync(Guid projectId, Guid parentTaskId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -73,7 +73,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetByPriorityAsync(TaskPriority priority, Guid projectId, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetByPriorityAsync(TaskPriority priority, Guid projectId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -86,7 +86,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> SearchAsync(string query, Guid projectId, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> SearchAsync(string query, Guid projectId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -109,7 +109,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetFocusedAsync(Guid projectId, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetFocusedAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -122,7 +122,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -135,7 +135,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetRecentAsync(int days, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetRecentAsync(int days, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var minCreatedAt = DateTime.UtcNow.AddDays(-Math.Abs(days));
@@ -149,7 +149,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetUnassignedRecentAsync(int days, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var minCreatedAt = DateTime.UtcNow.AddDays(-Math.Abs(days));
@@ -163,7 +163,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetDueOnDateAsync(DateOnly localDate, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetDueOnDateAsync(DateOnly localDate, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -177,7 +177,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetDueInRangeAsync(DateOnly localStartInclusive, DateOnly localEndInclusive, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetDueInRangeAsync(DateOnly localStartInclusive, DateOnly localEndInclusive, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -195,7 +195,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetDueAfterDateAsync(DateOnly localDateExclusive, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetDueAfterDateAsync(DateOnly localDateExclusive, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -209,7 +209,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetByIdsAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetByIdsAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(taskIds);
 
@@ -229,7 +229,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> AddAsync(DomainTask task, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> AddAsync(DomainTask task, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(task);
         EnsureSubscriptionMatch(task.SubscriptionId);
@@ -241,7 +241,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> UpdateAsync(DomainTask task, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> UpdateAsync(DomainTask task, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(task);
         EnsureSubscriptionMatch(task.SubscriptionId);
@@ -253,7 +253,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> UpdateRangeAsync(IEnumerable<DomainTask> tasks, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> UpdateRangeAsync(IEnumerable<DomainTask> tasks, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(tasks);
 
@@ -275,7 +275,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -293,7 +293,7 @@ public sealed class TaskRepository : ITaskRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 

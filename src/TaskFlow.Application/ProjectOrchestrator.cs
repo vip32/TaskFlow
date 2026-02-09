@@ -24,19 +24,19 @@ public sealed class ProjectOrchestrator : IProjectOrchestrator
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default)
+    public Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return this.projectRepository.GetAllAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<Project> GetByIdAsync(Guid projectId, CancellationToken cancellationToken = default)
+    public Task<Project> GetByIdAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
         return this.projectRepository.GetByIdAsync(projectId, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<Project> CreateAsync(string name, string color, string icon, bool isDefault = false, CancellationToken cancellationToken = default)
+    public async Task<Project> CreateAsync(string name, string color, string icon, bool isDefault = false, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var project = new Project(subscriptionId, name, color, icon, note: string.Empty, isDefault: isDefault);
@@ -44,7 +44,7 @@ public sealed class ProjectOrchestrator : IProjectOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<Project> UpdateNameAsync(Guid projectId, string newName, CancellationToken cancellationToken = default)
+    public async Task<Project> UpdateNameAsync(Guid projectId, string newName, CancellationToken cancellationToken = default)
     {
         var project = await this.projectRepository.GetByIdAsync(projectId, cancellationToken);
         project.UpdateName(newName);
@@ -52,7 +52,7 @@ public sealed class ProjectOrchestrator : IProjectOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<Project> UpdateVisualsAsync(Guid projectId, string newColor, string newIcon, CancellationToken cancellationToken = default)
+    public async Task<Project> UpdateVisualsAsync(Guid projectId, string newColor, string newIcon, CancellationToken cancellationToken = default)
     {
         var project = await this.projectRepository.GetByIdAsync(projectId, cancellationToken);
         project.UpdateColor(newColor);
@@ -61,7 +61,7 @@ public sealed class ProjectOrchestrator : IProjectOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<Project> UpdateViewTypeAsync(Guid projectId, ProjectViewType viewType, CancellationToken cancellationToken = default)
+    public async Task<Project> UpdateViewTypeAsync(Guid projectId, ProjectViewType viewType, CancellationToken cancellationToken = default)
     {
         var project = await this.projectRepository.GetByIdAsync(projectId, cancellationToken);
         project.UpdateViewType(viewType);
@@ -69,7 +69,7 @@ public sealed class ProjectOrchestrator : IProjectOrchestrator
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid projectId, CancellationToken cancellationToken = default)
+    public Task<bool> DeleteAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
         return this.projectRepository.DeleteAsync(projectId, cancellationToken);
     }

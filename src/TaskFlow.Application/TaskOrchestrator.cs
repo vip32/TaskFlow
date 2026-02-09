@@ -29,31 +29,31 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
+    public Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
         return this.taskRepository.GetByProjectIdAsync(projectId, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
+    public Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
     {
         return this.taskRepository.GetSubTasksAsync(parentTaskId, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<List<DomainTask>> SearchAsync(Guid projectId, string query, CancellationToken cancellationToken = default)
+    public Task<List<DomainTask>> SearchAsync(Guid projectId, string query, CancellationToken cancellationToken = default)
     {
         return this.taskRepository.SearchAsync(query, projectId, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<List<string>> GetNameSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default)
+    public Task<List<string>> GetNameSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default)
     {
         return this.taskHistoryRepository.GetSuggestionsAsync(prefix, isSubTaskName, take, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> CreateAsync(Guid projectId, string title, TaskPriority priority, string note, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> CreateAsync(Guid projectId, string title, TaskPriority priority, string note, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var task = new DomainTask(subscriptionId, title, projectId);
@@ -67,7 +67,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> CreateUnassignedAsync(string title, TaskPriority priority, string note, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> CreateUnassignedAsync(string title, TaskPriority priority, string note, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var task = new DomainTask(subscriptionId, title, Guid.Empty);
@@ -81,7 +81,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> UpdateTitleAsync(Guid taskId, string newTitle, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> UpdateTitleAsync(Guid taskId, string newTitle, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.UpdateTitle(newTitle);
@@ -91,7 +91,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> UpdateNoteAsync(Guid taskId, string newNote, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> UpdateNoteAsync(Guid taskId, string newNote, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.UpdateNote(newNote);
@@ -99,7 +99,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> SetPriorityAsync(Guid taskId, TaskPriority priority, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> SetPriorityAsync(Guid taskId, TaskPriority priority, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.SetPriority(priority);
@@ -107,7 +107,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> SetStatusAsync(Guid taskId, DomainTaskStatus status, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> SetStatusAsync(Guid taskId, DomainTaskStatus status, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.SetStatus(status);
@@ -115,7 +115,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> ToggleFocusAsync(Guid taskId, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> ToggleFocusAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.ToggleFocus();
@@ -123,7 +123,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         if (task.ParentTaskId != Guid.Empty)
@@ -138,21 +138,21 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> ReorderProjectTasksAsync(Guid projectId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> ReorderProjectTasksAsync(Guid projectId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default)
     {
         var tasks = await this.taskRepository.GetByProjectIdAsync(projectId, cancellationToken);
         return await ReorderAsync(tasks, orderedTaskIds, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> ReorderSubTasksAsync(Guid parentTaskId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> ReorderSubTasksAsync(Guid parentTaskId, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken = default)
     {
         var tasks = await this.taskRepository.GetSubTasksAsync(parentTaskId, cancellationToken);
         return await ReorderAsync(tasks, orderedTaskIds, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> UnassignFromProjectAsync(Guid taskId, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> UnassignFromProjectAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         if (task.ParentTaskId != Guid.Empty)
@@ -167,7 +167,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> SetDueDateAsync(Guid taskId, DateOnly dueDateLocal, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> SetDueDateAsync(Guid taskId, DateOnly dueDateLocal, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.SetDueDate(dueDateLocal);
@@ -175,7 +175,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> SetDueDateTimeAsync(Guid taskId, DateOnly dueDateLocal, TimeOnly dueTimeLocal, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> SetDueDateTimeAsync(Guid taskId, DateOnly dueDateLocal, TimeOnly dueTimeLocal, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         var timeZone = GetSubscriptionTimeZone();
@@ -184,7 +184,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> ClearDueDateAsync(Guid taskId, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> ClearDueDateAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.ClearDueDate();
@@ -192,7 +192,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> ToggleTodayMarkAsync(Guid taskId, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> ToggleTodayMarkAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.ToggleTodayMark();
@@ -200,7 +200,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> AddRelativeReminderAsync(Guid taskId, int minutesBefore, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> AddRelativeReminderAsync(Guid taskId, int minutesBefore, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.AddRelativeReminder(minutesBefore);
@@ -208,7 +208,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> AddDateOnlyReminderAsync(Guid taskId, TimeOnly fallbackLocalTime, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> AddDateOnlyReminderAsync(Guid taskId, TimeOnly fallbackLocalTime, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         var timeZone = GetSubscriptionTimeZone();
@@ -217,7 +217,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<DomainTask> RemoveReminderAsync(Guid taskId, Guid reminderId, CancellationToken cancellationToken = default)
+    public async Task<DomainTask> RemoveReminderAsync(Guid taskId, Guid reminderId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
         task.RemoveReminder(reminderId);
@@ -225,13 +225,13 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<List<DomainTask>> GetRecentAsync(int days = 7, CancellationToken cancellationToken = default)
+    public Task<List<DomainTask>> GetRecentAsync(int days = 7, CancellationToken cancellationToken = default)
     {
         return this.taskRepository.GetRecentAsync(days, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<DomainTask>> GetTodayAsync(CancellationToken cancellationToken = default)
+    public async Task<List<DomainTask>> GetTodayAsync(CancellationToken cancellationToken = default)
     {
         var timeZone = GetSubscriptionTimeZone();
         var todayLocal = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
@@ -251,7 +251,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<List<DomainTask>> GetThisWeekAsync(CancellationToken cancellationToken = default)
+    public Task<List<DomainTask>> GetThisWeekAsync(CancellationToken cancellationToken = default)
     {
         var timeZone = GetSubscriptionTimeZone();
         var todayLocal = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
@@ -262,7 +262,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<List<DomainTask>> GetUpcomingAsync(CancellationToken cancellationToken = default)
+    public Task<List<DomainTask>> GetUpcomingAsync(CancellationToken cancellationToken = default)
     {
         var timeZone = GetSubscriptionTimeZone();
         var todayLocal = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
@@ -273,7 +273,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
-    public global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid taskId, CancellationToken cancellationToken = default)
+    public Task<bool> DeleteAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         return this.taskRepository.DeleteAsync(taskId, cancellationToken);
     }
@@ -284,7 +284,7 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
         return TimeZoneInfo.FindSystemTimeZoneById(subscription.TimeZoneId);
     }
 
-    private async global::System.Threading.Tasks.Task<List<DomainTask>> ReorderAsync(List<DomainTask> tasks, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken)
+    private async Task<List<DomainTask>> ReorderAsync(List<DomainTask> tasks, IReadOnlyList<Guid> orderedTaskIds, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(orderedTaskIds);
 

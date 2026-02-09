@@ -26,7 +26,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -40,7 +40,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<MyTaskFlowSection> GetByIdAsync(Guid sectionId, CancellationToken cancellationToken = default)
+    public async Task<MyTaskFlowSection> GetByIdAsync(Guid sectionId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 
@@ -57,7 +57,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<MyTaskFlowSection> AddAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
+    public async Task<MyTaskFlowSection> AddAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(section);
         EnsureSubscriptionMatch(section.SubscriptionId);
@@ -69,7 +69,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<MyTaskFlowSection> UpdateAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
+    public async Task<MyTaskFlowSection> UpdateAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(section);
         EnsureSubscriptionMatch(section.SubscriptionId);
@@ -81,7 +81,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid sectionId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid sectionId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
 

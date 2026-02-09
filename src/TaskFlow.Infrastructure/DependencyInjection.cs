@@ -44,7 +44,7 @@ public static class DependencyInjection
     /// <param name="serviceProvider">Application service provider.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A task that completes when migrations are applied.</returns>
-    public static async global::System.Threading.Tasks.Task InitializeTaskFlowDatabaseAsync(this IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+    public static async Task InitializeTaskFlowDatabaseAsync(this IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
         using var scope = serviceProvider.CreateScope();
         var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();

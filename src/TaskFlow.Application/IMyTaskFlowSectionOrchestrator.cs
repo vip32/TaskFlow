@@ -12,7 +12,7 @@ public interface IMyTaskFlowSectionOrchestrator
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Ordered sections.</returns>
-    global::System.Threading.Tasks.Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a custom section.
@@ -21,7 +21,7 @@ public interface IMyTaskFlowSectionOrchestrator
     /// <param name="sortOrder">Sort order.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Created section.</returns>
-    global::System.Threading.Tasks.Task<MyTaskFlowSection> CreateAsync(string name, int sortOrder, CancellationToken cancellationToken = default);
+    Task<MyTaskFlowSection> CreateAsync(string name, int sortOrder, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates section rule.
@@ -34,7 +34,7 @@ public interface IMyTaskFlowSectionOrchestrator
     /// <param name="includeCancelledTasks">Include cancelled tasks.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Updated section.</returns>
-    global::System.Threading.Tasks.Task<MyTaskFlowSection> UpdateRuleAsync(Guid sectionId, TaskFlowDueBucket dueBucket, bool includeAssignedTasks, bool includeUnassignedTasks, bool includeDoneTasks, bool includeCancelledTasks, CancellationToken cancellationToken = default);
+    Task<MyTaskFlowSection> UpdateRuleAsync(Guid sectionId, TaskFlowDueBucket dueBucket, bool includeAssignedTasks, bool includeUnassignedTasks, bool includeDoneTasks, bool includeCancelledTasks, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds manual task membership.
@@ -43,7 +43,7 @@ public interface IMyTaskFlowSectionOrchestrator
     /// <param name="taskId">Task identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Updated section.</returns>
-    global::System.Threading.Tasks.Task<MyTaskFlowSection> IncludeTaskAsync(Guid sectionId, Guid taskId, CancellationToken cancellationToken = default);
+    Task<MyTaskFlowSection> IncludeTaskAsync(Guid sectionId, Guid taskId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes manual task membership.
@@ -52,7 +52,7 @@ public interface IMyTaskFlowSectionOrchestrator
     /// <param name="taskId">Task identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Updated section.</returns>
-    global::System.Threading.Tasks.Task<MyTaskFlowSection> RemoveTaskAsync(Guid sectionId, Guid taskId, CancellationToken cancellationToken = default);
+    Task<MyTaskFlowSection> RemoveTaskAsync(Guid sectionId, Guid taskId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Resolves tasks shown for one section using hybrid rule and manual curation.
@@ -60,5 +60,5 @@ public interface IMyTaskFlowSectionOrchestrator
     /// <param name="sectionId">Section identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Tasks included in section.</returns>
-    global::System.Threading.Tasks.Task<List<TaskFlow.Domain.Task>> GetSectionTasksAsync(Guid sectionId, CancellationToken cancellationToken = default);
+    Task<List<Domain.Task>> GetSectionTasksAsync(Guid sectionId, CancellationToken cancellationToken = default);
 }

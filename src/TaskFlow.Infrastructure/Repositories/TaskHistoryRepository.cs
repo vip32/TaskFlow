@@ -26,7 +26,7 @@ public sealed class TaskHistoryRepository : ITaskHistoryRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task RegisterUsageAsync(string name, bool isSubTaskName, CancellationToken cancellationToken = default)
+    public async System.Threading.Tasks.Task RegisterUsageAsync(string name, bool isSubTaskName, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -58,7 +58,7 @@ public sealed class TaskHistoryRepository : ITaskHistoryRepository
     }
 
     /// <inheritdoc/>
-    public async global::System.Threading.Tasks.Task<List<string>> GetSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default)
+    public async Task<List<string>> GetSuggestionsAsync(string prefix, bool isSubTaskName, int take = 20, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         var normalizedPrefix = string.IsNullOrWhiteSpace(prefix)

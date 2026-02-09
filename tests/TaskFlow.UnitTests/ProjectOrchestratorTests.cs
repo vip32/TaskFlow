@@ -12,7 +12,7 @@ public class ProjectOrchestratorTests
     /// Verifies create uses current subscription and persists through repository.
     /// </summary>
     [Fact]
-    public async global::System.Threading.Tasks.Task CreateAsync_ValidInput_PersistsProjectWithCurrentSubscription()
+    public async System.Threading.Tasks.Task CreateAsync_ValidInput_PersistsProjectWithCurrentSubscription()
     {
         var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true);
         subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
@@ -31,7 +31,7 @@ public class ProjectOrchestratorTests
     /// Verifies view type updates are immediately persisted.
     /// </summary>
     [Fact]
-    public async global::System.Threading.Tasks.Task UpdateViewTypeAsync_ExistingProject_PersistsChange()
+    public async System.Threading.Tasks.Task UpdateViewTypeAsync_ExistingProject_PersistsChange()
     {
         var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true);
         subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
@@ -79,33 +79,33 @@ public class ProjectOrchestratorTests
 
         public int UpdateCallCount { get; private set; }
 
-        public global::System.Threading.Tasks.Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default)
+        public Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.store.Values.ToList());
+            return System.Threading.Tasks.Task.FromResult(this.store.Values.ToList());
         }
 
-        public global::System.Threading.Tasks.Task<Project> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public Task<Project> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.store[id]);
+            return System.Threading.Tasks.Task.FromResult(this.store[id]);
         }
 
-        public global::System.Threading.Tasks.Task<Project> AddAsync(Project project, CancellationToken cancellationToken = default)
+        public Task<Project> AddAsync(Project project, CancellationToken cancellationToken = default)
         {
             this.AddCallCount++;
             this.store[project.Id] = project;
-            return global::System.Threading.Tasks.Task.FromResult(project);
+            return System.Threading.Tasks.Task.FromResult(project);
         }
 
-        public global::System.Threading.Tasks.Task<Project> UpdateAsync(Project project, CancellationToken cancellationToken = default)
+        public Task<Project> UpdateAsync(Project project, CancellationToken cancellationToken = default)
         {
             this.UpdateCallCount++;
             this.store[project.Id] = project;
-            return global::System.Threading.Tasks.Task.FromResult(project);
+            return System.Threading.Tasks.Task.FromResult(project);
         }
 
-        public global::System.Threading.Tasks.Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return global::System.Threading.Tasks.Task.FromResult(this.store.Remove(id));
+            return System.Threading.Tasks.Task.FromResult(this.store.Remove(id));
         }
     }
 }
