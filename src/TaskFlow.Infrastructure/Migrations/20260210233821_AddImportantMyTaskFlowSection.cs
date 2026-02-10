@@ -11,6 +11,13 @@ namespace TaskFlow.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(
+                @"UPDATE MyTaskFlowSections
+                    SET DueBucket = 6,
+                        IsSystemSection = 1,
+                        SortOrder = 2
+                    WHERE lower(Name) = 'important';");
+
+            migrationBuilder.Sql(
                 @"INSERT INTO MyTaskFlowSections (
                         Id,
                         SubscriptionId,

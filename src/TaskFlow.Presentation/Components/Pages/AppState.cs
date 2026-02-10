@@ -2,7 +2,7 @@ using TaskFlow.Domain;
 
 namespace TaskFlow.Presentation.Components.Pages;
 
-public sealed class HomeAppState
+public sealed class AppState
 {
     private readonly Dictionary<Guid, int> projectTaskCounts = [];
 

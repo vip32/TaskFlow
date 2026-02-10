@@ -1,6 +1,5 @@
 @using TaskFlow.Presentation.Components.Pages
 @implements IDisposable
-@inject HomeAppState HomeAppState
 @inject IProjectOrchestrator ProjectOrchestrator
 
 <MudDrawerHeader>
@@ -17,39 +16,39 @@
     <MudNavLink Href="" Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All">Home</MudNavLink>
 </MudNavMenu>
 
-@if (HomeAppState.MyTaskFlowSections.Count > 0)
+@if (AppState.MyTaskFlowSections.Count > 0)
 {
     <MudDivider Class="my-2" />
     <MudText Typo="Typo.caption" Class="tf-drawer-caption">My Task Flow</MudText>
-    @foreach (var flowSection in HomeAppState.MyTaskFlowSections)
+    @foreach (var flowSection in AppState.MyTaskFlowSections)
     {
-        var isActive = HomeAppState.SelectedSectionId == flowSection.Id;
+        var isActive = AppState.SelectedSectionId == flowSection.Id;
         <MudButton FullWidth="true"
                    Variant="@(isActive ? Variant.Filled : Variant.Text)"
                    Color="@(isActive ? Color.Primary : Color.Default)"
                    Class="tf-drawer-button"
-                   OnClick="() => HomeAppState.SelectSection(flowSection.Id)">
+                   OnClick="() => AppState.SelectSection(flowSection.Id)">
             @flowSection.Name
         </MudButton>
     }
 }
 
-@if (HomeAppState.Projects.Count > 0)
+@if (AppState.Projects.Count > 0)
 {
     <MudDivider Class="my-2" />
     <MudText Typo="Typo.caption" Class="tf-drawer-caption">Projects</MudText>
-    @foreach (var project in HomeAppState.Projects)
+    @foreach (var project in AppState.Projects)
     {
-        var isActive = HomeAppState.SelectedProjectId == project.Id;
+        var isActive = AppState.SelectedProjectId == project.Id;
         <MudButton FullWidth="true"
                    Variant="@(isActive ? Variant.Filled : Variant.Text)"
                    Color="@(isActive ? Color.Primary : Color.Default)"
                    Class="tf-drawer-button"
-                   OnClick="() => HomeAppState.SelectProject(project.Id)">
+                   OnClick="() => AppState.SelectProject(project.Id)">
             <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
             <span class="tf-project-dot" style="@($"background:{project.Color};")"></span>
             <span class="tf-drawer-project-name">@project.Name</span>
-            <MudBadge Class="tf-project-count" Color="Color.Info" Content="@HomeAppState.GetProjectTaskCount(project.Id)" />
+            <MudBadge Class="tf-project-count" Color="Color.Info" Content="@AppState.GetProjectTaskCount(project.Id)" />
         </MudButton>
     }
 
@@ -66,9 +65,12 @@
 }
 
 @code {
+    [CascadingParameter]
+    public AppState AppState { get; set; } = null!;
+
     protected override void OnInitialized()
     {
-        this.HomeAppState.Changed += OnStateChanged;
+        this.AppState.Changed += OnStateChanged;
     }
 
     private string newProjectName = string.Empty;
@@ -83,11 +85,11 @@
         var created = await this.ProjectOrchestrator.CreateAsync(this.newProjectName, "#2D9CFF", "folder");
         this.newProjectName = string.Empty;
 
-        var updatedProjects = this.HomeAppState.Projects.Concat([created]).OrderBy(project => project.CreatedAt).ToList();
-        var updatedCounts = this.HomeAppState.ProjectTaskCounts.ToDictionary(entry => entry.Key, entry => entry.Value);
+        var updatedProjects = this.AppState.Projects.Concat([created]).OrderBy(project => project.CreatedAt).ToList();
+        var updatedCounts = this.AppState.ProjectTaskCounts.ToDictionary(entry => entry.Key, entry => entry.Value);
         updatedCounts[created.Id] = 0;
-        this.HomeAppState.SetNavigationData(updatedProjects, this.HomeAppState.MyTaskFlowSections.ToList(), updatedCounts);
-        this.HomeAppState.SelectProject(created.Id);
+        this.AppState.SetNavigationData(updatedProjects, this.AppState.MyTaskFlowSections.ToList(), updatedCounts);
+        this.AppState.SelectProject(created.Id);
     }
 
     private async Task HandleCreateProjectKeyDown(KeyboardEventArgs args)
@@ -117,6 +119,6 @@
 
     public void Dispose()
     {
-        this.HomeAppState.Changed -= OnStateChanged;
+        this.AppState.Changed -= OnStateChanged;
     }
 }

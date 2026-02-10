@@ -8,7 +8,6 @@
 @inject IMyTaskFlowSectionOrchestrator MyTaskFlowSectionOrchestrator
 @inject ISnackbar Snackbar
 @inject IJSRuntime JsRuntime
-@inject HomeAppState HomeAppState
 
 <PageTitle>TaskFlow</PageTitle>
 
@@ -261,12 +260,15 @@
         Guid? ProjectId,
         List<TaskSnapshot> Children);
 
-    private Project selectedProject => this.HomeAppState.SelectedProjectId.HasValue
-        ? this.HomeAppState.Projects.FirstOrDefault(p => p.Id == this.HomeAppState.SelectedProjectId.Value)
+    private Project selectedProject => this.AppState.SelectedProjectId.HasValue
+        ? this.AppState.Projects.FirstOrDefault(p => p.Id == this.AppState.SelectedProjectId.Value)
         : null;
 
+    [CascadingParameter]
+    public AppState AppState { get; set; } = null!;
+
     private string CurrentTitle => this.selectedProject?.Name
-        ?? this.HomeAppState.MyTaskFlowSections.FirstOrDefault(s => s.Id == this.HomeAppState.SelectedSectionId)?.Name
+        ?? this.AppState.MyTaskFlowSections.FirstOrDefault(s => s.Id == this.AppState.SelectedSectionId)?.Name
         ?? "TaskFlow";
 
     private string CurrentSubtitle => this.selectedProject is null
@@ -318,7 +320,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.HomeAppState.Changed += OnHomeAppStateChanged;
+        this.AppState.Changed += OnAppStateChanged;
         await ReloadAllAsync();
     }
 
@@ -340,40 +342,40 @@
         var myTaskFlowSections = await this.MyTaskFlowSectionOrchestrator.GetAllAsync();
         var taskCounts = await BuildProjectTaskCountsAsync(projects);
 
-        this.HomeAppState.SetNavigationData(projects, myTaskFlowSections, taskCounts);
+        this.AppState.SetNavigationData(projects, myTaskFlowSections, taskCounts);
         await ApplySelectionAsync();
     }
 
-    private void OnHomeAppStateChanged()
+    private void OnAppStateChanged()
     {
         _ = InvokeAsync(ApplySelectionAsync);
     }
 
     private async Task ApplySelectionAsync()
     {
-        if (this.loadedProjectId == this.HomeAppState.SelectedProjectId
-            && this.loadedSectionId == this.HomeAppState.SelectedSectionId)
+        if (this.loadedProjectId == this.AppState.SelectedProjectId
+            && this.loadedSectionId == this.AppState.SelectedSectionId)
         {
             StateHasChanged();
             return;
         }
 
-        if (this.HomeAppState.SelectedProjectId.HasValue)
+        if (this.AppState.SelectedProjectId.HasValue)
         {
-            await LoadProjectTasksAsync(this.HomeAppState.SelectedProjectId.Value);
-            this.loadedProjectId = this.HomeAppState.SelectedProjectId;
+            await LoadProjectTasksAsync(this.AppState.SelectedProjectId.Value);
+            this.loadedProjectId = this.AppState.SelectedProjectId;
             this.loadedSectionId = null;
-            var currentProject = this.HomeAppState.Projects.FirstOrDefault(project => project.Id == this.HomeAppState.SelectedProjectId.Value);
+            var currentProject = this.AppState.Projects.FirstOrDefault(project => project.Id == this.AppState.SelectedProjectId.Value);
             if (currentProject is not null)
             {
                 SetProjectEditor(currentProject);
             }
         }
-        else if (this.HomeAppState.SelectedSectionId.HasValue)
+        else if (this.AppState.SelectedSectionId.HasValue)
         {
-            await LoadSectionTasksAsync(this.HomeAppState.SelectedSectionId.Value);
+            await LoadSectionTasksAsync(this.AppState.SelectedSectionId.Value);
             this.loadedProjectId = null;
-            this.loadedSectionId = this.HomeAppState.SelectedSectionId;
+            this.loadedSectionId = this.AppState.SelectedSectionId;
         }
         else
         {
@@ -509,14 +511,6 @@
         this.draggedBoardTaskId = taskId;
     }
 
-    private static void AllowBoardDrop(DragEventArgs args)
-    {
-        if (args.DataTransfer is not null)
-        {
-            args.DataTransfer.DropEffect = "move";
-        }
-    }
-
     private async Task HandleBoardDropAsync(DomainTaskStatus status)
     {
         if (!this.draggedBoardTaskId.HasValue)
@@ -555,9 +549,9 @@
             return;
         }
 
-        if (this.HomeAppState.SelectedProjectId.HasValue)
+        if (this.AppState.SelectedProjectId.HasValue)
         {
-            await this.TaskOrchestrator.CreateAsync(this.HomeAppState.SelectedProjectId.Value, this.newTaskTitle, this.newTaskPriority, string.Empty);
+            await this.TaskOrchestrator.CreateAsync(this.AppState.SelectedProjectId.Value, this.newTaskTitle, this.newTaskPriority, string.Empty);
         }
         else
         {
@@ -784,19 +778,19 @@
 
     private async Task ReloadCurrentTasksAsync()
     {
-        if (this.HomeAppState.SelectedProjectId.HasValue)
+        if (this.AppState.SelectedProjectId.HasValue)
         {
-            await LoadProjectTasksAsync(this.HomeAppState.SelectedProjectId.Value);
-            this.loadedProjectId = this.HomeAppState.SelectedProjectId;
+            await LoadProjectTasksAsync(this.AppState.SelectedProjectId.Value);
+            this.loadedProjectId = this.AppState.SelectedProjectId;
             this.loadedSectionId = null;
             return;
         }
 
-        if (this.HomeAppState.SelectedSectionId.HasValue)
+        if (this.AppState.SelectedSectionId.HasValue)
         {
-            await LoadSectionTasksAsync(this.HomeAppState.SelectedSectionId.Value);
+            await LoadSectionTasksAsync(this.AppState.SelectedSectionId.Value);
             this.loadedProjectId = null;
-            this.loadedSectionId = this.HomeAppState.SelectedSectionId;
+            this.loadedSectionId = this.AppState.SelectedSectionId;
         }
     }
 
@@ -807,8 +801,8 @@
 
     private async Task RecalculateProjectTaskCountsAsync()
     {
-        var counts = await BuildProjectTaskCountsAsync(this.HomeAppState.Projects);
-        this.HomeAppState.SetProjectTaskCounts(counts);
+        var counts = await BuildProjectTaskCountsAsync(this.AppState.Projects);
+        this.AppState.SetProjectTaskCounts(counts);
     }
 
     private async Task<Dictionary<Guid, int>> BuildProjectTaskCountsAsync(IReadOnlyList<Project> projects)
@@ -1135,7 +1129,7 @@
 
     public void Dispose()
     {
-        this.HomeAppState.Changed -= OnHomeAppStateChanged;
+        this.AppState.Changed -= OnAppStateChanged;
         this.editProjectDialogCloserRef?.Dispose();
     }
 }
@@ -1182,7 +1176,7 @@
             <MudText Typo="Typo.h6">Move Task</MudText>
             <MudSelect T="Guid?" Value="moveTargetProjectId" ValueChanged="value => moveTargetProjectId = value" Label="Select project" Variant="Variant.Outlined" Dense="true">
                 <MudSelectItem Value="@((Guid?)null)">Unassigned</MudSelectItem>
-                @foreach (var project in HomeAppState.Projects)
+                @foreach (var project in AppState.Projects)
                 {
                     <MudSelectItem Value="@((Guid?)project.Id)">@project.Name</MudSelectItem>
                 }

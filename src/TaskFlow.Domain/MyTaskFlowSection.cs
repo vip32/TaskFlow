@@ -220,6 +220,12 @@ public class MyTaskFlowSection
             return false;
         }
 
+        if (this.IsSystemSection
+            && string.Equals(this.Name, "Important", StringComparison.OrdinalIgnoreCase))
+        {
+            return task.IsImportant;
+        }
+
         return this.DueBucket switch
         {
             TaskFlowDueBucket.Any => true,

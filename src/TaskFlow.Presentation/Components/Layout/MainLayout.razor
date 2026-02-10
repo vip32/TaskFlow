@@ -1,7 +1,6 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @using TaskFlow.Presentation.Components.Pages
-@inject HomeAppState HomeAppState
 
 <MudThemeProvider Theme="@TaskFlowTheme.Theme" IsDarkMode="@isDarkMode" />
 <MudPopoverProvider />
@@ -10,6 +9,7 @@
 
 <CascadingValue Name="ToggleTheme" Value="(Func<Task>)ToggleThemeAsync">
     <CascadingValue Value="isDarkMode">
+        <CascadingValue Value="homeAppState">
         <MudLayout>
             <MudAppBar Elevation="1">
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
@@ -18,7 +18,7 @@
                 <MudIconButton Icon="@(isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)" Color="Color.Inherit" Edge="Edge.End" OnClick="ToggleThemeAsync" />
             </MudAppBar>
 
-            <MudDrawer Open="@HomeAppState.IsDrawerOpen"
+            <MudDrawer Open="@homeAppState.IsDrawerOpen"
                        OpenChanged="OnDrawerOpenChanged"
                        Elevation="1"
                        Variant="DrawerVariant.Responsive"
@@ -31,6 +31,7 @@
                 @Body
             </MudMainContent>
         </MudLayout>
+        </CascadingValue>
     </CascadingValue>
 </CascadingValue>
 
@@ -42,10 +43,11 @@
 
 @code {
     private bool isDarkMode = true;
+    private readonly AppState homeAppState = new();
 
     protected override void OnInitialized()
     {
-        this.HomeAppState.Changed += OnHomeStateChanged;
+        this.homeAppState.Changed += OnHomeStateChanged;
     }
 
     private Task ToggleThemeAsync()
@@ -57,13 +59,13 @@
 
     private Task OnDrawerOpenChanged(bool value)
     {
-        this.HomeAppState.SetDrawerOpen(value);
+        this.homeAppState.SetDrawerOpen(value);
         return Task.CompletedTask;
     }
 
     private Task ToggleDrawer()
     {
-        this.HomeAppState.ToggleDrawer();
+        this.homeAppState.ToggleDrawer();
         return Task.CompletedTask;
     }
 
@@ -74,6 +76,6 @@
 
     public void Dispose()
     {
-        this.HomeAppState.Changed -= OnHomeStateChanged;
+        this.homeAppState.Changed -= OnHomeStateChanged;
     }
 }

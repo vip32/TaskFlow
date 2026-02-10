@@ -29,7 +29,6 @@ builder.Services.AddMudServices(config =>
 });
 
 builder.Services.AddTaskFlowApplicationServices();
-builder.Services.AddSingleton<HomeAppState>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))

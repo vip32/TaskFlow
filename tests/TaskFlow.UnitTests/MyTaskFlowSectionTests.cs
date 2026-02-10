@@ -76,4 +76,24 @@ public class MyTaskFlowSectionTests
         Assert.True(importantMatches);
         Assert.False(regularMatches);
     }
+
+    /// <summary>
+    /// Verifies legacy Important system sections still behave as important-only.
+    /// </summary>
+    [Fact]
+    public void Matches_LegacyImportantByName_OnlyImportantTasksMatch()
+    {
+        var subscriptionId = Guid.NewGuid();
+        var section = MyTaskFlowSection.CreateSystem(subscriptionId, "Important", 2, TaskFlowDueBucket.Any);
+        var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
+        var nowUtc = DateTime.UtcNow;
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(nowUtc, timezone));
+
+        var importantTask = new DomainTask(subscriptionId, "Starred", Guid.NewGuid());
+        importantTask.ToggleImportant();
+        var regularTask = new DomainTask(subscriptionId, "Regular", Guid.NewGuid());
+
+        Assert.True(section.Matches(importantTask, today, today.AddDays(6), nowUtc, timezone));
+        Assert.False(section.Matches(regularTask, today, today.AddDays(6), nowUtc, timezone));
+    }
 }
