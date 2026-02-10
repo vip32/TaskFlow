@@ -10,8 +10,8 @@
 
 <PageTitle>TaskFlow</PageTitle>
 
-<div class="tf-shell" tabindex="0" @onkeydown="HandleShellKeyDown">
-    <aside class="tf-sidebar">
+<div class="@ShellClass" tabindex="0" @onkeydown="HandleShellKeyDown">
+    <aside class="@SidebarClass">
         <div class="tf-brand">
             <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Medium" />
             <div>
@@ -20,7 +20,10 @@
             </div>
         </div>
 
-        <MudText Typo="Typo.caption" Class="tf-sidebar-caption">My Task Flow</MudText>
+        @if (!isSidebarCollapsed)
+        {
+            <MudText Typo="Typo.caption" Class="tf-sidebar-caption">My Task Flow</MudText>
+        }
         @foreach (var flowSection in myTaskFlowSections)
         {
             var isActive = selectedSectionId == flowSection.Id;
@@ -29,13 +32,22 @@
                        Color="@(isActive ? Color.Primary : Color.Default)"
                        Class="tf-sidebar-button"
                        OnClick="() => SelectSectionAsync(flowSection.Id)">
-                @flowSection.Name
+                @if (!isSidebarCollapsed)
+                {
+                    @flowSection.Name
+                }
             </MudButton>
         }
 
-        <MudDivider Class="my-4" />
+        @if (!isSidebarCollapsed)
+        {
+            <MudDivider Class="my-4" />
+        }
 
-        <MudText Typo="Typo.caption" Class="tf-sidebar-caption">Projects</MudText>
+        @if (!isSidebarCollapsed)
+        {
+            <MudText Typo="Typo.caption" Class="tf-sidebar-caption">Projects</MudText>
+        }
         @foreach (var project in projects)
         {
             var isActive = selectedProjectId == project.Id;
@@ -46,21 +58,27 @@
                        OnClick="() => SelectProjectAsync(project.Id)">
                 <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
                 <span class="tf-project-dot" style="@($"background:{project.Color};")"></span>
-                <span class="tf-project-name">@project.Name</span>
-                <MudBadge Class="tf-project-count" Color="Color.Info" Content="@GetProjectTaskCount(project.Id)" />
+                @if (!isSidebarCollapsed)
+                {
+                    <span class="tf-project-name">@project.Name</span>
+                    <MudBadge Class="tf-project-count" Color="Color.Info" Content="@GetProjectTaskCount(project.Id)" />
+                }
             </MudButton>
         }
 
-        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-3" Spacing="1">
-            <MudTextField @bind-Value="newProjectName"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          Immediate="true"
-                          Placeholder="New project"
-                          Class="tf-sidebar-input"
-                          OnKeyDown="HandleCreateProjectKeyDown" />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateProjectAsync">Create</MudButton>
-        </MudStack>
+        @if (!isSidebarCollapsed)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-3" Spacing="1">
+                <MudTextField @bind-Value="newProjectName"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              Placeholder="New project"
+                              Class="tf-sidebar-input"
+                              OnKeyDown="HandleCreateProjectKeyDown" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateProjectAsync">Create</MudButton>
+            </MudStack>
+        }
     </aside>
 
     <section class="tf-main">
@@ -70,30 +88,29 @@
                 <MudText Typo="Typo.caption">@CurrentSubtitle</MudText>
             </div>
             <MudStack Row="true" Spacing="1">
-                <MudButton Variant="Variant.Outlined" OnClick="ToggleShortcutsHelp">Shortcuts</MudButton>
+                <MudTooltip Text="Collapse/expand sidebar">
+                    <MudIconButton Icon="@(isSidebarCollapsed ? Icons.Material.Filled.MenuOpen : Icons.Material.Filled.Menu)" OnClick="ToggleSidebarCollapse" />
+                </MudTooltip>
+                <MudTooltip Text="Keyboard shortcuts">
+                    <MudButton Variant="Variant.Outlined" OnClick="ToggleShortcutsHelp">Shortcuts</MudButton>
+                </MudTooltip>
+                <MudTooltip Text="Toggle light/dark mode">
+                    <MudIconButton Icon="@(IsDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)" OnClick="ToggleThemeAsync" />
+                </MudTooltip>
                 @if (selectedProject is not null)
                 {
-                    <MudButton Variant="Variant.Outlined" OnClick="ToggleProjectViewAsync">@ViewToggleLabel</MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteProjectDialog">Delete Project</MudButton>
+                    <MudTooltip Text="Toggle list/board view">
+                        <MudButton Variant="Variant.Outlined" OnClick="ToggleProjectViewAsync">@ViewToggleLabel</MudButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Edit project">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="OpenEditProjectDialog" />
+                    </MudTooltip>
+                    <MudTooltip Text="Delete project">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteProjectDialog">Delete Project</MudButton>
+                    </MudTooltip>
                 }
             </MudStack>
         </header>
-
-        @if (selectedProject is not null)
-        {
-            <MudPaper Class="tf-project-editor" Elevation="0">
-                <MudTextField @bind-Value="editProjectName" Label="Project name" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <MudTextField @bind-Value="editProjectColor" Label="Color" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <MudSelect T="string" @bind-Value="editProjectIcon" Label="Icon" Variant="Variant.Outlined" Dense="true">
-                    <MudSelectItem Value="@("folder")">Folder</MudSelectItem>
-                    <MudSelectItem Value="@("inbox")">Inbox</MudSelectItem>
-                    <MudSelectItem Value="@("work")">Work</MudSelectItem>
-                    <MudSelectItem Value="@("code")">Code</MudSelectItem>
-                    <MudSelectItem Value="@("flag")">Flag</MudSelectItem>
-                </MudSelect>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveProjectEditsAsync">Save Project</MudButton>
-            </MudPaper>
-        }
 
         <MudPaper Class="tf-filters" Elevation="0">
             <MudTextField @bind-Value="searchQuery"
@@ -126,7 +143,9 @@
                 <MudSelectItem Value="@SortMode.Focused">Focused</MudSelectItem>
             </MudSelect>
             <MudSwitch @bind-Value="showCompleted" Label="Show completed" Color="Color.Primary" />
-            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ClearCompletedAsync">Clear Completed</MudButton>
+            <MudTooltip Text="Delete all completed tasks">
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ClearCompletedAsync">Clear Completed</MudButton>
+            </MudTooltip>
         </MudPaper>
 
         <MudPaper Class="tf-create-row" Elevation="0">
@@ -136,13 +155,16 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           Immediate="true"
-                          OnKeyDown="HandleCreateTaskKeyDown" />
+                          TextUpdateSuppression="false"
+                          OnKeyUp="HandleCreateTaskKeyDown" />
             <MudSelect T="TaskPriority" @bind-Value="newTaskPriority" Label="Priority" Variant="Variant.Outlined" Dense="true">
                 <MudSelectItem Value="@TaskPriority.High">High</MudSelectItem>
                 <MudSelectItem Value="@TaskPriority.Medium">Medium</MudSelectItem>
                 <MudSelectItem Value="@TaskPriority.Low">Low</MudSelectItem>
             </MudSelect>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateTaskAsync">Add</MudButton>
+            <MudTooltip Text="Add task">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateTaskAsync">Add</MudButton>
+            </MudTooltip>
         </MudPaper>
 
         @if (selectedProject?.ViewType == ProjectViewType.Board)
@@ -156,18 +178,17 @@
                         {
                             <MudPaper Class="@GetTaskContainerClass(task, false)" Elevation="1" @onclick="() => selectedTaskId = task.Id">
                                 <TaskCard Item="task"
-                                          Projects="projects"
                                           BoardStatuses="boardStatuses"
-                                          ToggleComplete="ToggleCompleteAsync"
-                                          ToggleFocus="ToggleFocusAsync"
-                                          UpdateTitle="UpdateTitleAsync"
-                                          UpdateNote="UpdateNoteAsync"
-                                          UpdatePriority="UpdatePriorityAsync"
-                                          UpdateStatus="UpdateStatusAsync"
-                                          ToggleTodayMark="ToggleTodayMarkAsync"
-                                          DuplicateTask="DuplicateTaskAsync"
-                                          DeleteTask="DeleteTaskAsync"
-                                          MoveTask="MoveTaskAsync" />
+                                          OnToggleComplete="() => ToggleCompleteAsync(task)"
+                                          OnToggleFocus="() => ToggleFocusAsync(task)"
+                                          OnUpdateTitle="value => UpdateTitleAsync(task, value)"
+                                          OnUpdateNote="value => UpdateNoteAsync(task, value)"
+                                          OnUpdatePriority="value => UpdatePriorityAsync(task, value)"
+                                          OnUpdateStatus="value => UpdateStatusAsync(task, value)"
+                                          OnToggleToday="() => ToggleTodayMarkAsync(task)"
+                                          OnDuplicate="() => DuplicateTaskAsync(task)"
+                                          OnDelete="() => DeleteTaskAsync(task)"
+                                          OnRequestMove="() => OpenMoveTaskDialog(task.Id)" />
                             </MudPaper>
                         }
                     </MudPaper>
@@ -190,18 +211,17 @@
                     {
                         <MudPaper Class="@GetTaskContainerClass(task, false)" Elevation="0" @onclick="() => selectedTaskId = task.Id">
                             <TaskCard Item="task"
-                                      Projects="projects"
                                       BoardStatuses="boardStatuses"
-                                      ToggleComplete="ToggleCompleteAsync"
-                                      ToggleFocus="ToggleFocusAsync"
-                                      UpdateTitle="UpdateTitleAsync"
-                                      UpdateNote="UpdateNoteAsync"
-                                      UpdatePriority="UpdatePriorityAsync"
-                                      UpdateStatus="UpdateStatusAsync"
-                                      ToggleTodayMark="ToggleTodayMarkAsync"
-                                      DuplicateTask="DuplicateTaskAsync"
-                                      DeleteTask="DeleteTaskAsync"
-                                      MoveTask="MoveTaskAsync" />
+                                      OnToggleComplete="() => ToggleCompleteAsync(task)"
+                                      OnToggleFocus="() => ToggleFocusAsync(task)"
+                                      OnUpdateTitle="value => UpdateTitleAsync(task, value)"
+                                      OnUpdateNote="value => UpdateNoteAsync(task, value)"
+                                      OnUpdatePriority="value => UpdatePriorityAsync(task, value)"
+                                      OnUpdateStatus="value => UpdateStatusAsync(task, value)"
+                                      OnToggleToday="() => ToggleTodayMarkAsync(task)"
+                                      OnDuplicate="() => DuplicateTaskAsync(task)"
+                                      OnDelete="() => DeleteTaskAsync(task)"
+                                      OnRequestMove="() => OpenMoveTaskDialog(task.Id)" />
 
                             @if (subTasksByParent.TryGetValue(task.Id, out var subTasks) && subTasks.Count > 0)
                             {
@@ -210,18 +230,17 @@
                                     {
                                         <MudPaper Class="@GetTaskContainerClass(subTask, true)" Elevation="0">
                                             <TaskCard Item="subTask"
-                                                      Projects="projects"
                                                       BoardStatuses="boardStatuses"
-                                                      ToggleComplete="ToggleCompleteAsync"
-                                                      ToggleFocus="ToggleFocusAsync"
-                                                      UpdateTitle="UpdateTitleAsync"
-                                                      UpdateNote="UpdateNoteAsync"
-                                                      UpdatePriority="UpdatePriorityAsync"
-                                                      UpdateStatus="UpdateStatusAsync"
-                                                      ToggleTodayMark="ToggleTodayMarkAsync"
-                                                      DuplicateTask="DuplicateTaskAsync"
-                                                      DeleteTask="DeleteTaskAsync"
-                                                      MoveTask="MoveTaskAsync" />
+                                                      OnToggleComplete="() => ToggleCompleteAsync(subTask)"
+                                                      OnToggleFocus="() => ToggleFocusAsync(subTask)"
+                                                      OnUpdateTitle="value => UpdateTitleAsync(subTask, value)"
+                                                      OnUpdateNote="value => UpdateNoteAsync(subTask, value)"
+                                                      OnUpdatePriority="value => UpdatePriorityAsync(subTask, value)"
+                                                      OnUpdateStatus="value => UpdateStatusAsync(subTask, value)"
+                                                      OnToggleToday="() => ToggleTodayMarkAsync(subTask)"
+                                                      OnDuplicate="() => DuplicateTaskAsync(subTask)"
+                                                      OnDelete="() => DeleteTaskAsync(subTask)"
+                                                      OnRequestMove="() => OpenMoveTaskDialog(subTask.Id)" />
                                         </MudPaper>
                                     }
                                 </div>
@@ -233,8 +252,13 @@
                                               Placeholder="Add subtask"
                                               Variant="Variant.Text"
                                               Margin="Margin.Dense"
+                                              TextUpdateSuppression="false"
+                                              InputId="@GetSubTaskInputId(task.Id)"
+                                              OnKeyUp="args => HandleCreateSubTaskKeyUp(task.Id, args)"
                                               Class="tf-subtask-input" />
-                                <MudIconButton Icon="@Icons.Material.Filled.SubdirectoryArrowRight" OnClick="() => CreateSubTaskAsync(task.Id)" />
+                                <MudTooltip Text="Add subtask">
+                                    <MudIconButton Icon="@Icons.Material.Filled.SubdirectoryArrowRight" OnClick="() => CreateSubTaskAsync(task.Id)" />
+                                </MudTooltip>
                             </MudStack>
                         </MudPaper>
                     }
@@ -245,10 +269,22 @@
         <MudPaper Class="tf-focus-timer" Elevation="0">
             <MudText Typo="Typo.subtitle2">Focus Timer</MudText>
             <MudText Typo="Typo.h6">@timerRemaining.ToString(@"mm\:ss")</MudText>
+            <MudSelect T="int" Value="selectedTimerMinutes" ValueChanged="OnTimerPresetChangedAsync" Label="Duration" Dense="true" Variant="Variant.Outlined">
+                <MudSelectItem Value="5">5 mins</MudSelectItem>
+                <MudSelectItem Value="15">15 mins</MudSelectItem>
+                <MudSelectItem Value="30">30 mins</MudSelectItem>
+                <MudSelectItem Value="60">60 mins</MudSelectItem>
+            </MudSelect>
             <MudStack Row="true" Spacing="1">
-                <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="StartTimer" Disabled="@timerRunning">Start</MudButton>
-                <MudButton Variant="Variant.Outlined" OnClick="PauseTimer" Disabled="@(!timerRunning)">Pause</MudButton>
-                <MudButton Variant="Variant.Text" OnClick="ResetTimer">Reset</MudButton>
+                <MudTooltip Text="Start focus timer">
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="StartTimer" Disabled="@timerRunning">Start</MudButton>
+                </MudTooltip>
+                <MudTooltip Text="Pause focus timer">
+                    <MudButton Variant="Variant.Outlined" OnClick="PauseTimer" Disabled="@(!timerRunning)">Pause</MudButton>
+                </MudTooltip>
+                <MudTooltip Text="Reset focus timer">
+                    <MudButton Variant="Variant.Text" OnClick="ResetTimer">Reset</MudButton>
+                </MudTooltip>
             </MudStack>
         </MudPaper>
     </section>
@@ -300,6 +336,17 @@
     private readonly Dictionary<Guid, string> newSubTaskTitles = [];
     private readonly Dictionary<Guid, int> projectTaskCounts = [];
     private readonly Stack<UndoAction> undoActions = new();
+    private readonly (string Hex, string Name)[] projectColorOptions =
+    [
+        ("#2D9CFF", "Ocean Blue"),
+        ("#30C76A", "Mint Green"),
+        ("#F2B01E", "Amber"),
+        ("#EF4B6C", "Coral Red"),
+        ("#9B5DE5", "Violet"),
+        ("#14B8A6", "Teal"),
+        ("#F97316", "Orange"),
+        ("#64748B", "Slate"),
+    ];
 
     private List<Project> projects = [];
     private List<MyTaskFlowSection> myTaskFlowSections = [];
@@ -319,14 +366,21 @@
     private bool showCompleted;
     private bool showShortcuts;
     private bool showDeleteProjectDialog;
+    private bool showEditProjectDialog;
+    private bool showMoveTaskDialog;
     private bool isApplyingUndo;
+    private bool isSidebarCollapsed;
     private SortMode sortMode = SortMode.CreatedDesc;
-    private TimeSpan timerRemaining = TimeSpan.FromMinutes(25);
+    private int selectedTimerMinutes = 30;
+    private TimeSpan timerRemaining = TimeSpan.FromMinutes(30);
     private bool timerRunning;
     private PeriodicTimer timer = null!;
     private CancellationTokenSource timerCts = null!;
     private MudTextField<string> newTaskInputRef;
     private MudTextField<string> searchInputRef;
+    private Guid? moveTaskId;
+    private Guid? moveTargetProjectId;
+    private Guid? pendingSubTaskFocusParentId;
 
     private sealed record UndoAction(string Description, Func<Task> UndoAsync);
 
@@ -339,6 +393,16 @@
         bool IsMarkedForToday,
         Guid? ProjectId,
         List<TaskSnapshot> Children);
+
+    private string ShellClass => this.isSidebarCollapsed ? "tf-shell tf-shell-collapsed" : "tf-shell";
+
+    private string SidebarClass => this.isSidebarCollapsed ? "tf-sidebar tf-sidebar-collapsed" : "tf-sidebar";
+
+    [CascadingParameter(Name = "ToggleTheme")]
+    public Func<Task> ToggleTheme { get; set; }
+
+    [CascadingParameter]
+    public bool IsDarkMode { get; set; }
 
     private Project selectedProject => this.selectedProjectId.HasValue ? this.projects.FirstOrDefault(p => p.Id == this.selectedProjectId.Value) : null;
 
@@ -396,6 +460,18 @@
     protected override async Task OnInitializedAsync()
     {
         await ReloadAllAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!this.pendingSubTaskFocusParentId.HasValue)
+        {
+            return;
+        }
+
+        var parentTaskId = this.pendingSubTaskFocusParentId.Value;
+        this.pendingSubTaskFocusParentId = null;
+        await this.JsRuntime.InvokeVoidAsync("taskflowUi.focusById", GetSubTaskInputId(parentTaskId));
     }
 
     private async Task ReloadAllAsync()
@@ -471,24 +547,63 @@
             return;
         }
 
-        var created = await this.ProjectOrchestrator.CreateAsync(this.newProjectName, "#2D9CFF", "folder");
+        var created = await this.ProjectOrchestrator.CreateAsync(this.newProjectName, this.projectColorOptions[0].Hex, "folder");
         this.newProjectName = string.Empty;
         await ReloadAllAsync();
         await SelectProjectAsync(created.Id);
         this.Snackbar.Add("Project created.", Severity.Success);
     }
 
-    private async Task SaveProjectEditsAsync()
+    private void OpenEditProjectDialog()
     {
         if (this.selectedProject is null)
         {
             return;
         }
 
-        await this.ProjectOrchestrator.UpdateNameAsync(this.selectedProject.Id, this.editProjectName);
-        await this.ProjectOrchestrator.UpdateVisualsAsync(this.selectedProject.Id, this.editProjectColor, this.editProjectIcon);
+        SetProjectEditor(this.selectedProject);
+        this.showEditProjectDialog = true;
+    }
+
+    private void CloseEditProjectDialog()
+    {
+        this.showEditProjectDialog = false;
+    }
+
+    private async Task OnProjectNameEditedAsync(string value)
+    {
+        if (this.selectedProject is null || string.Equals(this.selectedProject.Name, value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        this.editProjectName = value;
+        await this.ProjectOrchestrator.UpdateNameAsync(this.selectedProject.Id, value);
         await ReloadAllAsync();
-        this.Snackbar.Add("Project updated.", Severity.Success);
+    }
+
+    private async Task OnProjectColorEditedAsync(string value)
+    {
+        if (this.selectedProject is null || string.Equals(this.selectedProject.Color, value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        this.editProjectColor = value;
+        await this.ProjectOrchestrator.UpdateVisualsAsync(this.selectedProject.Id, value, this.editProjectIcon);
+        await ReloadAllAsync();
+    }
+
+    private async Task OnProjectIconEditedAsync(string value)
+    {
+        if (this.selectedProject is null || string.Equals(this.selectedProject.Icon, value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        this.editProjectIcon = value;
+        await this.ProjectOrchestrator.UpdateVisualsAsync(this.selectedProject.Id, this.editProjectColor, value);
+        await ReloadAllAsync();
     }
 
     private void OpenDeleteProjectDialog()
@@ -499,6 +614,38 @@
     private void CloseDeleteProjectDialog()
     {
         this.showDeleteProjectDialog = false;
+    }
+
+    private void OpenMoveTaskDialog(Guid taskId)
+    {
+        this.moveTaskId = taskId;
+        this.moveTargetProjectId = this.activeTasks.FirstOrDefault(task => task.Id == taskId)?.ProjectId;
+        this.showMoveTaskDialog = true;
+    }
+
+    private void CloseMoveTaskDialog()
+    {
+        this.showMoveTaskDialog = false;
+        this.moveTaskId = null;
+        this.moveTargetProjectId = null;
+    }
+
+    private async Task ConfirmMoveTaskAsync()
+    {
+        if (!this.moveTaskId.HasValue)
+        {
+            return;
+        }
+
+        var task = this.activeTasks.FirstOrDefault(item => item.Id == this.moveTaskId.Value);
+        if (task is null)
+        {
+            CloseMoveTaskDialog();
+            return;
+        }
+
+        await MoveTaskAsync(task, this.moveTargetProjectId);
+        CloseMoveTaskDialog();
     }
 
     private async Task DeleteProjectAsync()
@@ -533,6 +680,12 @@
         }
 
         this.newTaskTitle = string.Empty;
+        await InvokeAsync(StateHasChanged);
+        if (this.newTaskInputRef is not null)
+        {
+            await this.newTaskInputRef.FocusAsync();
+        }
+
         await ReloadCurrentTasksAsync();
         this.Snackbar.Add("Task created.", Severity.Success);
     }
@@ -547,7 +700,17 @@
         await this.TaskOrchestrator.CreateSubTaskAsync(parentTaskId, title, TaskPriority.Medium, string.Empty);
 
         this.newSubTaskTitles[parentTaskId] = string.Empty;
+        this.pendingSubTaskFocusParentId = parentTaskId;
         await ReloadCurrentTasksAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleCreateSubTaskKeyUp(Guid parentTaskId, KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" || args.Key == "NumpadEnter")
+        {
+            await CreateSubTaskAsync(parentTaskId);
+        }
     }
 
     private async Task ToggleCompleteAsync(TaskFlow.Domain.Task task)
@@ -561,6 +724,7 @@
 
         await this.TaskOrchestrator.SetStatusAsync(task.Id, target);
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
         var statusMessage = target == DomainTaskStatus.Done ? "Task completed." : "Task restored.";
         this.Snackbar.Add($"{statusMessage} Press Ctrl/Cmd+Z to undo.", Severity.Success);
     }
@@ -574,24 +738,28 @@
 
         await this.TaskOrchestrator.UpdateTitleAsync(task.Id, value);
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
     }
 
     private async Task UpdateNoteAsync(TaskFlow.Domain.Task task, string value)
     {
         await this.TaskOrchestrator.UpdateNoteAsync(task.Id, value);
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
     }
 
     private async Task UpdatePriorityAsync(TaskFlow.Domain.Task task, TaskPriority priority)
     {
         await this.TaskOrchestrator.SetPriorityAsync(task.Id, priority);
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
     }
 
     private async Task UpdateStatusAsync(TaskFlow.Domain.Task task, DomainTaskStatus status)
     {
         await this.TaskOrchestrator.SetStatusAsync(task.Id, status);
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
     }
 
     private async Task ToggleFocusAsync(TaskFlow.Domain.Task task)
@@ -608,6 +776,7 @@
 
         await this.TaskOrchestrator.ToggleFocusAsync(task.Id);
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
     }
 
     private async Task DeleteTaskAsync(TaskFlow.Domain.Task task)
@@ -620,6 +789,7 @@
 
         await this.TaskOrchestrator.DeleteAsync(task.Id);
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
         this.Snackbar.Add("Task deleted. Press Ctrl/Cmd+Z to undo.", Severity.Info);
     }
 
@@ -636,6 +806,7 @@
         }
 
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
         this.Snackbar.Add("Task duplicated.", Severity.Info);
     }
 
@@ -643,6 +814,7 @@
     {
         await this.TaskOrchestrator.ToggleTodayMarkAsync(task.Id);
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
     }
 
     private async Task MoveTaskAsync(TaskFlow.Domain.Task task, Guid? projectId)
@@ -670,6 +842,8 @@
         }
 
         await ReloadCurrentTasksAsync();
+        await RecalculateProjectTaskCountsAsync();
+        StateHasChanged();
         this.Snackbar.Add("Task moved.", Severity.Info);
     }
 
@@ -712,6 +886,7 @@
         }
 
         await ReloadCurrentTasksAsync();
+        StateHasChanged();
         this.Snackbar.Add($"Cleared {completed.Count} completed task(s). Press Ctrl/Cmd+Z to undo.", Severity.Warning);
     }
 
@@ -887,6 +1062,11 @@
         return this.newSubTaskTitles.TryGetValue(parentTaskId, out var value) ? value : string.Empty;
     }
 
+    private static string GetSubTaskInputId(Guid parentTaskId)
+    {
+        return $"subtask-input-{parentTaskId:N}";
+    }
+
     private void SetNewSubTaskTitle(Guid parentTaskId, string value)
     {
         this.newSubTaskTitles[parentTaskId] = value;
@@ -894,7 +1074,7 @@
 
     private async Task HandleCreateTaskKeyDown(KeyboardEventArgs args)
     {
-        if (args.Key == "Enter")
+        if (args.Key == "Enter" || args.Key == "NumpadEnter")
         {
             await CreateTaskAsync();
         }
@@ -902,10 +1082,36 @@
 
     private async Task HandleCreateProjectKeyDown(KeyboardEventArgs args)
     {
-        if (args.Key == "Enter")
+        if (args.Key == "Enter" || args.Key == "NumpadEnter")
         {
             await CreateProjectAsync();
         }
+    }
+
+    private Task HandleEditProjectDialogKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" || args.Key == "NumpadEnter")
+        {
+            CloseEditProjectDialog();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleThemeAsync()
+    {
+        return this.ToggleTheme?.Invoke() ?? Task.CompletedTask;
+    }
+
+    private Task OnTimerPresetChangedAsync(int minutes)
+    {
+        this.selectedTimerMinutes = minutes;
+        if (!this.timerRunning)
+        {
+            this.timerRemaining = TimeSpan.FromMinutes(minutes);
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task HandleShellKeyDown(KeyboardEventArgs args)
@@ -969,6 +1175,11 @@
         this.showShortcuts = !this.showShortcuts;
     }
 
+    private void ToggleSidebarCollapse()
+    {
+        this.isSidebarCollapsed = !this.isSidebarCollapsed;
+    }
+
     private async Task StartTimer()
     {
         if (this.timerRunning)
@@ -1012,7 +1223,7 @@
     private void ResetTimer()
     {
         PauseTimer();
-        this.timerRemaining = TimeSpan.FromMinutes(25);
+        this.timerRemaining = TimeSpan.FromMinutes(this.selectedTimerMinutes);
     }
 
     private async Task PlayTimerBeepAsync(string eventType)
@@ -1026,4 +1237,55 @@
             // Ignore audio errors to avoid breaking interaction flow.
         }
     }
+}
+
+@if (showEditProjectDialog)
+{
+    <div class="tf-shortcuts-backdrop" @onclick="CloseEditProjectDialog">
+        <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true" tabindex="0" @onkeydown="HandleEditProjectDialogKeyDown">
+            <MudText Typo="Typo.h6">Edit Project</MudText>
+            <MudTextField T="string" Value="editProjectName" ValueChanged="OnProjectNameEditedAsync" Label="Project name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudSelect T="string" Value="editProjectColor" ValueChanged="OnProjectColorEditedAsync" Label="Color" Variant="Variant.Outlined" Dense="true">
+                @foreach (var option in projectColorOptions)
+                {
+                    <MudSelectItem Value="@option.Hex">
+                        <span class="tf-color-option">
+                            <span class="tf-color-swatch" style="@($"background:{option.Hex}")"></span>
+                            <span>@option.Name</span>
+                        </span>
+                    </MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="string" Value="editProjectIcon" ValueChanged="OnProjectIconEditedAsync" Label="Icon" Variant="Variant.Outlined" Dense="true">
+                <MudSelectItem Value="@("folder")">Folder</MudSelectItem>
+                <MudSelectItem Value="@("inbox")">Inbox</MudSelectItem>
+                <MudSelectItem Value="@("work")">Work</MudSelectItem>
+                <MudSelectItem Value="@("code")">Code</MudSelectItem>
+                <MudSelectItem Value="@("flag")">Flag</MudSelectItem>
+            </MudSelect>
+            <MudStack Row="true" Spacing="1" Class="mt-3">
+                <MudButton Variant="Variant.Outlined" OnClick="CloseEditProjectDialog">Done</MudButton>
+            </MudStack>
+        </MudPaper>
+    </div>
+}
+
+@if (showMoveTaskDialog)
+{
+    <div class="tf-shortcuts-backdrop" @onclick="CloseMoveTaskDialog">
+        <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true">
+            <MudText Typo="Typo.h6">Move Task</MudText>
+            <MudSelect T="Guid?" Value="moveTargetProjectId" ValueChanged="value => moveTargetProjectId = value" Label="Select project" Variant="Variant.Outlined" Dense="true">
+                <MudSelectItem Value="@((Guid?)null)">Unassigned</MudSelectItem>
+                @foreach (var project in projects)
+                {
+                    <MudSelectItem Value="@((Guid?)project.Id)">@project.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudStack Row="true" Spacing="1" Class="mt-3">
+                <MudButton Variant="Variant.Outlined" OnClick="CloseMoveTaskDialog">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmMoveTaskAsync">Move</MudButton>
+            </MudStack>
+        </MudPaper>
+    </div>
 }

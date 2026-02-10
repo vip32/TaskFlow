@@ -1,14 +1,29 @@
 @inherits LayoutComponentBase
 
-<MudThemeProvider Theme="@TaskFlowTheme.Theme" IsDarkMode="true" />
+<MudThemeProvider Theme="@TaskFlowTheme.Theme" IsDarkMode="@isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-@Body
+<CascadingValue Name="ToggleTheme" Value="(Func<Task>)ToggleThemeAsync">
+    <CascadingValue Value="isDarkMode">
+        @Body
+    </CascadingValue>
+</CascadingValue>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool isDarkMode = true;
+
+    private Task ToggleThemeAsync()
+    {
+        this.isDarkMode = !this.isDarkMode;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

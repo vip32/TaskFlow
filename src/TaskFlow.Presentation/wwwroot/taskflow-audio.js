@@ -34,4 +34,21 @@
 
         beepTone(740, 130, 0.06);
     };
+
+    window.taskflowUi = window.taskflowUi || {};
+    window.taskflowUi.focusById = function (id) {
+        if (!id) {
+            return;
+        }
+
+        var element = document.getElementById(id);
+        if (!element) {
+            return;
+        }
+
+        element.focus();
+        if (typeof element.select === "function") {
+            element.select();
+        }
+    };
 })();
