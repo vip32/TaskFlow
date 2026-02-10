@@ -1,0 +1,122 @@
+@using TaskFlow.Application
+@using TaskFlow.Domain
+@inject IProjectOrchestrator ProjectOrchestrator
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-2">Edit Project</MudText>
+        <form @onsubmit="HandleSubmitAsync">
+            <MudTextField T="string"
+                          Value="projectName"
+                          ValueChanged="OnNameChangedAsync"
+                          Label="Project name"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense" />
+
+            <MudSelect T="string"
+                       Value="projectColor"
+                       ValueChanged="OnColorChangedAsync"
+                       Label="Color"
+                       Variant="Variant.Outlined"
+                       Dense="true">
+                @foreach (var option in colorOptions)
+                {
+                    <MudSelectItem Value="@option.Hex">
+                        <span class="tf-color-option">
+                            <span class="tf-color-swatch" style="@($"background:{option.Hex}")"></span>
+                            <span>@option.Name</span>
+                        </span>
+                    </MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="string"
+                       Value="projectIcon"
+                       ValueChanged="OnIconChangedAsync"
+                       Label="Icon"
+                       Variant="Variant.Outlined"
+                       Dense="true">
+                <MudSelectItem Value="@("folder")">Folder</MudSelectItem>
+                <MudSelectItem Value="@("inbox")">Inbox</MudSelectItem>
+                <MudSelectItem Value="@("work")">Work</MudSelectItem>
+                <MudSelectItem Value="@("code")">Code</MudSelectItem>
+                <MudSelectItem Value="@("flag")">Flag</MudSelectItem>
+            </MudSelect>
+
+            <button type="submit" class="tf-hidden-submit" aria-hidden="true" tabindex="-1"></button>
+        </form>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" OnClick="Close">Done</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly (string Hex, string Name)[] colorOptions =
+    [
+        ("#2D9CFF", "Ocean Blue"),
+        ("#30C76A", "Mint Green"),
+        ("#F2B01E", "Amber"),
+        ("#EF4B6C", "Coral Red"),
+        ("#9B5DE5", "Violet"),
+        ("#14B8A6", "Teal"),
+        ("#F97316", "Orange"),
+        ("#64748B", "Slate"),
+    ];
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Guid ProjectId { get; set; }
+
+    [Parameter]
+    public string InitialName { get; set; } = string.Empty;
+
+    [Parameter]
+    public string InitialColor { get; set; } = "#2D9CFF";
+
+    [Parameter]
+    public string InitialIcon { get; set; } = "folder";
+
+    private string projectName = string.Empty;
+    private string projectColor = "#2D9CFF";
+    private string projectIcon = "folder";
+
+    protected override void OnParametersSet()
+    {
+        this.projectName = this.InitialName;
+        this.projectColor = this.InitialColor;
+        this.projectIcon = this.InitialIcon;
+    }
+
+    private async System.Threading.Tasks.Task OnNameChangedAsync(string value)
+    {
+        this.projectName = value;
+        await this.ProjectOrchestrator.UpdateNameAsync(this.ProjectId, value);
+    }
+
+    private async System.Threading.Tasks.Task OnColorChangedAsync(string value)
+    {
+        this.projectColor = value;
+        await this.ProjectOrchestrator.UpdateVisualsAsync(this.ProjectId, value, this.projectIcon);
+    }
+
+    private async System.Threading.Tasks.Task OnIconChangedAsync(string value)
+    {
+        this.projectIcon = value;
+        await this.ProjectOrchestrator.UpdateVisualsAsync(this.ProjectId, this.projectColor, value);
+    }
+
+    private System.Threading.Tasks.Task HandleSubmitAsync()
+    {
+        this.MudDialog.Close(DialogResult.Ok(true));
+        return System.Threading.Tasks.Task.CompletedTask;
+    }
+
+    private void Close()
+    {
+        this.MudDialog.Close(DialogResult.Ok(true));
+    }
+}

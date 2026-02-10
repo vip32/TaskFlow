@@ -131,6 +131,7 @@ public class AppDbContext : DbContext
             entity.Property(t => t.Status).HasConversion<int>().IsRequired();
             entity.Property(t => t.IsCompleted).IsRequired();
             entity.Property(t => t.IsFocused).IsRequired();
+            entity.Property(t => t.IsImportant).IsRequired();
             entity.Property(t => t.ProjectId).IsRequired(false);
             entity.Property(t => t.ParentTaskId).IsRequired(false);
             entity.Property(t => t.CreatedAt).IsRequired();

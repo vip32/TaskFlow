@@ -1,0 +1,52 @@
+@using TaskFlow.Domain
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-2">Move Task</MudText>
+        <MudSelect T="Guid?"
+                   Value="selectedProjectId"
+                   ValueChanged="value => selectedProjectId = value"
+                   Label="Select project"
+                   Variant="Variant.Outlined"
+                   Dense="true">
+            <MudSelectItem Value="@((Guid?)null)">Unassigned</MudSelectItem>
+            @foreach (var project in Projects)
+            {
+                <MudSelectItem Value="@((Guid?)project.Id)">@project.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Move">Move</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Guid? CurrentProjectId { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<Project> Projects { get; set; } = [];
+
+    private Guid? selectedProjectId;
+
+    protected override void OnParametersSet()
+    {
+        this.selectedProjectId = this.CurrentProjectId;
+    }
+
+    private void Cancel()
+    {
+        this.MudDialog.Cancel();
+    }
+
+    private void Move()
+    {
+        this.MudDialog.Close(DialogResult.Ok(this.selectedProjectId));
+    }
+}

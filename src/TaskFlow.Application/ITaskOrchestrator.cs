@@ -121,6 +121,14 @@ public interface ITaskOrchestrator
     Task<DomainTask> ToggleFocusAsync(Guid taskId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Toggles important flag and persists immediately.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    Task<DomainTask> ToggleImportantAsync(Guid taskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Moves a task to another project and persists immediately.
     /// </summary>
     /// <param name="taskId">Task identifier.</param>

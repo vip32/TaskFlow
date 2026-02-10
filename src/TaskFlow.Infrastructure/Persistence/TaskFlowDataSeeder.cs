@@ -64,8 +64,9 @@ public static class TaskFlowDataSeeder
         db.MyTaskFlowSections.AddRange(
             MyTaskFlowSection.CreateSystem(subscription.Id, "Recent", 0, TaskFlowDueBucket.Recent),
             MyTaskFlowSection.CreateSystem(subscription.Id, "Today", 1, TaskFlowDueBucket.Today),
-            MyTaskFlowSection.CreateSystem(subscription.Id, "This Week", 2, TaskFlowDueBucket.ThisWeek),
-            MyTaskFlowSection.CreateSystem(subscription.Id, "Upcoming", 3, TaskFlowDueBucket.Upcoming));
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Important", 2, TaskFlowDueBucket.Important),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "This Week", 3, TaskFlowDueBucket.ThisWeek),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Upcoming", 4, TaskFlowDueBucket.Upcoming));
 
         db.SaveChanges();
     }
@@ -125,8 +126,9 @@ public static class TaskFlowDataSeeder
         db.MyTaskFlowSections.AddRange(
             MyTaskFlowSection.CreateSystem(subscription.Id, "Recent", 0, TaskFlowDueBucket.Recent),
             MyTaskFlowSection.CreateSystem(subscription.Id, "Today", 1, TaskFlowDueBucket.Today),
-            MyTaskFlowSection.CreateSystem(subscription.Id, "This Week", 2, TaskFlowDueBucket.ThisWeek),
-            MyTaskFlowSection.CreateSystem(subscription.Id, "Upcoming", 3, TaskFlowDueBucket.Upcoming));
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Important", 2, TaskFlowDueBucket.Important),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "This Week", 3, TaskFlowDueBucket.ThisWeek),
+            MyTaskFlowSection.CreateSystem(subscription.Id, "Upcoming", 4, TaskFlowDueBucket.Upcoming));
 
         await db.SaveChangesAsync(cancellationToken);
     }

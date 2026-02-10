@@ -47,6 +47,11 @@ public class Task
     public bool IsFocused { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether this task is marked as important.
+    /// </summary>
+    public bool IsImportant { get; private set; }
+
+    /// <summary>
     /// Gets the workflow status of the task.
     /// </summary>
     public TaskStatus Status { get; private set; }
@@ -171,7 +176,8 @@ public class Task
         this.ProjectId = projectId;
         this.ParentTaskId = null;
         this.Priority = TaskPriority.Medium;
-        this.Status = TaskStatus.New;
+        this.Status = TaskStatus.Todo;
+        this.IsImportant = false;
         this.CreatedAt = DateTime.UtcNow;
         this.CompletedAt = null;
         this.SortOrder = 0;
@@ -213,6 +219,7 @@ public class Task
         TaskPriority priority,
         bool isCompleted,
         bool isFocused,
+        bool isImportant,
         TaskStatus status,
         DateTime createdAt,
         DateTime? completedAt,
@@ -235,6 +242,7 @@ public class Task
             Priority = priority,
             IsCompleted = isCompleted,
             IsFocused = isFocused,
+            IsImportant = isImportant,
             Status = status,
             CreatedAt = createdAt,
             CompletedAt = completedAt,
@@ -290,7 +298,7 @@ public class Task
 
         if (this.Status == TaskStatus.Done)
         {
-            this.Status = TaskStatus.New;
+            this.Status = TaskStatus.Todo;
         }
     }
 
@@ -407,6 +415,19 @@ public class Task
     }
 
     /// <summary>
+    /// Toggles important flag on top-level tasks.
+    /// </summary>
+    public void ToggleImportant()
+    {
+        if (this.ParentTaskId.HasValue)
+        {
+            throw new InvalidOperationException("Subtasks cannot be marked as important.");
+        }
+
+        this.IsImportant = !this.IsImportant;
+    }
+
+    /// <summary>
     /// Updates the task title.
     /// </summary>
     /// <param name="newTitle">New title value.</param>
@@ -459,11 +480,7 @@ public class Task
             this.Uncomplete();
         }
 
-        if (status == TaskStatus.Cancelled)
-        {
-            this.IsCompleted = false;
-            this.CompletedAt = null;
-        }
+        this.CompletedAt = null;
     }
 
     /// <summary>

@@ -52,4 +52,28 @@ public class MyTaskFlowSectionTests
         Assert.True(dueMatches);
         Assert.True(markedMatches);
     }
+
+    /// <summary>
+    /// Verifies important due bucket only includes starred tasks.
+    /// </summary>
+    [Fact]
+    public void Matches_ImportantBucket_OnlyImportantTasksMatch()
+    {
+        var subscriptionId = Guid.NewGuid();
+        var section = MyTaskFlowSection.CreateSystem(subscriptionId, "Important", 2, TaskFlowDueBucket.Important);
+        var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
+        var nowUtc = DateTime.UtcNow;
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(nowUtc, timezone));
+
+        var importantTask = new DomainTask(subscriptionId, "Starred", Guid.NewGuid());
+        importantTask.ToggleImportant();
+
+        var regularTask = new DomainTask(subscriptionId, "Regular", Guid.NewGuid());
+
+        var importantMatches = section.Matches(importantTask, today, today.AddDays(6), nowUtc, timezone);
+        var regularMatches = section.Matches(regularTask, today, today.AddDays(6), nowUtc, timezone);
+
+        Assert.True(importantMatches);
+        Assert.False(regularMatches);
+    }
 }

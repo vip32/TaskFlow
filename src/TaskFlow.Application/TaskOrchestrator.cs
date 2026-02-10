@@ -137,6 +137,14 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
+    public async Task<DomainTask> ToggleImportantAsync(Guid taskId, CancellationToken cancellationToken = default)
+    {
+        var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
+        task.ToggleImportant();
+        return await this.taskRepository.UpdateAsync(task, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public async Task<DomainTask> MoveToProjectAsync(Guid taskId, Guid newProjectId, CancellationToken cancellationToken = default)
     {
         var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);

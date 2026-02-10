@@ -220,11 +220,6 @@ public class MyTaskFlowSection
             return false;
         }
 
-        if (task.Status == TaskStatus.Cancelled && !this.IncludeCancelledTasks)
-        {
-            return false;
-        }
-
         return this.DueBucket switch
         {
             TaskFlowDueBucket.Any => true,
@@ -233,6 +228,7 @@ public class MyTaskFlowSection
             TaskFlowDueBucket.Upcoming => task.DueDateLocal.HasValue && task.DueDateLocal.Value > endOfWeekLocal,
             TaskFlowDueBucket.NoDueDate => !task.DueDateLocal.HasValue,
             TaskFlowDueBucket.Recent => IsRecent(task, nowUtc, timeZone),
+            TaskFlowDueBucket.Important => task.IsImportant,
             _ => false,
         };
     }

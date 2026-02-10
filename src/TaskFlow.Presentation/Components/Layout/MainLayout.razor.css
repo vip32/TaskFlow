@@ -1,3 +1,62 @@
+.tf-main-content {
+    padding: 1rem;
+}
+
+.tf-app-drawer {
+    padding: 0.25rem 0.5rem 0.75rem;
+}
+
+.tf-drawer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.tf-drawer-brand-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.tf-drawer-brand-subtitle {
+    font-size: 0.76rem;
+    opacity: 0.8;
+}
+
+.tf-drawer-caption {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.75;
+    margin: 0.45rem 0 0.5rem;
+    display: block;
+}
+
+.tf-drawer-button {
+    justify-content: flex-start;
+    margin-bottom: 0.35rem;
+    text-transform: none;
+    min-height: 42px;
+}
+
+.tf-drawer-project-name {
+    flex: 1;
+    text-align: left;
+}
+
+.tf-drawer-input {
+    width: 100%;
+}
+
+.tf-project-count {
+    margin-left: auto;
+}
+
+.tf-project-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    margin-right: 0.6rem;
+}
+
 #blazor-error-ui {
     color-scheme: dark;
     background: #2a2e36;

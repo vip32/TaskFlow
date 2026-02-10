@@ -39,6 +39,33 @@ public class MyTaskFlowSectionOrchestratorTests
         Assert.Contains(tasks, task => task.Id == manualTask.Id);
     }
 
+    /// <summary>
+    /// Verifies important section returns only starred tasks.
+    /// </summary>
+    [Fact]
+    public async System.Threading.Tasks.Task GetSectionTasksAsync_ImportantSection_ReturnsOnlyImportantTasks()
+    {
+        var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true, "Europe/Berlin");
+        subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
+
+        var importantSection = MyTaskFlowSection.CreateSystem(subscription.Id, "Important", 2, TaskFlowDueBucket.Important);
+
+        var starredTask = new DomainTask(subscription.Id, "Starred", Guid.NewGuid());
+        starredTask.ToggleImportant();
+
+        var regularTask = new DomainTask(subscription.Id, "Regular", Guid.NewGuid());
+
+        var sectionRepository = new FakeSectionRepository(importantSection);
+        var taskRepository = new FakeTaskRepository(starredTask, regularTask);
+        var accessor = new FakeCurrentSubscriptionAccessor(subscription);
+        var orchestrator = new MyTaskFlowSectionOrchestrator(sectionRepository, taskRepository, accessor);
+
+        var tasks = await orchestrator.GetSectionTasksAsync(importantSection.Id);
+
+        Assert.Single(tasks);
+        Assert.Equal(starredTask.Id, tasks[0].Id);
+    }
+
     private sealed class FakeCurrentSubscriptionAccessor : ICurrentSubscriptionAccessor
     {
         private readonly Subscription subscription;

@@ -5,6 +5,7 @@ using MudBlazor.Services;
 using Serilog;
 using TaskFlow.Application;
 using TaskFlow.Presentation.Components;
+using TaskFlow.Presentation.Components.Pages;
 using TaskFlow.Infrastructure;
 using TaskFlow.Infrastructure.Persistence;
 
@@ -28,6 +29,7 @@ builder.Services.AddMudServices(config =>
 });
 
 builder.Services.AddTaskFlowApplicationServices();
+builder.Services.AddSingleton<HomeAppState>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))

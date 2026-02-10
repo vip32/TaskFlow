@@ -1,6 +1,7 @@
 @using TaskFlow.Domain
 @using DomainTaskStatus = TaskFlow.Domain.TaskStatus
 
+<div @onclick:stopPropagation="true">
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
     <MudTooltip Text="Complete task">
         <MudCheckBox T="bool" Value="Item.IsCompleted" ValueChanged="OnCompleteChangedAsync" />
@@ -11,6 +12,15 @@
                        Color="@(Item.IsFocused ? Color.Success : Color.Default)"
                        OnClick="OnToggleFocusAsync" />
     </MudTooltip>
+
+    @if (AllowImportant)
+    {
+        <MudTooltip Text="Toggle important">
+            <MudIconButton Icon="@(Item.IsImportant ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
+                           Color="@(Item.IsImportant ? Color.Warning : Color.Default)"
+                           OnClick="OnToggleImportantAsync" />
+        </MudTooltip>
+    }
 
     <MudTextField T="string"
                   Value="Item.Title"
@@ -67,6 +77,8 @@
     }
 </div>
 
+</div>
+
 @code {
     [Parameter, EditorRequired]
     public TaskFlow.Domain.Task Item { get; set; } = null!;
@@ -79,6 +91,12 @@
 
     [Parameter]
     public EventCallback OnToggleFocus { get; set; }
+
+    [Parameter]
+    public bool AllowImportant { get; set; } = true;
+
+    [Parameter]
+    public EventCallback OnToggleImportant { get; set; }
 
     [Parameter]
     public EventCallback<string> OnUpdateTitle { get; set; }
@@ -143,6 +161,11 @@
     private System.Threading.Tasks.Task OnToggleFocusAsync(MouseEventArgs _)
     {
         return this.OnToggleFocus.InvokeAsync();
+    }
+
+    private System.Threading.Tasks.Task OnToggleImportantAsync(MouseEventArgs _)
+    {
+        return this.OnToggleImportant.InvokeAsync();
     }
 
     private System.Threading.Tasks.Task OnTitleChangedAsync(string value)

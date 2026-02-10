@@ -34,4 +34,9 @@ public enum TaskFlowDueBucket
     /// Includes tasks without due date.
     /// </summary>
     NoDueDate = 5,
+
+    /// <summary>
+    /// Includes tasks marked as important.
+    /// </summary>
+    Important = 6,
 }

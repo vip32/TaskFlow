@@ -1,0 +1,122 @@
+@using TaskFlow.Presentation.Components.Pages
+@implements IDisposable
+@inject HomeAppState HomeAppState
+@inject IProjectOrchestrator ProjectOrchestrator
+
+<MudDrawerHeader>
+    <div class="tf-drawer-brand">
+        <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Medium" />
+        <div>
+            <div class="tf-drawer-brand-title">TaskFlow</div>
+            <div class="tf-drawer-brand-subtitle">Execution First</div>
+        </div>
+    </div>
+</MudDrawerHeader>
+
+<MudNavMenu>
+    <MudNavLink Href="" Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All">Home</MudNavLink>
+</MudNavMenu>
+
+@if (HomeAppState.MyTaskFlowSections.Count > 0)
+{
+    <MudDivider Class="my-2" />
+    <MudText Typo="Typo.caption" Class="tf-drawer-caption">My Task Flow</MudText>
+    @foreach (var flowSection in HomeAppState.MyTaskFlowSections)
+    {
+        var isActive = HomeAppState.SelectedSectionId == flowSection.Id;
+        <MudButton FullWidth="true"
+                   Variant="@(isActive ? Variant.Filled : Variant.Text)"
+                   Color="@(isActive ? Color.Primary : Color.Default)"
+                   Class="tf-drawer-button"
+                   OnClick="() => HomeAppState.SelectSection(flowSection.Id)">
+            @flowSection.Name
+        </MudButton>
+    }
+}
+
+@if (HomeAppState.Projects.Count > 0)
+{
+    <MudDivider Class="my-2" />
+    <MudText Typo="Typo.caption" Class="tf-drawer-caption">Projects</MudText>
+    @foreach (var project in HomeAppState.Projects)
+    {
+        var isActive = HomeAppState.SelectedProjectId == project.Id;
+        <MudButton FullWidth="true"
+                   Variant="@(isActive ? Variant.Filled : Variant.Text)"
+                   Color="@(isActive ? Color.Primary : Color.Default)"
+                   Class="tf-drawer-button"
+                   OnClick="() => HomeAppState.SelectProject(project.Id)">
+            <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
+            <span class="tf-project-dot" style="@($"background:{project.Color};")"></span>
+            <span class="tf-drawer-project-name">@project.Name</span>
+            <MudBadge Class="tf-project-count" Color="Color.Info" Content="@HomeAppState.GetProjectTaskCount(project.Id)" />
+        </MudButton>
+    }
+
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2" Spacing="1">
+        <MudTextField @bind-Value="newProjectName"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Immediate="true"
+                      Placeholder="New project"
+                      Class="tf-drawer-input"
+                      OnKeyDown="HandleCreateProjectKeyDown" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateProjectAsync">Create</MudButton>
+    </MudStack>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        this.HomeAppState.Changed += OnStateChanged;
+    }
+
+    private string newProjectName = string.Empty;
+
+    private async Task CreateProjectAsync()
+    {
+        if (string.IsNullOrWhiteSpace(this.newProjectName))
+        {
+            return;
+        }
+
+        var created = await this.ProjectOrchestrator.CreateAsync(this.newProjectName, "#2D9CFF", "folder");
+        this.newProjectName = string.Empty;
+
+        var updatedProjects = this.HomeAppState.Projects.Concat([created]).OrderBy(project => project.CreatedAt).ToList();
+        var updatedCounts = this.HomeAppState.ProjectTaskCounts.ToDictionary(entry => entry.Key, entry => entry.Value);
+        updatedCounts[created.Id] = 0;
+        this.HomeAppState.SetNavigationData(updatedProjects, this.HomeAppState.MyTaskFlowSections.ToList(), updatedCounts);
+        this.HomeAppState.SelectProject(created.Id);
+    }
+
+    private async Task HandleCreateProjectKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" || args.Key == "NumpadEnter")
+        {
+            await CreateProjectAsync();
+        }
+    }
+
+    private string ResolveProjectIcon(string icon)
+    {
+        return icon?.ToLowerInvariant() switch
+        {
+            "inbox" => Icons.Material.Filled.Inbox,
+            "work" => Icons.Material.Filled.Work,
+            "code" => Icons.Material.Filled.Code,
+            "flag" => Icons.Material.Filled.Flag,
+            _ => Icons.Material.Filled.Folder,
+        };
+    }
+
+    private void OnStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        this.HomeAppState.Changed -= OnStateChanged;
+    }
+}
