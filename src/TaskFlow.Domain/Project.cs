@@ -121,6 +121,52 @@ public class Project
     }
 
     /// <summary>
+    /// Rehydrates a project from serialized import data.
+    /// </summary>
+    /// <param name="subscriptionId">Owning subscription identifier.</param>
+    /// <param name="id">Persisted project identifier.</param>
+    /// <param name="name">Project display name.</param>
+    /// <param name="color">Project color marker.</param>
+    /// <param name="icon">Project icon key.</param>
+    /// <param name="note">Optional project note.</param>
+    /// <param name="isDefault">Whether the project is default.</param>
+    /// <param name="viewType">Preferred project view mode.</param>
+    /// <param name="createdAt">Persisted creation timestamp (UTC).</param>
+    /// <param name="tags">Optional project tags.</param>
+    /// <returns>Rehydrated project aggregate.</returns>
+    public static Project Rehydrate(
+        Guid subscriptionId,
+        Guid id,
+        string name,
+        string color,
+        string icon,
+        string note,
+        bool isDefault,
+        ProjectViewType viewType,
+        DateTime createdAt,
+        IEnumerable<string> tags)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Project id cannot be empty.", nameof(id));
+        }
+
+        var project = new Project(subscriptionId, name, color, icon, note, isDefault)
+        {
+            Id = id,
+            ViewType = viewType,
+            CreatedAt = createdAt,
+        };
+
+        if (tags is not null)
+        {
+            project.SetTags(tags);
+        }
+
+        return project;
+    }
+
+    /// <summary>
     /// Adds a task to this project and aligns the task project identifier.
     /// </summary>
     /// <param name="task">Task to add.</param>

@@ -1,0 +1,210 @@
+@using TaskFlow.Domain
+@using DomainTaskStatus = TaskFlow.Domain.TaskStatus
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+    <MudCheckBox T="bool" Value="Item.IsCompleted" ValueChanged="OnCompleteChangedAsync" />
+    <MudIconButton Icon="@(Item.IsFocused ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin)"
+                   Color="@(Item.IsFocused ? Color.Success : Color.Default)"
+                   OnClick="OnToggleFocusAsync" />
+    <MudTextField T="string"
+                  Value="Item.Title"
+                  ValueChanged="OnTitleChangedAsync"
+                  Variant="Variant.Text"
+                  Class="@(Item.IsCompleted ? "tf-task-title tf-task-title-done" : "tf-task-title")" />
+    <MudSelect T="TaskPriority" Value="Item.Priority" ValueChanged="OnPriorityChangedAsync" Dense="true" Variant="Variant.Text">
+        <MudSelectItem Value="@TaskPriority.High">High</MudSelectItem>
+        <MudSelectItem Value="@TaskPriority.Medium">Medium</MudSelectItem>
+        <MudSelectItem Value="@TaskPriority.Low">Low</MudSelectItem>
+    </MudSelect>
+    <MudSelect T="DomainTaskStatus" Value="Item.Status" ValueChanged="OnStatusChangedAsync" Dense="true" Variant="Variant.Text">
+        @foreach (var status in BoardStatuses)
+        {
+            <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
+        }
+    </MudSelect>
+    <MudIconButton Icon="@Icons.Material.Filled.Today" Color="@(Item.IsMarkedForToday ? Color.Warning : Color.Default)" OnClick="OnToggleTodayAsync" />
+    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="OnDuplicateAsync" />
+    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnDeleteAsync" />
+</MudStack>
+
+<MudTextField T="string"
+              Value="Item.Note"
+              Placeholder="Optional note"
+              Variant="Variant.Text"
+              Lines="2"
+              ValueChanged="OnNoteChangedAsync" />
+
+<div class="tf-task-meta">
+    <span class="tf-task-meta-dot" style="@($"background:{PriorityColor(Item.Priority)}")"></span>
+    <span>@Item.Priority.ToString()</span>
+    <span>@($"Created {RelativeTime(Item.CreatedAt)}")</span>
+    @if (Item.CompletedAt.HasValue)
+    {
+        <span>@($"Completed {RelativeTime(Item.CompletedAt.Value)}")</span>
+    }
+</div>
+
+<MudSelect T="Guid?"
+           Value="Item.ProjectId"
+           Dense="true"
+           Variant="Variant.Text"
+           Label="Move to project"
+           ValueChanged="OnProjectChangedAsync">
+    <MudSelectItem Value="@((Guid?)null)">Unassigned</MudSelectItem>
+    @foreach (var project in Projects)
+    {
+        <MudSelectItem Value="@((Guid?)project.Id)">@project.Name</MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [Parameter, EditorRequired]
+    public TaskFlow.Domain.Task Item { get; set; } = null!;
+
+    [Parameter]
+    public IReadOnlyList<Project> Projects { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<DomainTaskStatus> BoardStatuses { get; set; } = [];
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> ToggleComplete { get; set; }
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> ToggleFocus { get; set; }
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, string, System.Threading.Tasks.Task> UpdateTitle { get; set; }
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, string, System.Threading.Tasks.Task> UpdateNote { get; set; }
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, TaskPriority, System.Threading.Tasks.Task> UpdatePriority { get; set; }
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, DomainTaskStatus, System.Threading.Tasks.Task> UpdateStatus { get; set; }
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> ToggleTodayMark { get; set; }
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> DuplicateTask { get; set; }
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> DeleteTask { get; set; }
+
+    [Parameter]
+    public Func<TaskFlow.Domain.Task, Guid?, System.Threading.Tasks.Task> MoveTask { get; set; }
+
+    private static string PriorityColor(TaskPriority priority)
+    {
+        return priority switch
+        {
+            TaskPriority.High => "#FF6B6B",
+            TaskPriority.Medium => "#F57C00",
+            _ => "#10B981",
+        };
+    }
+
+    private static string RelativeTime(DateTime value)
+    {
+        var delta = DateTime.UtcNow - value;
+        if (delta.TotalMinutes < 1)
+        {
+            return "just now";
+        }
+
+        if (delta.TotalHours < 1)
+        {
+            return $"{Math.Floor(delta.TotalMinutes)}m ago";
+        }
+
+        if (delta.TotalDays < 1)
+        {
+            return $"{Math.Floor(delta.TotalHours)}h ago";
+        }
+
+        return $"{Math.Floor(delta.TotalDays)}d ago";
+    }
+
+    private async System.Threading.Tasks.Task OnCompleteChangedAsync(bool _)
+    {
+        if (this.ToggleComplete is not null)
+        {
+            await this.ToggleComplete(this.Item);
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnToggleFocusAsync(MouseEventArgs _)
+    {
+        if (this.ToggleFocus is not null)
+        {
+            await this.ToggleFocus(this.Item);
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnTitleChangedAsync(string value)
+    {
+        if (this.UpdateTitle is not null)
+        {
+            await this.UpdateTitle(this.Item, value);
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnNoteChangedAsync(string value)
+    {
+        if (this.UpdateNote is not null)
+        {
+            await this.UpdateNote(this.Item, value);
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnPriorityChangedAsync(TaskPriority value)
+    {
+        if (this.UpdatePriority is not null)
+        {
+            await this.UpdatePriority(this.Item, value);
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnStatusChangedAsync(DomainTaskStatus value)
+    {
+        if (this.UpdateStatus is not null)
+        {
+            await this.UpdateStatus(this.Item, value);
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnToggleTodayAsync(MouseEventArgs _)
+    {
+        if (this.ToggleTodayMark is not null)
+        {
+            await this.ToggleTodayMark(this.Item);
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnDuplicateAsync(MouseEventArgs _)
+    {
+        if (this.DuplicateTask is not null)
+        {
+            await this.DuplicateTask(this.Item);
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnDeleteAsync(MouseEventArgs _)
+    {
+        if (this.DeleteTask is not null)
+        {
+            await this.DeleteTask(this.Item);
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnProjectChangedAsync(Guid? value)
+    {
+        if (this.MoveTask is not null)
+        {
+            await this.MoveTask(this.Item, value);
+        }
+    }
+}

@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+src/TaskFlow.Presentation/taskflow.dev.db
+src/TaskFlow.Presentation/taskflow.dev.db-wal
+src/TaskFlow.Presentation/taskflow.dev.db-shm
+**/*.log

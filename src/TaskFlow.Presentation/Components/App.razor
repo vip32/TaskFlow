@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <ResourcePreloader />
+    <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["TaskFlow.Presentation.styles.css"]" />
     <ImportMap />
@@ -14,12 +15,10 @@
 </head>
 
 <body>
-    <MudThemeProvider Theme="@TaskFlowTheme.Theme" IsDarkMode="true" />
-    <MudPopoverProvider />
-    <MudDialogProvider />
-    <MudSnackbarProvider />
-    <Routes />
+    <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <ReconnectModal />
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="taskflow-audio.js"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 

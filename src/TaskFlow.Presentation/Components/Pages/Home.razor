@@ -6,6 +6,7 @@
 @inject ITaskOrchestrator TaskOrchestrator
 @inject IMyTaskFlowSectionOrchestrator MyTaskFlowSectionOrchestrator
 @inject ISnackbar Snackbar
+@inject IJSRuntime JsRuntime
 
 <PageTitle>TaskFlow</PageTitle>
 
@@ -54,11 +55,11 @@
             <MudTextField @bind-Value="newProjectName"
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
+                          Immediate="true"
                           Placeholder="New project"
                           Class="tf-sidebar-input"
-                          Adornment="Adornment.End"
-                          AdornmentIcon="@Icons.Material.Filled.Add"
-                          OnAdornmentClick="CreateProjectAsync" />
+                          OnKeyDown="HandleCreateProjectKeyDown" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateProjectAsync">Create</MudButton>
         </MudStack>
     </aside>
 
@@ -134,6 +135,7 @@
                           Label="Create task"
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
+                          Immediate="true"
                           OnKeyDown="HandleCreateTaskKeyDown" />
             <MudSelect T="TaskPriority" @bind-Value="newTaskPriority" Label="Priority" Variant="Variant.Outlined" Dense="true">
                 <MudSelectItem Value="@TaskPriority.High">High</MudSelectItem>
@@ -153,7 +155,19 @@
                         @foreach (var task in GetBoardTasks(status))
                         {
                             <MudPaper Class="@GetTaskContainerClass(task, false)" Elevation="1" @onclick="() => selectedTaskId = task.Id">
-                                @RenderTaskCard(task)
+                                <TaskCard Item="task"
+                                          Projects="projects"
+                                          BoardStatuses="boardStatuses"
+                                          ToggleComplete="ToggleCompleteAsync"
+                                          ToggleFocus="ToggleFocusAsync"
+                                          UpdateTitle="UpdateTitleAsync"
+                                          UpdateNote="UpdateNoteAsync"
+                                          UpdatePriority="UpdatePriorityAsync"
+                                          UpdateStatus="UpdateStatusAsync"
+                                          ToggleTodayMark="ToggleTodayMarkAsync"
+                                          DuplicateTask="DuplicateTaskAsync"
+                                          DeleteTask="DeleteTaskAsync"
+                                          MoveTask="MoveTaskAsync" />
                             </MudPaper>
                         }
                     </MudPaper>
@@ -175,7 +189,19 @@
                     @foreach (var task in FilteredTasks)
                     {
                         <MudPaper Class="@GetTaskContainerClass(task, false)" Elevation="0" @onclick="() => selectedTaskId = task.Id">
-                            @RenderTaskCard(task)
+                            <TaskCard Item="task"
+                                      Projects="projects"
+                                      BoardStatuses="boardStatuses"
+                                      ToggleComplete="ToggleCompleteAsync"
+                                      ToggleFocus="ToggleFocusAsync"
+                                      UpdateTitle="UpdateTitleAsync"
+                                      UpdateNote="UpdateNoteAsync"
+                                      UpdatePriority="UpdatePriorityAsync"
+                                      UpdateStatus="UpdateStatusAsync"
+                                      ToggleTodayMark="ToggleTodayMarkAsync"
+                                      DuplicateTask="DuplicateTaskAsync"
+                                      DeleteTask="DeleteTaskAsync"
+                                      MoveTask="MoveTaskAsync" />
 
                             @if (subTasksByParent.TryGetValue(task.Id, out var subTasks) && subTasks.Count > 0)
                             {
@@ -183,7 +209,19 @@
                                     @foreach (var subTask in subTasks)
                                     {
                                         <MudPaper Class="@GetTaskContainerClass(subTask, true)" Elevation="0">
-                                            @RenderTaskCard(subTask)
+                                            <TaskCard Item="subTask"
+                                                      Projects="projects"
+                                                      BoardStatuses="boardStatuses"
+                                                      ToggleComplete="ToggleCompleteAsync"
+                                                      ToggleFocus="ToggleFocusAsync"
+                                                      UpdateTitle="UpdateTitleAsync"
+                                                      UpdateNote="UpdateNoteAsync"
+                                                      UpdatePriority="UpdatePriorityAsync"
+                                                      UpdateStatus="UpdateStatusAsync"
+                                                      ToggleTodayMark="ToggleTodayMarkAsync"
+                                                      DuplicateTask="DuplicateTaskAsync"
+                                                      DeleteTask="DeleteTaskAsync"
+                                                      MoveTask="MoveTaskAsync" />
                                         </MudPaper>
                                     }
                                 </div>
@@ -737,37 +775,6 @@
         };
     }
 
-    private static string PriorityColor(TaskPriority priority)
-    {
-        return priority switch
-        {
-            TaskPriority.High => "#FF6B6B",
-            TaskPriority.Medium => "#F57C00",
-            _ => "#10B981",
-        };
-    }
-
-    private static string RelativeTime(DateTime value)
-    {
-        var delta = DateTime.UtcNow - value;
-        if (delta.TotalMinutes < 1)
-        {
-            return "just now";
-        }
-
-        if (delta.TotalHours < 1)
-        {
-            return $"{Math.Floor(delta.TotalMinutes)}m ago";
-        }
-
-        if (delta.TotalDays < 1)
-        {
-            return $"{Math.Floor(delta.TotalHours)}h ago";
-        }
-
-        return $"{Math.Floor(delta.TotalDays)}d ago";
-    }
-
     private string GetTaskContainerClass(TaskFlow.Domain.Task task, bool isSubTask)
     {
         var baseClass = isSubTask ? "tf-subtask" : "tf-task";
@@ -885,157 +892,19 @@
         this.newSubTaskTitles[parentTaskId] = value;
     }
 
-    private RenderFragment RenderTaskCard(TaskFlow.Domain.Task task) => builder =>
-    {
-        var sequence = 0;
-
-        builder.OpenComponent<MudStack>(sequence++);
-        builder.AddAttribute(sequence++, "Row", true);
-        builder.AddAttribute(sequence++, "AlignItems", AlignItems.Center);
-        builder.AddAttribute(sequence++, "Spacing", 1);
-        builder.AddAttribute(sequence++, "ChildContent", (RenderFragment)(contentBuilder =>
-        {
-            var contentSequence = 0;
-
-            contentBuilder.OpenComponent<MudCheckBox<bool>>(contentSequence++);
-            contentBuilder.AddAttribute(contentSequence++, "Value", task.IsCompleted);
-            contentBuilder.AddAttribute(contentSequence++, "ValueChanged", EventCallback.Factory.Create<bool>(this, async _ => await ToggleCompleteAsync(task)));
-            contentBuilder.CloseComponent();
-
-            contentBuilder.OpenComponent<MudIconButton>(contentSequence++);
-            contentBuilder.AddAttribute(contentSequence++, "Icon", task.IsFocused ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin);
-            contentBuilder.AddAttribute(contentSequence++, "Color", task.IsFocused ? Color.Success : Color.Default);
-            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ToggleFocusAsync(task)));
-            contentBuilder.CloseComponent();
-
-            contentBuilder.OpenComponent<MudTextField<string>>(contentSequence++);
-            contentBuilder.AddAttribute(contentSequence++, "Value", task.Title);
-            contentBuilder.AddAttribute(contentSequence++, "ValueChanged", EventCallback.Factory.Create<string>(this, async value => await UpdateTitleAsync(task, value)));
-            contentBuilder.AddAttribute(contentSequence++, "Variant", Variant.Text);
-            contentBuilder.AddAttribute(contentSequence++, "Class", task.IsCompleted ? "tf-task-title tf-task-title-done" : "tf-task-title");
-            contentBuilder.CloseComponent();
-
-            contentBuilder.OpenComponent<MudSelect<TaskPriority>>(contentSequence++);
-            contentBuilder.AddAttribute(contentSequence++, "Value", task.Priority);
-            contentBuilder.AddAttribute(contentSequence++, "ValueChanged", EventCallback.Factory.Create<TaskPriority>(this, async value => await UpdatePriorityAsync(task, value)));
-            contentBuilder.AddAttribute(contentSequence++, "Dense", true);
-            contentBuilder.AddAttribute(contentSequence++, "Variant", Variant.Text);
-            contentBuilder.AddAttribute(contentSequence++, "ChildContent", (RenderFragment)(priorityBuilder =>
-            {
-                var prioritySequence = 0;
-                priorityBuilder.OpenComponent<MudSelectItem<TaskPriority>>(prioritySequence++);
-                priorityBuilder.AddAttribute(prioritySequence++, "Value", TaskPriority.High);
-                priorityBuilder.AddAttribute(prioritySequence++, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, "High")));
-                priorityBuilder.CloseComponent();
-
-                priorityBuilder.OpenComponent<MudSelectItem<TaskPriority>>(prioritySequence++);
-                priorityBuilder.AddAttribute(prioritySequence++, "Value", TaskPriority.Medium);
-                priorityBuilder.AddAttribute(prioritySequence++, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, "Medium")));
-                priorityBuilder.CloseComponent();
-
-                priorityBuilder.OpenComponent<MudSelectItem<TaskPriority>>(prioritySequence++);
-                priorityBuilder.AddAttribute(prioritySequence++, "Value", TaskPriority.Low);
-                priorityBuilder.AddAttribute(prioritySequence++, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, "Low")));
-                priorityBuilder.CloseComponent();
-            }));
-            contentBuilder.CloseComponent();
-
-            contentBuilder.OpenComponent<MudSelect<DomainTaskStatus>>(contentSequence++);
-            contentBuilder.AddAttribute(contentSequence++, "Value", task.Status);
-            contentBuilder.AddAttribute(contentSequence++, "ValueChanged", EventCallback.Factory.Create<DomainTaskStatus>(this, async value => await UpdateStatusAsync(task, value)));
-            contentBuilder.AddAttribute(contentSequence++, "Dense", true);
-            contentBuilder.AddAttribute(contentSequence++, "Variant", Variant.Text);
-            contentBuilder.AddAttribute(contentSequence++, "ChildContent", (RenderFragment)(statusBuilder =>
-            {
-                var statusSequence = 0;
-                foreach (var status in boardStatuses)
-                {
-                    statusBuilder.OpenComponent<MudSelectItem<DomainTaskStatus>>(statusSequence++);
-                    statusBuilder.AddAttribute(statusSequence++, "Value", status);
-                    statusBuilder.AddAttribute(statusSequence++, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, status.ToString())));
-                    statusBuilder.CloseComponent();
-                }
-            }));
-            contentBuilder.CloseComponent();
-
-            contentBuilder.OpenComponent<MudIconButton>(contentSequence++);
-            contentBuilder.AddAttribute(contentSequence++, "Icon", Icons.Material.Filled.Today);
-            contentBuilder.AddAttribute(contentSequence++, "Color", task.IsMarkedForToday ? Color.Warning : Color.Default);
-            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await ToggleTodayMarkAsync(task)));
-            contentBuilder.CloseComponent();
-
-            contentBuilder.OpenComponent<MudIconButton>(contentSequence++);
-            contentBuilder.AddAttribute(contentSequence++, "Icon", Icons.Material.Filled.ContentCopy);
-            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await DuplicateTaskAsync(task)));
-            contentBuilder.CloseComponent();
-
-            contentBuilder.OpenComponent<MudIconButton>(contentSequence++);
-            contentBuilder.AddAttribute(contentSequence++, "Icon", Icons.Material.Filled.Delete);
-            contentBuilder.AddAttribute(contentSequence++, "Color", Color.Error);
-            contentBuilder.AddAttribute(contentSequence++, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, async _ => await DeleteTaskAsync(task)));
-            contentBuilder.CloseComponent();
-        }));
-        builder.CloseComponent();
-
-        builder.OpenComponent<MudTextField<string>>(sequence++);
-        builder.AddAttribute(sequence++, "Value", task.Note);
-        builder.AddAttribute(sequence++, "Placeholder", "Optional note");
-        builder.AddAttribute(sequence++, "Variant", Variant.Text);
-        builder.AddAttribute(sequence++, "Lines", 2);
-        builder.AddAttribute(sequence++, "ValueChanged", EventCallback.Factory.Create<string>(this, async value => await UpdateNoteAsync(task, value)));
-        builder.CloseComponent();
-
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "tf-task-meta");
-        builder.OpenElement(sequence++, "span");
-        builder.AddAttribute(sequence++, "class", "tf-task-meta-dot");
-        builder.AddAttribute(sequence++, "style", $"background:{PriorityColor(task.Priority)}");
-        builder.CloseElement();
-        builder.OpenElement(sequence++, "span");
-        builder.AddContent(sequence++, task.Priority.ToString());
-        builder.CloseElement();
-        builder.OpenElement(sequence++, "span");
-        builder.AddContent(sequence++, $"Created {RelativeTime(task.CreatedAt)}");
-        builder.CloseElement();
-        if (task.CompletedAt.HasValue)
-        {
-            builder.OpenElement(sequence++, "span");
-            builder.AddContent(sequence++, $"Completed {RelativeTime(task.CompletedAt.Value)}");
-            builder.CloseElement();
-        }
-
-        builder.CloseElement();
-
-        builder.OpenComponent<MudSelect<Guid?>>(sequence++);
-        builder.AddAttribute(sequence++, "Value", task.ProjectId);
-        builder.AddAttribute(sequence++, "Dense", true);
-        builder.AddAttribute(sequence++, "Variant", Variant.Text);
-        builder.AddAttribute(sequence++, "Label", "Move to project");
-        builder.AddAttribute(sequence++, "ValueChanged", EventCallback.Factory.Create<Guid?>(this, async value => await MoveTaskAsync(task, value)));
-        builder.AddAttribute(sequence++, "ChildContent", (RenderFragment)(projectBuilder =>
-        {
-            var projectSequence = 0;
-            projectBuilder.OpenComponent<MudSelectItem<Guid?>>(projectSequence++);
-            projectBuilder.AddAttribute(projectSequence++, "Value", (Guid?)null);
-            projectBuilder.AddAttribute(projectSequence++, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, "Unassigned")));
-            projectBuilder.CloseComponent();
-
-            foreach (var project in projects)
-            {
-                projectBuilder.OpenComponent<MudSelectItem<Guid?>>(projectSequence++);
-                projectBuilder.AddAttribute(projectSequence++, "Value", (Guid?)project.Id);
-                projectBuilder.AddAttribute(projectSequence++, "ChildContent", (RenderFragment)(textBuilder => textBuilder.AddContent(0, project.Name)));
-                projectBuilder.CloseComponent();
-            }
-        }));
-        builder.CloseComponent();
-    };
-
     private async Task HandleCreateTaskKeyDown(KeyboardEventArgs args)
     {
         if (args.Key == "Enter")
         {
             await CreateTaskAsync();
+        }
+    }
+
+    private async Task HandleCreateProjectKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await CreateProjectAsync();
         }
     }
 
@@ -1100,7 +969,7 @@
         this.showShortcuts = !this.showShortcuts;
     }
 
-    private void StartTimer()
+    private async Task StartTimer()
     {
         if (this.timerRunning)
         {
@@ -1110,6 +979,7 @@
         this.timerRunning = true;
         this.timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
         this.timerCts = new CancellationTokenSource();
+        await PlayTimerBeepAsync("start");
         _ = RunTimerAsync(this.timer, this.timerCts.Token);
     }
 
@@ -1121,6 +991,7 @@
             {
                 this.timerRunning = false;
                 this.Snackbar.Add("Focus session complete.", Severity.Success);
+                await PlayTimerBeepAsync("finish");
                 await InvokeAsync(StateHasChanged);
                 return;
             }
@@ -1142,5 +1013,17 @@
     {
         PauseTimer();
         this.timerRemaining = TimeSpan.FromMinutes(25);
+    }
+
+    private async Task PlayTimerBeepAsync(string eventType)
+    {
+        try
+        {
+            await this.JsRuntime.InvokeVoidAsync("taskflowAudio.beep", eventType);
+        }
+        catch
+        {
+            // Ignore audio errors to avoid breaking interaction flow.
+        }
     }
 }

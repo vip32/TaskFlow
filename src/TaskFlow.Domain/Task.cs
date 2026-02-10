@@ -182,6 +182,80 @@ public class Task
     }
 
     /// <summary>
+    /// Rehydrates a task from serialized import data.
+    /// </summary>
+    /// <param name="subscriptionId">Owning subscription identifier.</param>
+    /// <param name="id">Persisted task identifier.</param>
+    /// <param name="title">Task title.</param>
+    /// <param name="projectId">Owning project identifier or null for unassigned.</param>
+    /// <param name="parentTaskId">Parent task identifier for subtasks.</param>
+    /// <param name="note">Optional note content.</param>
+    /// <param name="priority">Task priority.</param>
+    /// <param name="isCompleted">Completion flag.</param>
+    /// <param name="isFocused">Focus flag.</param>
+    /// <param name="status">Workflow status.</param>
+    /// <param name="createdAt">Persisted creation timestamp (UTC).</param>
+    /// <param name="completedAt">Persisted completion timestamp (UTC).</param>
+    /// <param name="sortOrder">Persisted sort order.</param>
+    /// <param name="dueDateLocal">Optional due date in subscription local timezone.</param>
+    /// <param name="dueTimeLocal">Optional due time in subscription local timezone.</param>
+    /// <param name="dueAtUtc">Optional due instant in UTC.</param>
+    /// <param name="isMarkedForToday">Explicit today marker.</param>
+    /// <param name="tags">Optional task tags.</param>
+    /// <returns>Rehydrated task aggregate.</returns>
+    public static Task Rehydrate(
+        Guid subscriptionId,
+        Guid id,
+        string title,
+        Guid? projectId,
+        Guid? parentTaskId,
+        string note,
+        TaskPriority priority,
+        bool isCompleted,
+        bool isFocused,
+        TaskStatus status,
+        DateTime createdAt,
+        DateTime? completedAt,
+        int sortOrder,
+        DateOnly? dueDateLocal,
+        TimeOnly? dueTimeLocal,
+        DateTime? dueAtUtc,
+        bool isMarkedForToday,
+        IEnumerable<string> tags)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Task id cannot be empty.", nameof(id));
+        }
+
+        var task = new Task(subscriptionId, title, projectId)
+        {
+            Id = id,
+            ParentTaskId = parentTaskId,
+            Priority = priority,
+            IsCompleted = isCompleted,
+            IsFocused = isFocused,
+            Status = status,
+            CreatedAt = createdAt,
+            CompletedAt = completedAt,
+            SortOrder = sortOrder < 0 ? 0 : sortOrder,
+            DueDateLocal = dueDateLocal,
+            DueTimeLocal = dueTimeLocal,
+            DueAtUtc = dueAtUtc,
+            IsMarkedForToday = isMarkedForToday,
+        };
+
+        task.UpdateNote(note);
+
+        if (tags is not null)
+        {
+            task.SetTags(tags);
+        }
+
+        return task;
+    }
+
+    /// <summary>
     /// Marks the task as complete and completes all subtasks recursively.
     /// </summary>
     public void Complete()
