@@ -152,7 +152,7 @@
                         <MudText Typo="Typo.subtitle2">@status (@GetBoardTasks(status).Count)</MudText>
                         @foreach (var task in GetBoardTasks(status))
                         {
-                            <MudPaper Class="tf-task" Elevation="1" @onclick="() => selectedTaskId = task.Id">
+                            <MudPaper Class="@GetTaskContainerClass(task, false)" Elevation="1" @onclick="() => selectedTaskId = task.Id">
                                 @RenderTaskCard(task)
                             </MudPaper>
                         }
@@ -174,7 +174,7 @@
                 {
                     @foreach (var task in FilteredTasks)
                     {
-                        <MudPaper Class="tf-task" Elevation="0" @onclick="() => selectedTaskId = task.Id">
+                        <MudPaper Class="@GetTaskContainerClass(task, false)" Elevation="0" @onclick="() => selectedTaskId = task.Id">
                             @RenderTaskCard(task)
 
                             @if (subTasksByParent.TryGetValue(task.Id, out var subTasks) && subTasks.Count > 0)
@@ -182,7 +182,7 @@
                                 <div class="tf-subtasks">
                                     @foreach (var subTask in subTasks)
                                     {
-                                        <MudPaper Class="tf-subtask" Elevation="0">
+                                        <MudPaper Class="@GetTaskContainerClass(subTask, true)" Elevation="0">
                                             @RenderTaskCard(subTask)
                                         </MudPaper>
                                     }
@@ -225,6 +225,8 @@
             <p>Delete: delete selected task</p>
             <p>Ctrl/Cmd + N: focus new task</p>
             <p>Ctrl/Cmd + F: focus search</p>
+            <p>Ctrl/Cmd + P: toggle focus pin on selected task</p>
+            <p>Ctrl/Cmd + Z: undo last action</p>
             <p>Ctrl/Cmd + /: toggle this help</p>
         </MudPaper>
     </div>
@@ -245,6 +247,8 @@
 }
 
 @code {
+    private const int MaxUndoActions = 20;
+
     private enum SortMode
     {
         CreatedDesc,
@@ -257,6 +261,7 @@
     private readonly Dictionary<Guid, List<TaskFlow.Domain.Task>> subTasksByParent = [];
     private readonly Dictionary<Guid, string> newSubTaskTitles = [];
     private readonly Dictionary<Guid, int> projectTaskCounts = [];
+    private readonly Stack<UndoAction> undoActions = new();
 
     private List<Project> projects = [];
     private List<MyTaskFlowSection> myTaskFlowSections = [];
@@ -276,6 +281,7 @@
     private bool showCompleted;
     private bool showShortcuts;
     private bool showDeleteProjectDialog;
+    private bool isApplyingUndo;
     private SortMode sortMode = SortMode.CreatedDesc;
     private TimeSpan timerRemaining = TimeSpan.FromMinutes(25);
     private bool timerRunning;
@@ -283,6 +289,18 @@
     private CancellationTokenSource timerCts = null!;
     private MudTextField<string> newTaskInputRef;
     private MudTextField<string> searchInputRef;
+
+    private sealed record UndoAction(string Description, Func<Task> UndoAsync);
+
+    private sealed record TaskSnapshot(
+        string Title,
+        string Note,
+        TaskPriority Priority,
+        DomainTaskStatus Status,
+        bool IsFocused,
+        bool IsMarkedForToday,
+        Guid? ProjectId,
+        List<TaskSnapshot> Children);
 
     private Project selectedProject => this.selectedProjectId.HasValue ? this.projects.FirstOrDefault(p => p.Id == this.selectedProjectId.Value) : null;
 
@@ -497,9 +515,16 @@
     private async Task ToggleCompleteAsync(TaskFlow.Domain.Task task)
     {
         var target = task.IsCompleted ? DomainTaskStatus.New : DomainTaskStatus.Done;
+        var previousStatus = task.Status;
+        PushUndoAction("toggle completion", async () =>
+        {
+            await this.TaskOrchestrator.SetStatusAsync(task.Id, previousStatus);
+        });
+
         await this.TaskOrchestrator.SetStatusAsync(task.Id, target);
         await ReloadCurrentTasksAsync();
-        this.Snackbar.Add(target == DomainTaskStatus.Done ? "Task completed." : "Task restored.", Severity.Success);
+        var statusMessage = target == DomainTaskStatus.Done ? "Task completed." : "Task restored.";
+        this.Snackbar.Add($"{statusMessage} Press Ctrl/Cmd+Z to undo.", Severity.Success);
     }
 
     private async Task UpdateTitleAsync(TaskFlow.Domain.Task task, string value)
@@ -533,15 +558,31 @@
 
     private async Task ToggleFocusAsync(TaskFlow.Domain.Task task)
     {
+        var wasFocused = task.IsFocused;
+        PushUndoAction("toggle focus", async () =>
+        {
+            var current = this.activeTasks.FirstOrDefault(x => x.Id == task.Id);
+            if (current is null || current.IsFocused != wasFocused)
+            {
+                await this.TaskOrchestrator.ToggleFocusAsync(task.Id);
+            }
+        });
+
         await this.TaskOrchestrator.ToggleFocusAsync(task.Id);
         await ReloadCurrentTasksAsync();
     }
 
     private async Task DeleteTaskAsync(TaskFlow.Domain.Task task)
     {
+        var snapshot = await CaptureTaskSnapshotAsync(task);
+        PushUndoAction("delete task", async () =>
+        {
+            await RestoreTaskSnapshotAsync(snapshot);
+        });
+
         await this.TaskOrchestrator.DeleteAsync(task.Id);
         await ReloadCurrentTasksAsync();
-        this.Snackbar.Add("Task deleted.", Severity.Info);
+        this.Snackbar.Add("Task deleted. Press Ctrl/Cmd+Z to undo.", Severity.Info);
     }
 
     private async Task DuplicateTaskAsync(TaskFlow.Domain.Task task)
@@ -568,6 +609,19 @@
 
     private async Task MoveTaskAsync(TaskFlow.Domain.Task task, Guid? projectId)
     {
+        var previousProjectId = task.ProjectId;
+        PushUndoAction("move task", async () =>
+        {
+            if (previousProjectId.HasValue)
+            {
+                await this.TaskOrchestrator.MoveToProjectAsync(task.Id, previousProjectId.Value);
+            }
+            else
+            {
+                await this.TaskOrchestrator.UnassignFromProjectAsync(task.Id);
+            }
+        });
+
         if (projectId.HasValue)
         {
             await this.TaskOrchestrator.MoveToProjectAsync(task.Id, projectId.Value);
@@ -598,13 +652,29 @@
     private async Task ClearCompletedAsync()
     {
         var completed = this.activeTasks.Where(task => task.IsCompleted).ToList();
+        var completedIds = completed.Select(task => task.Id).ToHashSet();
+        var rootCompleted = completed.Where(task => !task.ParentTaskId.HasValue || !completedIds.Contains(task.ParentTaskId.Value)).ToList();
+        var snapshots = new List<TaskSnapshot>();
+        foreach (var task in rootCompleted)
+        {
+            snapshots.Add(await CaptureTaskSnapshotAsync(task));
+        }
+
+        PushUndoAction("clear completed tasks", async () =>
+        {
+            foreach (var snapshot in snapshots)
+            {
+                await RestoreTaskSnapshotAsync(snapshot);
+            }
+        });
+
         foreach (var task in completed)
         {
             await this.TaskOrchestrator.DeleteAsync(task.Id);
         }
 
         await ReloadCurrentTasksAsync();
-        this.Snackbar.Add($"Cleared {completed.Count} completed task(s).", Severity.Warning);
+        this.Snackbar.Add($"Cleared {completed.Count} completed task(s). Press Ctrl/Cmd+Z to undo.", Severity.Warning);
     }
 
     private async Task ReloadCurrentTasksAsync()
@@ -696,6 +766,113 @@
         }
 
         return $"{Math.Floor(delta.TotalDays)}d ago";
+    }
+
+    private string GetTaskContainerClass(TaskFlow.Domain.Task task, bool isSubTask)
+    {
+        var baseClass = isSubTask ? "tf-subtask" : "tf-task";
+        if (!task.CompletedAt.HasValue)
+        {
+            return baseClass;
+        }
+
+        return task.CompletedAt.Value >= DateTime.UtcNow.AddMinutes(-15)
+            ? $"{baseClass} tf-task-recent"
+            : baseClass;
+    }
+
+    private void PushUndoAction(string description, Func<Task> undoAsync)
+    {
+        if (this.isApplyingUndo)
+        {
+            return;
+        }
+
+        if (this.undoActions.Count >= MaxUndoActions)
+        {
+            this.undoActions.Clear();
+        }
+
+        this.undoActions.Push(new UndoAction(description, undoAsync));
+    }
+
+    private async Task UndoLastActionAsync()
+    {
+        if (!this.undoActions.TryPop(out var action))
+        {
+            this.Snackbar.Add("Nothing to undo.", Severity.Normal);
+            return;
+        }
+
+        try
+        {
+            this.isApplyingUndo = true;
+            await action.UndoAsync();
+            await ReloadCurrentTasksAsync();
+            await RecalculateProjectTaskCountsAsync();
+            this.Snackbar.Add($"Undid: {action.Description}", Severity.Success);
+        }
+        finally
+        {
+            this.isApplyingUndo = false;
+        }
+    }
+
+    private async Task<TaskSnapshot> CaptureTaskSnapshotAsync(TaskFlow.Domain.Task task)
+    {
+        var children = await this.TaskOrchestrator.GetSubTasksAsync(task.Id);
+        var snapshots = new List<TaskSnapshot>();
+        foreach (var child in children)
+        {
+            snapshots.Add(await CaptureTaskSnapshotAsync(child));
+        }
+
+        return new TaskSnapshot(
+            task.Title,
+            task.Note ?? string.Empty,
+            task.Priority,
+            task.Status,
+            task.IsFocused,
+            task.IsMarkedForToday,
+            task.ProjectId,
+            snapshots);
+    }
+
+    private async Task RestoreTaskSnapshotAsync(TaskSnapshot snapshot, Guid? parentTaskId = null)
+    {
+        TaskFlow.Domain.Task recreated;
+        if (parentTaskId.HasValue)
+        {
+            recreated = await this.TaskOrchestrator.CreateSubTaskAsync(parentTaskId.Value, snapshot.Title, snapshot.Priority, snapshot.Note ?? string.Empty);
+        }
+        else if (snapshot.ProjectId.HasValue)
+        {
+            recreated = await this.TaskOrchestrator.CreateAsync(snapshot.ProjectId.Value, snapshot.Title, snapshot.Priority, snapshot.Note ?? string.Empty);
+        }
+        else
+        {
+            recreated = await this.TaskOrchestrator.CreateUnassignedAsync(snapshot.Title, snapshot.Priority, snapshot.Note ?? string.Empty);
+        }
+
+        if (snapshot.Status != DomainTaskStatus.New)
+        {
+            await this.TaskOrchestrator.SetStatusAsync(recreated.Id, snapshot.Status);
+        }
+
+        if (snapshot.IsFocused)
+        {
+            await this.TaskOrchestrator.ToggleFocusAsync(recreated.Id);
+        }
+
+        if (snapshot.IsMarkedForToday)
+        {
+            await this.TaskOrchestrator.ToggleTodayMarkAsync(recreated.Id);
+        }
+
+        foreach (var child in snapshot.Children)
+        {
+            await RestoreTaskSnapshotAsync(child, recreated.Id);
+        }
     }
 
     private string GetNewSubTaskTitle(Guid parentTaskId)
@@ -896,6 +1073,20 @@
             {
                 await this.searchInputRef.FocusAsync();
             }
+        }
+
+        if ((args.CtrlKey || args.MetaKey) && args.Key.Equals("p", StringComparison.OrdinalIgnoreCase) && this.selectedTaskId.HasValue)
+        {
+            var task = this.activeTasks.FirstOrDefault(x => x.Id == this.selectedTaskId.Value);
+            if (task is not null)
+            {
+                await ToggleFocusAsync(task);
+            }
+        }
+
+        if ((args.CtrlKey || args.MetaKey) && args.Key.Equals("z", StringComparison.OrdinalIgnoreCase))
+        {
+            await UndoLastActionAsync();
         }
 
         if ((args.CtrlKey || args.MetaKey) && args.Key == "/")

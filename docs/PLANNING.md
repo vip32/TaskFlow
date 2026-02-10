@@ -435,7 +435,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 1.63 | Implement move to project selector | 10 min | 1.56, 1.29 | Done |
 | 1.64 | Implement focus pin button | 5 min | 1.56, 1.32 | Done |
 | 1.65 | Add CreatedAt and CompletedAt timestamps | 10 min | 1.56 | Done |
-| 1.66 | Add visual indicator for recently completed tasks | 5 min | 1.56 | Pending |
+| 1.66 | Add visual indicator for recently completed tasks | 5 min | 1.56 | Done |
 | 1.67 | Implement empty state component | 10 min | 1.56 | Done |
 
 **Phase 1E Checklist**:
@@ -468,8 +468,8 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 1.70 | Add Delete shortcut (delete selected task) | 5 min | 1.68, 1.61 | Done |
 | 1.71 | Add Ctrl/Cmd + N shortcut (focus new task input) | 5 min | 1.68, 1.55 | Done |
 | 1.72 | Add Ctrl/Cmd + F shortcut (focus search input) | 5 min | 1.68, 1.50 | Done |
-| 1.73 | Add Ctrl/Cmd + P shortcut (toggle focus pin) | 5 min | 1.68, 1.64 | Pending |
-| 1.74 | Add Ctrl/Cmd + Z shortcut (undo last action) | 10 min | 1.68 | Pending |
+| 1.73 | Add Ctrl/Cmd + P shortcut (toggle focus pin) | 5 min | 1.68, 1.64 | Done |
+| 1.74 | Add Ctrl/Cmd + Z shortcut (undo last action) | 10 min | 1.68 | Done |
 | 1.75 | Add Ctrl/Cmd + / shortcut (show keyboard shortcuts help) | 10 min | 1.68 | Done |
 
 **Phase 1F Checklist**:
@@ -478,8 +478,8 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [x] Delete: Delete task
 - [x] Ctrl/Cmd + N: Focus new task
 - [x] Ctrl/Cmd + F: Focus search
-- [ ] Ctrl/Cmd + P: Toggle focus pin
-- [ ] Ctrl/Cmd + Z: Undo
+- [x] Ctrl/Cmd + P: Toggle focus pin
+- [x] Ctrl/Cmd + Z: Undo
 - [x] Ctrl/Cmd + /: Show help
 
 #### Phase 1G: Toast Notifications (6 tasks)

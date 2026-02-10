@@ -123,6 +123,11 @@
     background: rgba(42, 46, 54, 0.72);
 }
 
+.tf-task-recent {
+    border-color: #2d9cff;
+    box-shadow: 0 0 0 1px rgba(45, 156, 255, 0.35);
+}
+
 .tf-subtasks {
     margin-top: 0.5rem;
     padding-left: 1.2rem;
