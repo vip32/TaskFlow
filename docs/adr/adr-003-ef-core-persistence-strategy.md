@@ -7,7 +7,7 @@
 
 ## Context
 
-TaskFlow is a Blazor Server application designed for single-user deployment on Raspberry Pi hardware with moderate data volume. The data model is relational and requires transactional consistency, simple operations, and straightforward backup/restore.
+TaskFlow is a Blazor Server application designed for container deployment with moderate data volume. The data model is relational and requires transactional consistency, simple operations, and straightforward backup/restore.
 
 Blazor Server circuits can be long-lived, so DbContext lifetime management must avoid stale tracking state, cross-call state leaks, and memory growth.
 

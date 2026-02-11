@@ -34,12 +34,12 @@ TaskFlow provides task and project management with:
 - My Task Flow smart views and customizable sections (Recent, Today, This Week, Upcoming by default)
 - Focus pin for highlighting important tasks
 - Advanced UX features (search, sort, keyboard shortcuts)
-- Private network access via Tailscale
+- Public cloud access via Azure ingress with TLS
 
 ### Target Audience
 - **Primary (current)**: Personal deployment with a single subscription
 - **Primary (target)**: Multi-user SaaS model where each user operates within exactly one subscription boundary
-- **Environment**: Raspberry Pi 5, Debian 13, private Tailscale network
+- **Environment**: Azure-hosted Linux containers
 - **Scale**: Per subscription, 10-50 projects and 100-1000 tasks in baseline usage
 
 ### Version
@@ -852,7 +852,7 @@ TaskFlow provides task and project management with:
 **Description**: Application must run in Docker containers.
 
 **Requirements**:
-- Tailscale sidecar container
+- Cloud ingress/reverse proxy container or managed ingress
 - Blazor Server application container
 - Nginx reverse proxy container
 - Named volume for database persistence
@@ -860,12 +860,12 @@ TaskFlow provides task and project management with:
 **Priority**: Must Have
 
 #### FR13.2 Network Access
-**Description**: Application must be accessible via Tailscale.
+**Description**: Application must be accessible via public cloud endpoint.
 
 **Requirements**:
-- URL: http://taskflow.churra-platy.ts.net
-- Requires Tailscale network access
-- HTTPS not required (private network)
+- URL: https://taskflow.your-domain.com
+- Requires Azure ingress or equivalent public endpoint
+- HTTPS required for production access
 
 **Priority**: Must Have
 
@@ -1000,7 +1000,7 @@ TaskFlow provides task and project management with:
 ### NFR6: Security
 
 #### NFR6.1 Network Security
-**Requirement**: Application must be accessible only via Tailscale VPN.
+**Requirement**: Application must be accessible via secured public cloud ingress (Azure).
 
 **Priority**: Must Have
 
@@ -1034,7 +1034,7 @@ TaskFlow provides task and project management with:
 **Priority**: Must Have
 
 #### NFR7.3 Platform Support
-**Requirement**: Must run on Raspberry Pi 5 ARM64 architecture.
+**Requirement**: Must run in Azure-hosted Linux containers.
 
 **Priority**: Must Have
 
@@ -1595,15 +1595,15 @@ TaskFlow provides task and project management with:
 ### C1: Technical Constraints
 
 **C1.1 Platform**
-- Must run on Raspberry Pi 5 (ARM64)
+- Must run in Azure Linux container hosting
 - Must use .NET 10.0
 - Must use Blazor Server
 - Must use SQLite database
 - Must use Docker containers
 
 **C1.2 Access**
-- Must be accessible only via Tailscale VPN
-- URL: http://taskflow.churra-platy.ts.net
+- Must be accessible via secured public HTTPS endpoint
+- URL: https://taskflow.your-domain.com
 - No public internet access
 
 **C1.3 Architecture**
@@ -1616,7 +1616,7 @@ TaskFlow provides task and project management with:
 ### C2: Budget Constraints
 
 **C2.1 Infrastructure**
-- Use existing Raspberry Pi 5
+- Use Azure container infrastructure
 - No additional hardware costs
 - No cloud services
 

@@ -22,23 +22,23 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - **Runtime**: Blazor Server
 - **Database**: SQLite with Entity Framework Core
 - **UI Framework**: MudBlazor 8.x
-- **Deployment**: Docker containers on Raspberry Pi 5 (ARM64)
-- **Network**: Tailscale VPN for private access
+- **Deployment**: Docker containers on Azure (Linux)
+- **Network**: Azure ingress for public access
 - **Architecture**: Domain-Driven Design (DDD) with Rich Domain Model
 
 ### Project Location
 - **Source**: `/home/vip32/Projects/TaskFlow/`
 - **Database Volume**: `taskflow-data`
-- **Tailscale State**: `/home/vip32/Projects/ts-taskflow/state`
+- **Azure ingress State**: `/home/vip32/Projects/taskflow-gateway/state`
 - **Nginx Config**: `/home/vip32/Projects/taskflow-nginx/nginx.conf`
 
 ### Access URL
-- **Production**: http://taskflow.churra-platy.ts.net
+- **Production**: https://taskflow.your-domain.com
 
 ### Execution Status (2026-02-09)
 
 #### Completed
-- [x] Solution scaffolded (`TaskFlow.sln`) with all baseline projects in `src/` and `tests/`.
+- [x] Solution scaffolded (`TaskFlow.slnx`) with all baseline projects in `src/` and `tests/`.
 - [x] Project references configured according to architecture dependency direction.
 - [x] Core packages added (EF Core, SQLite provider, MudBlazor, test stack).
 - [x] Domain baseline implemented for Phase 0B:
@@ -61,7 +61,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [x] Phase 0C Infrastructure implementation (DbContext, repositories, migrations, seeding).
 - [x] Phase 0D Application orchestrators.
 - [x] Phase 0E DI registration and startup composition baseline (application and infrastructure registrations wired in `Program.cs`).
-- [ ] Tailscale-related deployment steps are intentionally deferred for now.
+- [ ] Azure ingress and public-cloud deployment steps are intentionally deferred for now.
 
 ---
 
@@ -150,7 +150,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 0.1 | Create directories: `/home/vip32/Projects/ts-taskflow/state`, `/home/vip32/Projects/taskflow-nginx` | 2 min | - | Pending |
+| 0.1 | Create directories: `/home/vip32/Projects/taskflow-gateway/state`, `/home/vip32/Projects/taskflow-nginx` | 2 min | - | Pending |
 | 0.2 | Generate Blazor Server project at `/home/vip32/Projects/taskflow` | 5 min | - | Pending |
 | 0.3 | Add MudBlazor package to project | 2 min | 0.2 | Pending |
 | 0.4 | Add EF Core SQLite package | 2 min | 0.3 | Pending |
@@ -293,14 +293,14 @@ TaskFlow is a personal task management web application built with Blazor Server,
 | 1.3 | Create `Application/` folder with feature slices | 10 min | 1.1 | Done |
 | 1.4 | Create `Infrastructure/` folder structure | 10 min | 1.1 | Done |
 | 1.5 | Create `Presentation/` folder with feature slices | 10 min | 1.1 | Done |
-| 1.6 | Set up `TaskFlow.sln` solution file | 5 min | 1.1 | Done |
+| 1.6 | Set up `TaskFlow.slnx` solution file | 5 min | 1.1 | Done |
 | 1.7 | Configure project references (solution-level dependencies) | 10 min | 1.6 | Done |
 | 1.8 | Set up `Directory.Build.props` for shared MSBuild properties | 5 min | 1.6 | Done |
 | 1.9 | Verify solution builds successfully | 5 min | 1.7 | Done |
 | 1.10 | Create GitHub repository and initialize | 5 min | 1.9 | Done |
 | 1.11 | Create `.github/workflows/docker-build.yml` workflow | 15 min | 1.10 | Done |
 | 1.12 | Configure workflow to build on push to main | 5 min | 1.11 | Done |
-| 1.13 | Configure workflow to build Docker image (ARM64) | 10 min | 1.11 | Pending |
+| 1.13 | Configure workflow to build Docker image (x64 (optionally multi-arch)) | 10 min | 1.11 | Pending |
 | 1.14 | Configure workflow to push image to container registry | 10 min | 1.13 | Pending |
 | 1.15 | Test GitHub Actions workflow manually | 10 min | 1.14 | Pending |
 
@@ -317,7 +317,7 @@ TaskFlow is a personal task management web application built with Blazor Server,
 - [x] GitHub repository initialized
 - [x] GitHub Actions workflow created
 - [x] Workflow configured for builds on push
-- [ ] Workflow builds ARM64 Docker image
+- [ ] Workflow builds x64 (optionally multi-arch) Docker image
 - [ ] Workflow pushes to container registry
 - [ ] Workflow tested manually
 
@@ -505,18 +505,18 @@ TaskFlow is a personal task management web application built with Blazor Server,
 
 | # | Task | Est. Time | Dependencies | Status |
 |----|------|-----------|--------------|--------|
-| 1.82 | Create Dockerfile for Blazor Server (ARM64) | 15 min | 1.7 | Done |
+| 1.82 | Create Dockerfile for Blazor Server (x64 (optionally multi-arch)) | 15 min | 1.7 | Done |
 | 1.83 | Create `Projects/taskflow-nginx/nginx.conf` reverse proxy | 10 min | - | Pending |
-| 1.84 | Add `ts-taskflow` service to `/home/vip32/docker-compose.yaml` | 10 min | 1.1, 1.82 | Pending |
+| 1.84 | Add `taskflow-gateway` service to `/home/vip32/docker-compose.yaml` | 10 min | 1.1, 1.82 | Pending |
 | 1.85 | Add `taskflow` service with volume and ports | 10 min | 1.82, 1.83 | Pending |
 | 1.86 | Add `taskflow-nginx` service with Uptime Kuma labels | 10 min | 1.83, 1.85 | Pending |
 | 1.87 | Review docker-compose configuration | 5 min | 1.84-1.86 | Pending |
 | 1.88 | Verify network_mode pattern matches existing services | 5 min | 1.87 | Pending |
 
 **Phase 1H Checklist**:
-- [x] Dockerfile created for ARM64
+- [x] Dockerfile created for x64 (optionally multi-arch)
 - [ ] nginx.conf created with reverse proxy
-- [ ] ts-taskflow service added to docker-compose
+- [ ] taskflow-gateway service added to docker-compose
 - [ ] taskflow service added
 - [ ] taskflow-nginx service added
 - [ ] Uptime Kuma labels configured
@@ -528,17 +528,17 @@ TaskFlow is a personal task management web application built with Blazor Server,
 |----|------|-----------|--------------|--------|
 | 1.89 | Build Docker image: `docker-compose build taskflow` | 5 min | 1.82 | Pending |
 | 1.90 | Test build completes without errors | 2 min | 1.89 | Pending |
-| 1.91 | Start containers: `docker-compose up -d ts-taskflow taskflow taskflow-nginx` | 5 min | 1.90 | Pending |
+| 1.91 | Start containers: `docker-compose up -d taskflow-gateway taskflow taskflow-nginx` | 5 min | 1.90 | Pending |
 | 1.92 | Verify containers are running | 2 min | 1.91 | Pending |
-| 1.93 | Access at `http://taskflow.churra-platy.ts.net` | 2 min | 1.92 | Pending |
-| 1.94 | Check Tailscale accessibility | 2 min | 1.93 | Pending |
+| 1.93 | Access at `https://taskflow.your-domain.com` | 2 min | 1.92 | Pending |
+| 1.94 | Check Azure ingress accessibility | 2 min | 1.93 | Pending |
 
 **Phase 1I Checklist**:
 - [ ] Docker image built successfully
 - [ ] Build completed without errors
 - [ ] Containers started
 - [ ] All containers running
-- [ ] App accessible via Tailscale
+- [ ] App accessible via Azure ingress
 - [ ] App loads in browser
 
 ### Phase 1 Summary
@@ -837,11 +837,11 @@ Phase 3 (My Task Flow + Focus Timer)
 
 | Risk | Impact | Probability | Mitigation |
 |-------|---------|-------------|------------|
-| Blazor Server performance issues on Raspberry Pi 5 | Medium | Low | Optimize queries, use AsNoTracking for read-only, implement virtualization |
+| Blazor Server performance issues on Azure container host | Medium | Low | Optimize queries, use AsNoTracking for read-only, implement virtualization |
 | SQLite file corruption on power loss | Medium | Low | Regular backups, journal mode for SQLite, transaction safety |
 | MudBlazor theme conflicts with custom Turquoise colors | Low | Low | Test theme thoroughly, use CSS custom properties to override defaults |
-| Docker image build failures on ARM64 | Medium | Low | Test build locally first, use official .NET ARM64 SDK images |
-| SignalR connection issues across Tailscale network | Medium | Medium | Implement graceful fallback, add connection status indicator |
+| Docker image build failures on x64 (optionally multi-arch) | Medium | Low | Test build locally first, use official .NET x64 (optionally multi-arch) SDK images |
+| SignalR connection issues across Azure ingress network | Medium | Medium | Implement graceful fallback, add connection status indicator |
 | Drag-and-drop complexity in Board view | Low | Medium | Use tested MudBlazor drag-drop components, add visual feedback |
 
 ### Scope Risks
@@ -856,7 +856,7 @@ Phase 3 (My Task Flow + Focus Timer)
 
 | Risk | Impact | Probability | Mitigation |
 |-------|---------|-------------|------------|
-| Tailscale authentication issues | High | Low | Have backup TS_AUTHKEY ready, document TS setup process |
+| Azure ingress authentication issues | High | Low | Have backup AZURE_DEPLOY_TOKEN ready, document TS setup process |
 | Port conflicts with existing services | Medium | Low | Check existing docker-compose, use unique ports in internal network |
 | Nginx configuration errors | Medium | Low | Test nginx.conf locally, verify with docker-compose up --dry-run |
 
@@ -1087,7 +1087,7 @@ public async Task AddAsync_ShouldAddTaskToDatabase()
 - [ ] REQUIREMENTS.md reviewed
 - [ ] PLANNING.md reviewed
 - [ ] Development environment ready (.NET 10.0 SDK, Docker)
-- [ ] Tailscale TS_AUTHKEY available
+- [ ] Azure ingress AZURE_DEPLOY_TOKEN available
 - [ ] docker-compose.yaml backup created
 - [ ] Previous containers stopped (if any)
 
@@ -1096,7 +1096,7 @@ public async Task AddAsync_ShouldAddTaskToDatabase()
 #### Step 1: Project Initialization
 ```bash
 # Create directories
-mkdir -p /home/vip32/Projects/ts-taskflow/state
+mkdir -p /home/vip32/Projects/taskflow-gateway/state
 mkdir -p /home/vip32/Projects/taskflow-nginx
 
 # Navigate to Projects directory
@@ -1151,23 +1151,23 @@ docker images | grep taskflow
 #### Step 6: Container Deployment
 ```bash
 # Start all three containers
-docker-compose up -d ts-taskflow taskflow taskflow-nginx
+docker-compose up -d taskflow-gateway taskflow taskflow-nginx
 
 # Verify all containers running
-docker-compose ps ts-taskflow taskflow taskflow-nginx
+docker-compose ps taskflow-gateway taskflow taskflow-nginx
 
 # Check logs for any errors
 docker-compose logs taskflow
 ```
 
-#### Step 7: Tailscale Verification
+#### Step 7: Azure ingress Verification
 ```bash
-# Check Tailscale connectivity
-# Verify ts-taskflow container is connected
-docker-compose logs ts-taskflow
+# Check Azure ingress connectivity
+# Verify taskflow-gateway container is connected
+docker-compose logs taskflow-gateway
 
-# Test access from other Tailscale device
-# Open http://taskflow.churra-platy.ts.net in browser
+# Test access from other Azure ingress device
+# Open https://taskflow.your-domain.com in browser
 ```
 
 #### Step 8: Post-Deployment Verification
@@ -1194,7 +1194,7 @@ docker cp taskflow:/data/taskflow.db /home/vip32/backups/taskflow/taskflow_initi
 - [ ] No errors in logs
 - [ ] Database file created in volume
 - [ ] App loads in browser
-- [ ] Tailscale connection successful
+- [ ] Azure ingress connection successful
 - [ ] All CRUD operations working
 - [ ] All UI interactions working
 - [ ] Responsive design verified
@@ -1221,7 +1221,7 @@ docker cp taskflow:/data/taskflow.db /home/vip32/backups/taskflow/taskflow_initi
 - Critical bugs preventing basic functionality
 - Data corruption issues
 - Performance issues making app unusable
-- Tailscale connectivity issues
+- Azure ingress connectivity issues
 
 ### Rollback Procedures
 
@@ -1232,7 +1232,7 @@ git checkout docker-compose.yaml
 
 # Restart with previous configuration
 docker-compose down
-docker-compose up -d ts-taskflow taskflow taskflow-nginx
+docker-compose up -d taskflow-gateway taskflow taskflow-nginx
 ```
 
 #### Level 2: Code Rollback
@@ -1243,25 +1243,25 @@ git checkout <commit-hash>
 
 # Rebuild and redeploy
 docker-compose build taskflow
-docker-compose up -d ts-taskflow taskflow taskflow-nginx
+docker-compose up -d taskflow-gateway taskflow taskflow-nginx
 ```
 
 #### Level 3: Database Rollback
 ```bash
 # Stop containers
-docker-compose down ts-taskflow taskflow taskflow-nginx
+docker-compose down taskflow-gateway taskflow taskflow-nginx
 
 # Restore database from backup
 docker cp /home/vip32/backups/taskflow/taskflow_latest.db taskflow:/data/taskflow.db
 
 # Restart containers
-docker-compose up -d ts-taskflow taskflow taskflow-nginx
+docker-compose up -d taskflow-gateway taskflow taskflow-nginx
 ```
 
 #### Level 4: Full Environment Rollback
 ```bash
 # Stop all TaskFlow containers
-docker-compose down ts-taskflow taskflow taskflow-nginx
+docker-compose down taskflow-gateway taskflow taskflow-nginx
 
 # Remove images
 docker-compose down --rmi all
@@ -1324,7 +1324,7 @@ docker volume rm taskflow-data
 ### Pre-Implementation
 - [ ] All documentation reviewed
 - [ ] Development environment verified
-- [ ] Dependencies checked (SDK, Docker, Tailscale)
+- [ ] Dependencies checked (SDK, Docker, Azure ingress)
 - [ ] Backup plan documented
 - [ ] Rollback plan understood
 
@@ -1374,14 +1374,14 @@ dotnet publish -c Release -o ./publish
 docker-compose build taskflow
 
 # Start containers
-docker-compose up -d ts-taskflow taskflow taskflow-nginx
+docker-compose up -d taskflow-gateway taskflow taskflow-nginx
 
 # Stop containers
-docker-compose down ts-taskflow taskflow taskflow-nginx
+docker-compose down taskflow-gateway taskflow taskflow-nginx
 
 # View logs
 docker-compose logs taskflow
-docker-compose logs -f ts-taskflow
+docker-compose logs -f taskflow-gateway
 
 # Execute command in container
 docker-compose exec taskflow <command>
@@ -1390,13 +1390,13 @@ docker-compose exec taskflow <command>
 docker cp taskflow:/data/taskflow.db ./backup.db
 ```
 
-#### Tailscale Commands
+#### Azure ingress Commands
 ```bash
-# View Tailscale status in container
-docker-compose exec ts-taskflow tailscale status
+# View Azure ingress status in container
+docker-compose exec taskflow-gateway Azure ingress status
 
-# View Tailscale IP
-docker-compose exec ts-taskflow tailscale ip -4
+# View Azure ingress IP
+docker-compose exec taskflow-gateway Azure ingress ip -4
 ```
 
 ### B. File Locations
@@ -1415,8 +1415,8 @@ docker-compose exec ts-taskflow tailscale ip -4
 │   ├── Pages/
 │   ├── wwwroot/
 │   └── Dockerfile
-├── ts-taskflow/
-│   └── state/              # Tailscale state
+├── taskflow-gateway/
+│   └── state/              # Azure ingress state
 ├── taskflow-nginx/
 │   └── nginx.conf          # Nginx config
 └── backups/
@@ -1451,3 +1451,5 @@ docker-compose exec ts-taskflow tailscale ip -4
 ---
 
 *Document Last Updated: February 9, 2026*
+
+

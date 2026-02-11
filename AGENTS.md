@@ -15,7 +15,7 @@ The codebase follows DDD with a rich domain model and clean architecture. Busine
 - UI component library: MudBlazor 8.x
 - Data access: Entity Framework Core
 - Database: SQLite
-- Deployment: Docker (Raspberry Pi ARM64 target), private Tailscale network
+- Deployment: Docker containers in public cloud (Azure target)
 - Testing: xUnit
 
 ## Design References

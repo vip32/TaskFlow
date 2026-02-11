@@ -1,0 +1,16 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/TaskFlow.Application/TaskFlow.Application.csproj" />
+    <Project Path="src/TaskFlow.Domain/TaskFlow.Domain.csproj" />
+    <Project Path="src/TaskFlow.Infrastructure/TaskFlow.Infrastructure.csproj" />
+    <Project Path="src/TaskFlow.Presentation/TaskFlow.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TaskFlow.UnitTests/TaskFlow.UnitTests.csproj" />
+  </Folder>
+</Solution>

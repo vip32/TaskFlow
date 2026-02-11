@@ -5,7 +5,7 @@
       "label": "dotnet: restore (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": ["restore", "TaskFlow.sln"],
+      "args": ["restore", "TaskFlow.slnx"],
       "group": "build",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -18,7 +18,7 @@
       "label": "dotnet: build (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": ["build", "TaskFlow.sln", "--configuration", "Debug"],
+      "args": ["build", "TaskFlow.slnx", "--configuration", "Debug"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -34,7 +34,7 @@
       "label": "dotnet: build (solution, Release)",
       "type": "process",
       "command": "dotnet",
-      "args": ["build", "TaskFlow.sln", "--configuration", "Release"],
+      "args": ["build", "TaskFlow.slnx", "--configuration", "Release"],
       "group": "build",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -47,7 +47,7 @@
       "label": "dotnet: clean (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": ["clean", "TaskFlow.sln"],
+      "args": ["clean", "TaskFlow.slnx"],
       "group": "build",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -125,7 +125,7 @@
       "label": "dotnet: test (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": ["test", "TaskFlow.sln", "--configuration", "Debug"],
+      "args": ["test", "TaskFlow.slnx", "--configuration", "Debug"],
       "group": "test",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -138,7 +138,7 @@
       "label": "dotnet: outdated (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": ["outdated", "TaskFlow.sln"],
+      "args": ["outdated", "TaskFlow.slnx"],
       "group": "none",
       "problemMatcher": [],
       "presentation": {
@@ -151,7 +151,7 @@
       "label": "dotnet: outdated update (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": ["outdated", "TaskFlow.sln", "--upgrade"],
+      "args": ["outdated", "TaskFlow.slnx", "--upgrade"],
       "group": "none",
       "problemMatcher": [],
       "presentation": {

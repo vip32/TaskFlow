@@ -32,16 +32,16 @@ TaskFlow is a task management application built with Blazor Server, providing us
 - **Mobile-First**: Fully responsive design with desktop-first approach
 
 ### Target Environment
-- **Platform**: Raspberry Pi 5 (ARM64, Debian 13)
-- **Access**: Private network via Tailscale VPN
-- **URL**: http://taskflow.churra-platy.ts.net
+- **Platform**: Azure-hosted Linux containers (Docker)
+- **Access**: Public cloud endpoint with TLS termination
+- **URL**: https://taskflow.your-domain.com
 - **Scale**: Single user deployment (personal use)
 
 ### Current Implementation Snapshot (2026-02-09)
 
 The repository currently contains the foundational architecture, persistence baseline, and application orchestration baseline:
 
-- **Solution and projects created**: `TaskFlow.sln` with `TaskFlow.Domain`, `TaskFlow.Application`, `TaskFlow.Infrastructure`, `TaskFlow.Presentation`, and `TaskFlow.UnitTests`.
+- **Solution and projects created**: `TaskFlow.slnx` with `TaskFlow.Domain`, `TaskFlow.Application`, `TaskFlow.Infrastructure`, `TaskFlow.Presentation`, and `TaskFlow.UnitTests`.
 - **Project references wired**: `Presentation -> Application, Infrastructure`, `Application -> Domain`, `Infrastructure -> Domain`, tests reference `Domain` and `Application`.
 - **Domain baseline implemented**: `Project`, `Task`, `FocusSession`, `Subscription`, and `SubscriptionSchedule` aggregates plus value enums and repository interfaces.
 - **Domain refinements implemented**: project/task tagging support, optional project note, expanded task statuses (`New`, `InProgress`, `Paused`, `Done`, `Cancelled`), and task title history entity for autocomplete.
@@ -73,7 +73,7 @@ flowchart TB
     App -->|"use"| Domain["Domain Layer\nRich Aggregates"]
     App -->|"via repositories"| Infra["Infrastructure Layer\nEF Core + Repositories"]
     Blazor --> Nginx["Nginx Reverse Proxy"]
-    Nginx --> Tailscale["Tailscale VPN Network"]
+    Nginx --> Internet["Public Internet / Azure Edge"]
 ```
 ```mermaid
 flowchart TB
@@ -83,7 +83,7 @@ flowchart TB
     App -->|"use"| Domain["Domain Layer\nRich Aggregates"]
     App -->|"via repositories"| Infra["Infrastructure Layer\nEF Core + Repositories"]
     Blazor --> Nginx["Nginx Reverse Proxy"]
-    Nginx --> Tailscale["Tailscale VPN Network"]
+    Nginx --> Internet["Public Internet / Azure Edge"]
 ```
 
 ### Architectural Decisions
@@ -534,7 +534,7 @@ Components extracted for reuse across List and Board views:
 ### DevOps
 - **Container**: Docker
 - **Reverse Proxy**: Nginx
-- **Network**: Tailscale VPN
+- **Network**: Azure public ingress + TLS
 - **Monitoring**: Uptime Kuma integration
 
 ### Development
@@ -1177,9 +1177,9 @@ flowchart TD
 ## Security
 
 ### Authentication
-- **Current State**: No authentication (single user, private network)
+- **Current State**: No authentication (single-user deployment; internet-facing hardening required)
 - **Future-Ready**: Structure supports adding ASP.NET Core Identity
-- **Access Control**: Tailscale VPN provides network-level security
+- **Access Control**: Azure network controls + reverse proxy restrictions
 
 ### Authorization
 - **No RBAC**: Single user has full access
@@ -1187,8 +1187,8 @@ flowchart TD
 
 ### Data Protection
 - **SQLite Database**: File-based, can be encrypted if needed
-- **Tailscale**: End-to-end encryption for network traffic
-- **HTTPS**: Not required in private Tailscale network
+- **Transport Security**: TLS required for all public endpoints
+- **HTTPS**: Required for production traffic
 
 ### Input Validation
 - **Server-Side Validation**: Model validation in services
@@ -1304,8 +1304,7 @@ public async Task<int> ImportProjectsAsync(string jsonData);
 
 ```mermaid
 flowchart TB
-    TS["ts-taskflow\nTailscale sidecar"] -->|"network_mode: service:ts-taskflow"| APP["taskflow\nBlazor Server App"]
-    APP -->|"network_mode: service:ts-taskflow"| NGINX["taskflow-nginx\nReverse Proxy"]
+    APP["taskflow\nBlazor Server App"] --> NGINX["taskflow-nginx\nReverse Proxy"]
     APP --> VOL["taskflow-data volume"]
 ```
 
@@ -1319,7 +1318,7 @@ COPY ["TaskFlow.csproj", "./"]
 RUN dotnet restore "TaskFlow.csproj"
 COPY . .
 RUN dotnet publish "TaskFlow.csproj" -c Release -o /app/publish \
-    --runtime linux-arm64 \
+    --runtime linux-x64 \
     --self-contained false
 
 # Runtime stage
@@ -1333,20 +1332,6 @@ ENTRYPOINT ["dotnet", "TaskFlow.dll"]
 ### Docker Compose Configuration
 
 ```yaml
-ts-taskflow:
-  image: tailscale/tailscale:latest
-  hostname: taskflow
-  volumes:
-    - /home/vip32/Projects/ts-taskflow/state:/var/lib/tailscale
-  environment:
-    - TS_AUTHKEY=${TS_AUTHKEY}
-    - TS_STATE_DIR=/var/lib/tailscale
-    - TS_EXTRA_ARGS=--advertise-exit-node
-  cap_add:
-    - NET_ADMIN
-  restart: unless-stopped
-  network_mode: service:ts-taskflow
-
 taskflow:
   build: ./Projects/taskflow
   restart: unless-stopped
@@ -1355,9 +1340,8 @@ taskflow:
     - ConnectionStrings__Default=Data Source=/data/taskflow.db
   volumes:
     - taskflow-data:/data
-  network_mode: service:ts-taskflow
   labels:
-    - kuma.doompi.http.url=http://taskflow.churra-platy.ts.net
+    - kuma.doompi.http.url=https://taskflow.your-domain.com
     - kuma.doompi.http.name=TaskFlow
 
 taskflow-nginx:
@@ -1367,9 +1351,8 @@ taskflow-nginx:
     - /home/vip32/Projects/taskflow-nginx/nginx.conf:/etc/nginx/conf.d/default.conf
   depends_on:
     - taskflow
-  network_mode: service:ts-taskflow
   labels:
-    - kuma.doompi.http.url=http://taskflow.churra-platy.ts.net
+    - kuma.doompi.http.url=https://taskflow.your-domain.com
     - kuma.doompi.http.name=TaskFlow (Proxy)
 
 volumes:
@@ -1412,18 +1395,18 @@ server {
    ```bash
    cd /home/vip32
    docker-compose build taskflow
-   docker-compose up -d ts-taskflow taskflow taskflow-nginx
+docker-compose up -d taskflow taskflow-nginx
    ```
 
 2. **Verify Deployment**
    ```bash
-   docker-compose ps ts-taskflow taskflow taskflow-nginx
+   docker-compose ps taskflow taskflow-nginx
    docker-compose logs taskflow
    ```
 
 3. **Access Application**
-   - URL: http://taskflow.churra-platy.ts.net
-   - Requires Tailscale network access
+   - URL: https://taskflow.your-domain.com
+   - Publicly reachable via configured Azure ingress/DNS
 
 4. **Monitoring**
    - Uptime Kuma integration via labels
@@ -1454,14 +1437,14 @@ server {
 - **Memory**: ~50-100MB per active user circuit
 
 #### Network Performance
-- **Tailscale**: Low latency VPN tunnel
+- **Azure Network**: Public ingress with TLS termination
 - **SignalR**: WebSocket for real-time updates
 - **Compression**: gzip for static assets
 
 ### Scaling Strategies (Future)
 
 #### Vertical Scaling
-- **Upgrade Hardware**: More CPU, RAM on Raspberry Pi 5
+- **Upgrade Hosting Plan**: More CPU/RAM in Azure compute tier
 - **Database Migration**: PostgreSQL or MySQL for larger datasets
 - **Caching**: Redis for session caching
 
@@ -1618,7 +1601,7 @@ flowchart TD
 
 TaskFlow uses GitHub Actions to:
 1. Build the .NET solution on every push
-2. Create Docker images for ARM64 (Raspberry Pi 5 compatible)
+2. Create Docker images for cloud deployment (x64, optionally multi-arch)
 3. Push images to container registry (GitHub Container Registry or Docker Hub)
 
 ### Workflow Configuration
@@ -1667,20 +1650,20 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Build Docker image (ARM64)
+    - name: Build Docker image (x64)
       run: |
-        docker build --platform linux/arm64 \
-          -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-arm64 \
+        docker build --platform linux/amd64 \
+          -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-amd64 \
           -f ./Dockerfile \
           .
     
-    - name: Push Docker image (ARM64)
-      run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-arm64
+    - name: Push Docker image (x64)
+      run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-amd64
     
     - name: Create multi-arch manifest
       run: |
         docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-arm64
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-amd64
     
     - name: Push manifest
       run: docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
@@ -1690,7 +1673,7 @@ jobs:
 
 ```mermaid
 flowchart TD
-    Root["TaskFlow.sln"] --> Domain["src/TaskFlow.Domain"]
+    Root["TaskFlow.slnx"] --> Domain["src/TaskFlow.Domain"]
     Root --> Application["src/TaskFlow.Application"]
     Root --> Infrastructure["src/TaskFlow.Infrastructure"]
     Root --> Presentation["src/TaskFlow.Presentation"]

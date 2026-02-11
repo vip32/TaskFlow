@@ -7,7 +7,7 @@
 
 ## Context
 
-TaskFlow is a single-user application running in a private network, with a focus on rapid iteration and low operational overhead. Real-time UI updates are a core experience requirement.
+TaskFlow is a single-user application deployed as containers, with a focus on rapid iteration and low operational overhead. Real-time UI updates are a core experience requirement.
 
 The team wants to reduce boilerplate and avoid maintaining parallel contracts between UI and API layers for this deployment profile.
 
@@ -53,7 +53,7 @@ Use application orchestrators and repositories directly from the server-side Bla
 - Cross-device access becomes harder
 - Distribution and update process is heavier
 
-**Why not chosen:** Browser-based private access aligns better with deployment goals.
+**Why not chosen:** Browser-based cloud access aligns better with deployment goals.
 
 ## Consequences
 
