@@ -145,7 +145,7 @@ a {
 
 .tf-board .tf-task,
 .tf-board .tf-subtask {
-    padding: 0.75rem;
+    padding: 0.5rem;
 }
 
 .tf-subtasks {
@@ -188,12 +188,15 @@ a {
 }
 
 .tf-board {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(200px, 1fr));
+    display: flex;
+    align-items: flex-start;
+    overflow-x: auto;
     gap: 0.75rem;
 }
 
 .tf-board-dropzone {
+    width: 280px;
+    min-width: 280px;
     min-height: 100%;
 }
 
@@ -288,7 +291,14 @@ a {
     }
 
     .tf-board {
+        display: grid;
         grid-template-columns: 1fr;
+        overflow-x: visible;
+    }
+
+    .tf-board-dropzone {
+        width: auto;
+        min-width: 0;
     }
 }
 

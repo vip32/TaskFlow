@@ -92,10 +92,10 @@
 
         @if (selectedProject?.ViewType == ProjectViewType.Board)
         {
-            <HomeBoardView BoardStatuses="boardStatuses"
+            <TaskBoardView BoardStatuses="boardStatuses"
                            GetBoardTasks="GetBoardTasks"
-                           OnDropToStatus="HandleBoardDropAsync"
-                           OnDragStart="StartBoardDrag"
+                           OnDropTaskToStatus="HandleBoardDropAsync"
+                           OnCreateTaskInStatus="CreateTaskInStatusAsync"
                            OnSelectTask="taskId => selectedTaskId = taskId"
                            GetTaskContainerClass="GetTaskContainerClass"
                            OnToggleComplete="ToggleCompleteAsync"
@@ -217,7 +217,6 @@
     private Guid? moveTaskId;
     private Guid? moveTargetProjectId;
     private Guid? pendingSubTaskFocusParentId;
-    private Guid? draggedBoardTaskId;
     private Guid? loadedProjectId;
     private Guid? loadedSectionId;
     private DotNetObjectReference<Home> editProjectDialogCloserRef;
@@ -495,21 +494,9 @@
         CloseMoveTaskDialog();
     }
 
-    private void StartBoardDrag(Guid taskId)
+    private async Task HandleBoardDropAsync(TaskFlow.Domain.Task task, DomainTaskStatus status)
     {
-        this.draggedBoardTaskId = taskId;
-    }
-
-    private async Task HandleBoardDropAsync(DomainTaskStatus status)
-    {
-        if (!this.draggedBoardTaskId.HasValue)
-        {
-            return;
-        }
-
-        var task = this.activeTasks.FirstOrDefault(item => item.Id == this.draggedBoardTaskId.Value);
-        this.draggedBoardTaskId = null;
-        if (task is null || task.Status == status)
+        if (task.Status == status)
         {
             return;
         }
@@ -552,6 +539,32 @@
         if (this.newTaskInputRef is not null)
         {
             await this.newTaskInputRef.FocusAsync();
+        }
+
+        await ReloadCurrentTasksAsync();
+        this.Snackbar.Add("Task created.", Severity.Success);
+    }
+
+    private async Task CreateTaskInStatusAsync(DomainTaskStatus status, string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return;
+        }
+
+        TaskFlow.Domain.Task created;
+        if (this.AppState.SelectedProjectId.HasValue)
+        {
+            created = await this.TaskOrchestrator.CreateAsync(this.AppState.SelectedProjectId.Value, title, TaskPriority.Medium, string.Empty);
+        }
+        else
+        {
+            created = await this.TaskOrchestrator.CreateUnassignedAsync(title, TaskPriority.Medium, string.Empty);
+        }
+
+        if (status != DomainTaskStatus.Todo)
+        {
+            await this.TaskOrchestrator.SetStatusAsync(created.Id, status);
         }
 
         await ReloadCurrentTasksAsync();
