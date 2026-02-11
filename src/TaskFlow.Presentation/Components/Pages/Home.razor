@@ -96,43 +96,13 @@
                            GetBoardTasks="GetBoardTasks"
                            OnDropTaskToStatus="HandleBoardDropAsync"
                            OnCreateTaskInStatus="CreateTaskInStatusAsync"
-                           OnSelectTask="taskId => selectedTaskId = taskId"
-                           GetTaskContainerClass="GetTaskContainerClass"
-                           OnToggleComplete="ToggleCompleteAsync"
-                           OnToggleFocus="ToggleFocusAsync"
-                           OnToggleImportant="ToggleImportantAsync"
-                           OnUpdateTitle="UpdateTitleAsync"
-                           OnUpdateNote="UpdateNoteAsync"
-                           OnUpdatePriority="UpdatePriorityAsync"
-                           OnUpdateStatus="UpdateStatusAsync"
-                           OnToggleToday="ToggleTodayMarkAsync"
-                           OnDuplicate="DuplicateTaskAsync"
-                           OnDelete="DeleteTaskAsync"
-                           OnRequestMove="OpenMoveTaskDialog" />
+                           OnEditTaskRequested="OpenBoardTaskDialog"
+                           />
         }
         else
         {
             <HomeListView Tasks="FilteredTasks"
-                          BoardStatuses="boardStatuses"
-                          SubTasksByParent="subTasksByParent"
-                          GetTaskContainerClass="GetTaskContainerClass"
-                          OnSelectTask="taskId => selectedTaskId = taskId"
-                          OnToggleComplete="ToggleCompleteAsync"
-                          OnToggleFocus="ToggleFocusAsync"
-                          OnToggleImportant="ToggleImportantAsync"
-                          OnUpdateTitle="UpdateTitleAsync"
-                          OnUpdateNote="UpdateNoteAsync"
-                          OnUpdatePriority="UpdatePriorityAsync"
-                          OnUpdateStatus="UpdateStatusAsync"
-                          OnToggleToday="ToggleTodayMarkAsync"
-                          OnDuplicate="DuplicateTaskAsync"
-                          OnDelete="DeleteTaskAsync"
-                          OnRequestMove="OpenMoveTaskDialog"
-                          GetNewSubTaskTitle="GetNewSubTaskTitle"
-                          SetNewSubTaskTitle="SetNewSubTaskTitle"
-                          GetSubTaskInputId="GetSubTaskInputId"
-                          OnSubTaskKeyUp="HandleCreateSubTaskKeyUp"
-                          OnCreateSubTask="CreateSubTaskAsync" />
+                          OnEditTaskRequested="OpenBoardTaskDialog" />
         }
 
     </section>
@@ -210,12 +180,14 @@
     private bool showDeleteProjectDialog;
     private bool showEditProjectDialog;
     private bool showMoveTaskDialog;
+    private bool showBoardTaskDialog;
     private bool isApplyingUndo;
     private SortMode sortMode = SortMode.CreatedDesc;
     private MudTextField<string> newTaskInputRef;
     private MudTextField<string> searchInputRef;
     private Guid? moveTaskId;
     private Guid? moveTargetProjectId;
+    private Guid? boardTaskId;
     private Guid? pendingSubTaskFocusParentId;
     private Guid? loadedProjectId;
     private Guid? loadedSectionId;
@@ -249,6 +221,10 @@
         : $"{FilteredTasks.Count} task(s)";
 
     private string ViewToggleLabel => this.selectedProject?.ViewType == ProjectViewType.Board ? "List View" : "Board View";
+
+    private TaskFlow.Domain.Task boardTask => this.boardTaskId.HasValue
+        ? this.activeTasks.FirstOrDefault(task => task.Id == this.boardTaskId.Value)
+        : null;
 
     private List<TaskFlow.Domain.Task> FilteredTasks
     {
@@ -476,6 +452,19 @@
         this.moveTargetProjectId = null;
     }
 
+    private void OpenBoardTaskDialog(Guid taskId)
+    {
+        this.selectedTaskId = taskId;
+        this.boardTaskId = taskId;
+        this.showBoardTaskDialog = true;
+    }
+
+    private void CloseBoardTaskDialog()
+    {
+        this.showBoardTaskDialog = false;
+        this.boardTaskId = null;
+    }
+
     private async Task ConfirmMoveTaskAsync()
     {
         if (!this.moveTaskId.HasValue)
@@ -676,6 +665,10 @@
         });
 
         await this.TaskOrchestrator.DeleteAsync(task.Id);
+        if (this.boardTaskId == task.Id)
+        {
+            CloseBoardTaskDialog();
+        }
         await ReloadCurrentTasksAsync();
         StateHasChanged();
         this.Snackbar.Add("Task deleted. Press Ctrl/Cmd+Z to undo.", Severity.Info);
@@ -1100,6 +1093,28 @@
         </MudPaper>
         </div>
     </div>
+}
+
+@if (showBoardTaskDialog && boardTask is not null)
+{
+    <TaskEditDialog Task="boardTask"
+                    SubTasks="(subTasksByParent.TryGetValue(boardTask.Id, out var subTasks) ? subTasks : new List<TaskFlow.Domain.Task>())"
+                    BoardStatuses="boardStatuses"
+                    OnToggleComplete="ToggleCompleteAsync"
+                    OnToggleFocus="ToggleFocusAsync"
+                    OnToggleImportant="ToggleImportantAsync"
+                    OnUpdateTitle="UpdateTitleAsync"
+                    OnUpdateNote="UpdateNoteAsync"
+                    OnUpdatePriority="UpdatePriorityAsync"
+                    OnUpdateStatus="UpdateStatusAsync"
+                    OnToggleToday="ToggleTodayMarkAsync"
+                    OnDuplicate="DuplicateTaskAsync"
+                    OnDelete="DeleteTaskAsync"
+                    OnRequestMove="OpenMoveTaskDialog"
+                    NewSubTaskTitle="GetNewSubTaskTitle(boardTask.Id)"
+                    OnNewSubTaskTitleChanged="value => SetNewSubTaskTitle(boardTask.Id, value)"
+                    OnCreateSubTask="() => CreateSubTaskAsync(boardTask.Id)"
+                    OnClose="CloseBoardTaskDialog" />
 }
 
 @if (showMoveTaskDialog)

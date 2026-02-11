@@ -5,17 +5,17 @@
                   Items="BoardItems"
                   ItemsSelector="ItemInDropZone"
                   ItemDropped="HandleItemDropped"
-                  Class="tf-board">
+                  Class="d-flex flex-wrap flex-grow-1">
     <ChildContent>
         @foreach (var status in BoardStatuses)
         {
             var boardTasks = GetBoardTasks.Invoke(status);
-            <MudPaper Class="tf-board-dropzone" Elevation="0">
-                <MudText Typo="Typo.subtitle2">@status (@boardTasks.Count)</MudText>
-                <MudDropZone T="TaskFlow.Domain.Task" Identifier="@status.ToString()" Class="tf-board-column" />
+            <MudPaper Elevation="0" Class="pa-4 ma-2 d-flex flex-column flex-grow-1" MinHeight="340px" Style="min-width:260px;">
+                <MudText Typo="Typo.subtitle1" Class="mb-2"><b>@status</b> (@boardTasks.Count)</MudText>
+                <MudDropZone T="TaskFlow.Domain.Task" Identifier="@status.ToString()" Class="flex-grow-1" />
                 @if (boardTasks.Count == 0)
                 {
-                    <MudText Typo="Typo.caption" Class="tf-board-empty">Drop tasks here</MudText>
+                    <MudText Typo="Typo.caption" Class="mt-2">Drop tasks here</MudText>
                 }
 
                 <MudStack Row="true" Spacing="1" Class="mt-2">
@@ -23,7 +23,7 @@
                                   Value="@GetNewTaskTitle(status)"
                                   ValueChanged="value => SetNewTaskTitle(status, value)"
                                   Placeholder="Add task"
-                                  Variant="Variant.Text"
+                                  Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   TextUpdateSuppression="false"
                                   OnKeyUp="args => HandleCreateTaskKeyUp(status, args)" />
@@ -33,20 +33,11 @@
         }
     </ChildContent>
     <ItemRenderer>
-        <MudPaper Class="@GetTaskContainerClass.Invoke(context, false)" Elevation="1" @onclick="() => OnSelectTask.Invoke(context.Id)">
-            <TaskCard Item="context"
-                      BoardStatuses="BoardStatuses"
-                      OnToggleComplete="() => OnToggleComplete.Invoke(context)"
-                      OnToggleFocus="() => OnToggleFocus.Invoke(context)"
-                      OnToggleImportant="() => OnToggleImportant.Invoke(context)"
-                      OnUpdateTitle="value => OnUpdateTitle.Invoke(context, value)"
-                      OnUpdateNote="value => OnUpdateNote.Invoke(context, value)"
-                      OnUpdatePriority="value => OnUpdatePriority.Invoke(context, value)"
-                      OnUpdateStatus="value => OnUpdateStatus.Invoke(context, value)"
-                      OnToggleToday="() => OnToggleToday.Invoke(context)"
-                      OnDuplicate="() => OnDuplicate.Invoke(context)"
-                      OnDelete="() => OnDelete.Invoke(context)"
-                      OnRequestMove="() => OnRequestMove.Invoke(context.Id)" />
+        <MudPaper Elevation="2" Class="pa-3 ma-2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                <MudText Typo="Typo.body1">@context.Title</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="() => OnEditTaskRequested.Invoke(context.Id)" />
+            </MudStack>
         </MudPaper>
     </ItemRenderer>
 </MudDropContainer>
@@ -62,51 +53,16 @@
     public Func<TaskFlow.Domain.Task, DomainTaskStatus, System.Threading.Tasks.Task> OnDropTaskToStatus { get; set; } = null!;
 
     [Parameter, EditorRequired]
-    public Action<Guid> OnSelectTask { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, bool, string> GetTaskContainerClass { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnToggleComplete { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnToggleFocus { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnToggleImportant { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, string, System.Threading.Tasks.Task> OnUpdateTitle { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, string, System.Threading.Tasks.Task> OnUpdateNote { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, TaskPriority, System.Threading.Tasks.Task> OnUpdatePriority { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, DomainTaskStatus, System.Threading.Tasks.Task> OnUpdateStatus { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnToggleToday { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnDuplicate { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnDelete { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Action<Guid> OnRequestMove { get; set; } = null!;
-
-    [Parameter, EditorRequired]
     public Func<DomainTaskStatus, string, System.Threading.Tasks.Task> OnCreateTaskInStatus { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Action<Guid> OnEditTaskRequested { get; set; } = null!;
 
     private readonly Dictionary<DomainTaskStatus, string> newTaskTitles = [];
 
     private List<TaskFlow.Domain.Task> BoardItems => this.BoardStatuses
         .SelectMany(status => this.GetBoardTasks.Invoke(status))
+        .Where(task => !task.ParentTaskId.HasValue)
         .GroupBy(task => task.Id)
         .Select(group => group.First())
         .ToList();

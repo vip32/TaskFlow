@@ -1,5 +1,4 @@
 @using TaskFlow.Domain
-@using DomainTaskStatus = TaskFlow.Domain.TaskStatus
 
 <div class="tf-list">
     @if (Tasks.Count == 0)
@@ -13,58 +12,10 @@
     {
         @foreach (var task in Tasks)
         {
-            <MudPaper Class="@GetTaskContainerClass.Invoke(task, false)" Elevation="0" @onclick="() => OnSelectTask.Invoke(task.Id)">
-                <TaskCard Item="task"
-                          BoardStatuses="BoardStatuses"
-                          OnToggleComplete="() => OnToggleComplete.Invoke(task)"
-                          OnToggleFocus="() => OnToggleFocus.Invoke(task)"
-                          OnToggleImportant="() => OnToggleImportant.Invoke(task)"
-                          OnUpdateTitle="value => OnUpdateTitle.Invoke(task, value)"
-                          OnUpdateNote="value => OnUpdateNote.Invoke(task, value)"
-                          OnUpdatePriority="value => OnUpdatePriority.Invoke(task, value)"
-                          OnUpdateStatus="value => OnUpdateStatus.Invoke(task, value)"
-                          OnToggleToday="() => OnToggleToday.Invoke(task)"
-                          OnDuplicate="() => OnDuplicate.Invoke(task)"
-                          OnDelete="() => OnDelete.Invoke(task)"
-                          OnRequestMove="() => OnRequestMove.Invoke(task.Id)" />
-
-                @if (SubTasksByParent.TryGetValue(task.Id, out var subTasks) && subTasks.Count > 0)
-                {
-                    <div class="tf-subtasks">
-                        @foreach (var subTask in subTasks)
-                        {
-                            <MudPaper Class="@GetTaskContainerClass.Invoke(subTask, true)" Elevation="0">
-                                <TaskCard Item="subTask"
-                                          BoardStatuses="BoardStatuses"
-                                          AllowImportant="false"
-                                          OnToggleComplete="() => OnToggleComplete.Invoke(subTask)"
-                                          OnToggleFocus="() => OnToggleFocus.Invoke(subTask)"
-                                          OnUpdateTitle="value => OnUpdateTitle.Invoke(subTask, value)"
-                                          OnUpdateNote="value => OnUpdateNote.Invoke(subTask, value)"
-                                          OnUpdatePriority="value => OnUpdatePriority.Invoke(subTask, value)"
-                                          OnUpdateStatus="value => OnUpdateStatus.Invoke(subTask, value)"
-                                          OnToggleToday="() => OnToggleToday.Invoke(subTask)"
-                                          OnDuplicate="() => OnDuplicate.Invoke(subTask)"
-                                          OnDelete="() => OnDelete.Invoke(subTask)"
-                                          OnRequestMove="() => OnRequestMove.Invoke(subTask.Id)" />
-                            </MudPaper>
-                        }
-                    </div>
-                }
-
-                <MudStack Row="true" Class="mt-2" Spacing="1">
-                    <MudTextField T="string" Value="@GetNewSubTaskTitle.Invoke(task.Id)"
-                                  ValueChanged="value => SetNewSubTaskTitle.Invoke(task.Id, value)"
-                                  Placeholder="Add subtask"
-                                  Variant="Variant.Text"
-                                  Margin="Margin.Dense"
-                                  TextUpdateSuppression="false"
-                                  InputId="@GetSubTaskInputId.Invoke(task.Id)"
-                                  OnKeyUp="args => OnSubTaskKeyUp.Invoke(task.Id, args)"
-                                  Class="tf-subtask-input" />
-                    <MudTooltip Text="Add subtask">
-                        <MudIconButton Icon="@Icons.Material.Filled.SubdirectoryArrowRight" OnClick="() => OnCreateSubTask.Invoke(task.Id)" />
-                    </MudTooltip>
+            <MudPaper Elevation="1" Class="pa-2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                    <MudText Typo="Typo.body1" Class="@(task.IsCompleted ? "tf-task-title-done" : string.Empty)">@task.Title</MudText>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="() => OnEditTaskRequested.Invoke(task.Id)" />
                 </MudStack>
             </MudPaper>
         }
@@ -76,62 +27,5 @@
     public IReadOnlyList<TaskFlow.Domain.Task> Tasks { get; set; } = [];
 
     [Parameter, EditorRequired]
-    public IReadOnlyList<DomainTaskStatus> BoardStatuses { get; set; } = [];
-
-    [Parameter, EditorRequired]
-    public IReadOnlyDictionary<Guid, List<TaskFlow.Domain.Task>> SubTasksByParent { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, bool, string> GetTaskContainerClass { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Action<Guid> OnSelectTask { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnToggleComplete { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnToggleFocus { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnToggleImportant { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, string, System.Threading.Tasks.Task> OnUpdateTitle { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, string, System.Threading.Tasks.Task> OnUpdateNote { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, TaskPriority, System.Threading.Tasks.Task> OnUpdatePriority { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, DomainTaskStatus, System.Threading.Tasks.Task> OnUpdateStatus { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnToggleToday { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnDuplicate { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, System.Threading.Tasks.Task> OnDelete { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Action<Guid> OnRequestMove { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<Guid, string> GetNewSubTaskTitle { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Action<Guid, string> SetNewSubTaskTitle { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<Guid, string> GetSubTaskInputId { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<Guid, KeyboardEventArgs, System.Threading.Tasks.Task> OnSubTaskKeyUp { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<Guid, System.Threading.Tasks.Task> OnCreateSubTask { get; set; } = null!;
+    public Action<Guid> OnEditTaskRequested { get; set; } = null!;
 }
