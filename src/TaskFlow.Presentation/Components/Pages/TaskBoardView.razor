@@ -2,6 +2,7 @@
 @using DomainTaskStatus = TaskFlow.Domain.TaskStatus
 
 <MudDropContainer T="TaskFlow.Domain.Task"
+                  @key="BoardRenderKey"
                   Items="BoardItems"
                   ItemsSelector="ItemInDropZone"
                   ItemDropped="HandleItemDropped"
@@ -50,15 +51,18 @@
     public Func<DomainTaskStatus, List<TaskFlow.Domain.Task>> GetBoardTasks { get; set; } = null!;
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, DomainTaskStatus, System.Threading.Tasks.Task> OnDropTaskToStatus { get; set; } = null!;
+    public EventCallback<BoardDropRequest> OnDropTaskToStatus { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<DomainTaskStatus, string, System.Threading.Tasks.Task> OnCreateTaskInStatus { get; set; } = null!;
+    public EventCallback<BoardCreateRequest> OnCreateTaskInStatus { get; set; }
 
     [Parameter, EditorRequired]
     public EventCallback<Guid> OnEditTaskRequested { get; set; }
 
     private readonly Dictionary<DomainTaskStatus, string> newTaskTitles = [];
+
+    public sealed record BoardDropRequest(TaskFlow.Domain.Task Task, DomainTaskStatus Status);
+    public sealed record BoardCreateRequest(DomainTaskStatus Status, string Title);
 
     private List<TaskFlow.Domain.Task> BoardItems => this.BoardStatuses
         .SelectMany(status => this.GetBoardTasks.Invoke(status))
@@ -66,6 +70,8 @@
         .GroupBy(task => task.Id)
         .Select(group => group.First())
         .ToList();
+
+    private string BoardRenderKey => string.Join('|', this.BoardItems.Select(item => $"{item.Id:N}:{item.Status}"));
 
     private bool ItemInDropZone(TaskFlow.Domain.Task item, string dropZoneIdentifier)
     {
@@ -85,7 +91,7 @@
             return;
         }
 
-        await this.OnDropTaskToStatus.Invoke(drop.Item, status);
+        await this.OnDropTaskToStatus.InvokeAsync(new BoardDropRequest(drop.Item, status));
     }
 
     private string GetNewTaskTitle(DomainTaskStatus status)
@@ -115,6 +121,6 @@
         }
 
         this.newTaskTitles[status] = string.Empty;
-        await this.OnCreateTaskInStatus.Invoke(status, title);
+        await this.OnCreateTaskInStatus.InvokeAsync(new BoardCreateRequest(status, title));
     }
 }

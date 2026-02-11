@@ -285,6 +285,23 @@
       "dependsOn": ["dotnet: restore (solution)", "dotnet: build (solution)"],
       "dependsOrder": "sequence",
       "problemMatcher": []
+    },
+    {
+      "label": "dotnet: stop running presentation process",
+      "type": "process",
+      "command": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "Stop-Process -Name TaskFlow.Presentation -Force -ErrorAction SilentlyContinue; Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'dotnet.exe' -and $_.CommandLine -like '*TaskFlow.Presentation*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+      ],
+      "group": "none",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
     }
   ],
   "inputs": [

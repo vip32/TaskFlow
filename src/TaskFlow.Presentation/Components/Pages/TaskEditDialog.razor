@@ -11,17 +11,17 @@
 
         <TaskCard Item="Task"
                   BoardStatuses="BoardStatuses"
-                  OnToggleComplete="() => OnToggleComplete.Invoke(Task)"
-                  OnToggleFocus="() => OnToggleFocus.Invoke(Task)"
-                  OnToggleImportant="() => OnToggleImportant.Invoke(Task)"
-                  OnUpdateTitle="value => OnUpdateTitle.Invoke(Task, value)"
-                  OnUpdateNote="value => OnUpdateNote.Invoke(Task, value)"
-                  OnUpdatePriority="value => OnUpdatePriority.Invoke(Task, value)"
-                  OnUpdateStatus="value => OnUpdateStatus.Invoke(Task, value)"
-                  OnToggleToday="() => OnToggleToday.Invoke(Task)"
-                  OnDuplicate="() => OnDuplicate.Invoke(Task)"
-                  OnDelete="() => OnDelete.Invoke(Task)"
-                  OnRequestMove="() => OnRequestMove.Invoke(Task.Id)" />
+                  OnToggleComplete="() => OnToggleComplete.InvokeAsync(Task)"
+                  OnToggleFocus="() => OnToggleFocus.InvokeAsync(Task)"
+                  OnToggleImportant="() => OnToggleImportant.InvokeAsync(Task)"
+                  OnUpdateTitle="value => OnUpdateTitle.InvokeAsync(new TaskStringChange(Task, value))"
+                  OnUpdateNote="value => OnUpdateNote.InvokeAsync(new TaskStringChange(Task, value))"
+                  OnUpdatePriority="value => OnUpdatePriority.InvokeAsync(new TaskPriorityChange(Task, value))"
+                  OnUpdateStatus="value => OnUpdateStatus.InvokeAsync(new TaskStatusChange(Task, value))"
+                  OnToggleToday="() => OnToggleToday.InvokeAsync(Task)"
+                  OnDuplicate="() => OnDuplicate.InvokeAsync(Task)"
+                  OnDelete="() => OnDelete.InvokeAsync(Task)"
+                  OnRequestMove="() => OnRequestMove.InvokeAsync(Task.Id)" />
 
         @if (SubTasks.Count > 0)
         {
@@ -32,16 +32,16 @@
                         <TaskCard Item="subTask"
                                   BoardStatuses="BoardStatuses"
                                   AllowImportant="false"
-                                  OnToggleComplete="() => OnToggleComplete.Invoke(subTask)"
-                                  OnToggleFocus="() => OnToggleFocus.Invoke(subTask)"
-                                  OnUpdateTitle="value => OnUpdateTitle.Invoke(subTask, value)"
-                                  OnUpdateNote="value => OnUpdateNote.Invoke(subTask, value)"
-                                  OnUpdatePriority="value => OnUpdatePriority.Invoke(subTask, value)"
-                                  OnUpdateStatus="value => OnUpdateStatus.Invoke(subTask, value)"
-                                  OnToggleToday="() => OnToggleToday.Invoke(subTask)"
-                                  OnDuplicate="() => OnDuplicate.Invoke(subTask)"
-                                  OnDelete="() => OnDelete.Invoke(subTask)"
-                                  OnRequestMove="() => OnRequestMove.Invoke(subTask.Id)" />
+                                  OnToggleComplete="() => OnToggleComplete.InvokeAsync(subTask)"
+                                  OnToggleFocus="() => OnToggleFocus.InvokeAsync(subTask)"
+                                  OnUpdateTitle="value => OnUpdateTitle.InvokeAsync(new TaskStringChange(subTask, value))"
+                                  OnUpdateNote="value => OnUpdateNote.InvokeAsync(new TaskStringChange(subTask, value))"
+                                  OnUpdatePriority="value => OnUpdatePriority.InvokeAsync(new TaskPriorityChange(subTask, value))"
+                                  OnUpdateStatus="value => OnUpdateStatus.InvokeAsync(new TaskStatusChange(subTask, value))"
+                                  OnToggleToday="() => OnToggleToday.InvokeAsync(subTask)"
+                                  OnDuplicate="() => OnDuplicate.InvokeAsync(subTask)"
+                                  OnDelete="() => OnDelete.InvokeAsync(subTask)"
+                                  OnRequestMove="() => OnRequestMove.InvokeAsync(subTask.Id)" />
                     </MudPaper>
                 }
             </div>
@@ -56,12 +56,18 @@
                           Margin="Margin.Dense"
                           TextUpdateSuppression="false"
                           OnKeyUp="HandleCreateSubTaskKeyUp" />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnCreateSubTask">Add</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => OnCreateSubTask.InvokeAsync()">Add</MudButton>
         </MudStack>
     </MudPaper>
 </div>
 
 @code {
+    public sealed record TaskStringChange(TaskFlow.Domain.Task Task, string Value);
+
+    public sealed record TaskPriorityChange(TaskFlow.Domain.Task Task, TaskPriority Value);
+
+    public sealed record TaskStatusChange(TaskFlow.Domain.Task Task, DomainTaskStatus Value);
+
     [Parameter, EditorRequired]
     public TaskFlow.Domain.Task Task { get; set; } = null!;
 
@@ -72,37 +78,37 @@
     public IReadOnlyList<DomainTaskStatus> BoardStatuses { get; set; } = [];
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, Task> OnToggleComplete { get; set; } = null!;
+    public EventCallback<TaskFlow.Domain.Task> OnToggleComplete { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, Task> OnToggleFocus { get; set; } = null!;
+    public EventCallback<TaskFlow.Domain.Task> OnToggleFocus { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, Task> OnToggleImportant { get; set; } = null!;
+    public EventCallback<TaskFlow.Domain.Task> OnToggleImportant { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, string, Task> OnUpdateTitle { get; set; } = null!;
+    public EventCallback<TaskStringChange> OnUpdateTitle { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, string, Task> OnUpdateNote { get; set; } = null!;
+    public EventCallback<TaskStringChange> OnUpdateNote { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, TaskPriority, Task> OnUpdatePriority { get; set; } = null!;
+    public EventCallback<TaskPriorityChange> OnUpdatePriority { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, DomainTaskStatus, Task> OnUpdateStatus { get; set; } = null!;
+    public EventCallback<TaskStatusChange> OnUpdateStatus { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, Task> OnToggleToday { get; set; } = null!;
+    public EventCallback<TaskFlow.Domain.Task> OnToggleToday { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, Task> OnDuplicate { get; set; } = null!;
+    public EventCallback<TaskFlow.Domain.Task> OnDuplicate { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<TaskFlow.Domain.Task, Task> OnDelete { get; set; } = null!;
+    public EventCallback<TaskFlow.Domain.Task> OnDelete { get; set; }
 
     [Parameter, EditorRequired]
-    public Action<Guid> OnRequestMove { get; set; } = null!;
+    public EventCallback<Guid> OnRequestMove { get; set; }
 
     [Parameter]
     public string NewSubTaskTitle { get; set; } = string.Empty;
@@ -111,7 +117,7 @@
     public EventCallback<string> OnNewSubTaskTitleChanged { get; set; }
 
     [Parameter, EditorRequired]
-    public Func<Task> OnCreateSubTask { get; set; } = null!;
+    public EventCallback OnCreateSubTask { get; set; }
 
     [Parameter, EditorRequired]
     public EventCallback OnClose { get; set; }
@@ -132,7 +138,7 @@
     {
         if (args.Key == "Enter" || args.Key == "NumpadEnter")
         {
-            await this.OnCreateSubTask.Invoke();
+            await this.OnCreateSubTask.InvokeAsync();
         }
     }
 }

@@ -231,7 +231,7 @@
                 query = query.Where(task => task.Status == this.statusFilter.Value);
             }
 
-            if (!this.showCompleted)
+            if (!this.showCompleted && this.selectedProject?.ViewType != ProjectViewType.Board)
             {
                 query = query.Where(task => !task.IsCompleted);
             }
@@ -429,11 +429,6 @@
         }
     }
 
-    private void OpenMoveTaskDialog(Guid taskId)
-    {
-        _ = OpenMoveTaskDialogAsync(taskId);
-    }
-
     private Task OpenBoardTaskDialog(Guid taskId)
     {
         this.selectedTaskId = taskId;
@@ -478,8 +473,10 @@
         }
     }
 
-    private async Task HandleBoardDropAsync(TaskFlow.Domain.Task task, DomainTaskStatus status)
+    private async Task HandleBoardDropAsync(TaskBoardView.BoardDropRequest request)
     {
+        var task = request.Task;
+        var status = request.Status;
         if (task.Status == status)
         {
             return;
@@ -528,8 +525,10 @@
         this.Snackbar.Add("Task created.", Severity.Success);
     }
 
-    private async Task CreateTaskInStatusAsync(DomainTaskStatus status, string title)
+    private async Task CreateTaskInStatusAsync(TaskBoardView.BoardCreateRequest request)
     {
+        var status = request.Status;
+        var title = request.Title;
         if (string.IsNullOrWhiteSpace(title))
         {
             return;
@@ -551,6 +550,7 @@
         }
 
         await ReloadCurrentTasksAsync();
+        await InvokeAsync(StateHasChanged);
         this.Snackbar.Add("Task created.", Severity.Success);
     }
 
@@ -914,6 +914,26 @@
         this.newSubTaskTitles[parentTaskId] = value;
     }
 
+    private Task HandleTaskTitleUpdateAsync(TaskEditDialog.TaskStringChange change)
+    {
+        return UpdateTitleAsync(change.Task, change.Value);
+    }
+
+    private Task HandleTaskNoteUpdateAsync(TaskEditDialog.TaskStringChange change)
+    {
+        return UpdateNoteAsync(change.Task, change.Value);
+    }
+
+    private Task HandleTaskPriorityUpdateAsync(TaskEditDialog.TaskPriorityChange change)
+    {
+        return UpdatePriorityAsync(change.Task, change.Value);
+    }
+
+    private Task HandleTaskStatusUpdateAsync(TaskEditDialog.TaskStatusChange change)
+    {
+        return UpdateStatusAsync(change.Task, change.Value);
+    }
+
     private async Task HandleCreateTaskKeyDown(KeyboardEventArgs args)
     {
         if (args.Key == "Enter" || args.Key == "NumpadEnter")
@@ -1045,14 +1065,14 @@
                     OnToggleComplete="ToggleCompleteAsync"
                     OnToggleFocus="ToggleFocusAsync"
                     OnToggleImportant="ToggleImportantAsync"
-                    OnUpdateTitle="UpdateTitleAsync"
-                    OnUpdateNote="UpdateNoteAsync"
-                    OnUpdatePriority="UpdatePriorityAsync"
-                    OnUpdateStatus="UpdateStatusAsync"
+                    OnUpdateTitle="HandleTaskTitleUpdateAsync"
+                    OnUpdateNote="HandleTaskNoteUpdateAsync"
+                    OnUpdatePriority="HandleTaskPriorityUpdateAsync"
+                    OnUpdateStatus="HandleTaskStatusUpdateAsync"
                     OnToggleToday="ToggleTodayMarkAsync"
                     OnDuplicate="DuplicateTaskAsync"
                     OnDelete="DeleteTaskAsync"
-                    OnRequestMove="OpenMoveTaskDialog"
+                    OnRequestMove="OpenMoveTaskDialogAsync"
                     NewSubTaskTitle="GetNewSubTaskTitle(boardTask.Id)"
                     OnNewSubTaskTitleChanged="value => SetNewSubTaskTitle(boardTask.Id, value)"
                     OnCreateSubTask="() => CreateSubTaskAsync(boardTask.Id)"
