@@ -48,7 +48,16 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton Variant="Variant.Outlined" OnClick="Close">Done</MudButton>
+        <MudTooltip Text="Delete project">
+            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                           Color="Color.Error"
+                           aria-label="Delete project"
+                           title="Delete project"
+                           OnClick="DeleteProjectAsync" />
+        </MudTooltip>
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" OnClick="Close">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">OK</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -78,6 +87,9 @@
 
     [Parameter]
     public string InitialIcon { get; set; } = "folder";
+
+    [Parameter, EditorRequired]
+    public EventCallback<Guid> OnDeleteProject { get; set; }
 
     private string projectName = string.Empty;
     private string projectColor = "primary";
@@ -116,6 +128,12 @@
 
     private void Close()
     {
+        this.MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private async System.Threading.Tasks.Task DeleteProjectAsync()
+    {
+        await this.OnDeleteProject.InvokeAsync(this.ProjectId);
         this.MudDialog.Close(DialogResult.Ok(true));
     }
 

@@ -7,7 +7,7 @@ namespace TaskFlow.Presentation.Components.Layout;
 /// <summary>
 /// Error boundary that maps recoverable exceptions to toasts and keeps the UI responsive.
 /// </summary>
-public sealed class TaskFlowErrorBoundary : ErrorBoundary
+public sealed class AppErrorBoundary : ErrorBoundary
 {
     [Inject]
     private IAppExceptionHandler UiExceptionHandler { get; set; } = null!;

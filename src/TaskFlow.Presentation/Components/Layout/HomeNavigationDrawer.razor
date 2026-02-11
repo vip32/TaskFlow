@@ -10,7 +10,7 @@
     <MudStack Spacing="0">
         @if (AppState.MyTaskFlowSections.Count > 0)
         {
-            <MudText Typo="Typo.overline" Class="mt-2 mb-1">My Task Flow</MudText>
+            @* <MudText Typo="Typo.overline" Class="mt-2 mb-1">My Task Flow</MudText> *@
             @foreach (var flowSection in AppState.MyTaskFlowSections)
             {
                 var isActive = AppState.SelectedSectionId == flowSection.Id;

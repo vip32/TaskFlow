@@ -34,7 +34,7 @@
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Style="min-width: 260px;" />
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <MudHidden Breakpoint="Breakpoint.MdAndDown">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                 <MudSelect T="TaskPriority?" @bind-Value="priorityFilter" Label="Priority" Variant="Variant.Outlined" Dense="true" Clearable="true">
                     <MudSelectItem T="TaskPriority?" Value="@TaskPriority.High">High</MudSelectItem>
@@ -58,6 +58,26 @@
     </MudStack>
 </SectionContent>
 
+<SectionContent SectionName="AppTopBarActions">
+    <MudTooltip Text="Keyboard shortcuts">
+        <MudIconButton Icon="@Icons.Material.Filled.Keyboard"
+                       Color="Color.Inherit"
+                       aria-label="Open shortcuts"
+                       title="Keyboard shortcuts"
+                       OnClick="OpenShortcutsDialogAsync" />
+    </MudTooltip>
+    @if (selectedProject is not null)
+    {
+        <MudTooltip Text="@ViewToggleTooltip">
+            <MudIconButton Icon="@ViewToggleIcon"
+                           Color="Color.Inherit"
+                           aria-label="Toggle project view"
+                           title="@ViewToggleTooltip"
+                           OnClick="ToggleProjectViewAsync" />
+        </MudTooltip>
+    }
+</SectionContent>
+
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-6" tabindex="0" @onkeydown="HandleShellKeyDown">
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
@@ -65,19 +85,10 @@
                 <MudTooltip Text="Delete all completed tasks">
                     <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ClearCompletedAsync">Clear Completed</MudButton>
                 </MudTooltip>
-                <MudTooltip Text="Keyboard shortcuts">
-                    <MudButton Variant="Variant.Outlined" OnClick="OpenShortcutsDialogAsync">Shortcuts</MudButton>
-                </MudTooltip>
                 @if (selectedProject is not null)
                 {
-                    <MudTooltip Text="Toggle list/board view">
-                        <MudButton Variant="Variant.Outlined" OnClick="ToggleProjectViewAsync">@ViewToggleLabel</MudButton>
-                    </MudTooltip>
                     <MudTooltip Text="Edit project">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="Edit project" title="Edit project" OnClick="OpenEditProjectDialogAsync" />
-                    </MudTooltip>
-                    <MudTooltip Text="Delete project">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteProjectDialogAsync">Delete Project</MudButton>
                     </MudTooltip>
                 }
             </MudStack>
@@ -128,6 +139,9 @@
                            OnDropTaskToStatus="HandleBoardDropAsync"
                            OnCreateTaskInStatus="CreateTaskInStatusAsync"
                            OnToggleCompleteRequested="HandleTaskToggleCompleteRequestedAsync"
+                           OnToggleFocusRequested="HandleTaskToggleFocusRequestedAsync"
+                           OnToggleImportantRequested="HandleTaskToggleImportantRequestedAsync"
+                           OnToggleTodayRequested="HandleTaskToggleTodayRequestedAsync"
                            OnUpdateTaskTitleRequested="HandleBoardTaskTitleUpdateAsync"
                            OnEditTaskRequested="OpenBoardTaskDialog" />
         }
@@ -135,6 +149,9 @@
         {
             <TaskListView Tasks="FilteredTasks"
                           OnToggleCompleteRequested="HandleTaskToggleCompleteRequestedAsync"
+                          OnToggleFocusRequested="HandleTaskToggleFocusRequestedAsync"
+                          OnToggleImportantRequested="HandleTaskToggleImportantRequestedAsync"
+                          OnToggleTodayRequested="HandleTaskToggleTodayRequestedAsync"
                           OnUpdateTaskTitleRequested="HandleListTaskTitleUpdateAsync"
                           OnEditTaskRequested="OpenBoardTaskDialog" />
         }
@@ -179,6 +196,13 @@
         Guid? ProjectId,
         List<TaskSnapshot> Children);
 
+    private sealed record ProjectSnapshot(
+        string Name,
+        string Color,
+        string Icon,
+        ProjectViewType ViewType,
+        List<TaskSnapshot> Tasks);
+
     private Project selectedProject => this.AppState.SelectedProjectId.HasValue
         ? this.AppState.Projects.FirstOrDefault(p => p.Id == this.AppState.SelectedProjectId.Value)
         : null;
@@ -194,7 +218,13 @@
         ? "Cross-project execution view"
         : $"{FilteredTasks.Count} task(s)";
 
-    private string ViewToggleLabel => this.selectedProject?.ViewType == ProjectViewType.Board ? "List View" : "Board View";
+    private string ViewToggleIcon => this.selectedProject?.ViewType == ProjectViewType.Board
+        ? Icons.Material.Filled.ViewList
+        : Icons.Material.Filled.ViewKanban;
+
+    private string ViewToggleTooltip => this.selectedProject?.ViewType == ProjectViewType.Board
+        ? "Switch to list view"
+        : "Switch to board view";
 
     private List<TaskFlow.Domain.Task> FilteredTasks
     {
@@ -227,10 +257,10 @@
 
             query = (this.sortMode ?? SortMode.CreatedDesc) switch
             {
-                SortMode.CreatedAsc => query.OrderBy(task => task.CreatedAt),
-                SortMode.Priority => query.OrderByDescending(task => task.Priority).ThenByDescending(task => task.CreatedAt),
+                SortMode.CreatedAsc => query.OrderByDescending(task => task.IsFocused).ThenBy(task => task.CreatedAt),
+                SortMode.Priority => query.OrderByDescending(task => task.IsFocused).ThenByDescending(task => task.Priority).ThenByDescending(task => task.CreatedAt),
                 SortMode.Focused => query.Where(task => task.IsFocused).OrderByDescending(task => task.CreatedAt),
-                _ => query.OrderByDescending(task => task.CreatedAt),
+                _ => query.OrderByDescending(task => task.IsFocused).ThenByDescending(task => task.CreatedAt),
             };
 
             return query.Where(task => !task.ParentTaskId.HasValue).ToList();
@@ -364,6 +394,7 @@
             { x => x.InitialName, this.selectedProject.Name },
             { x => x.InitialColor, this.selectedProject.Color },
             { x => x.InitialIcon, this.selectedProject.Icon },
+            { x => x.OnDeleteProject, EventCallback.Factory.Create<Guid>(this, DeleteProjectAsync) },
         };
 
         var dialog = await this.DialogService.ShowAsync<ProjectEditDialog>("Edit Project", parameters, new DialogOptions
@@ -375,26 +406,6 @@
 
         await dialog.Result;
         await ReloadAllAsync();
-    }
-
-    private async Task OpenDeleteProjectDialogAsync()
-    {
-        if (this.selectedProject is null)
-        {
-            return;
-        }
-
-        var dialog = await this.DialogService.ShowAsync<ProjectDeleteDialog>("Delete Project", new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.ExtraSmall,
-        });
-
-        var result = await dialog.Result;
-        if (!result.Canceled)
-        {
-            await DeleteProjectAsync();
-        }
     }
 
     private async Task OpenBoardTaskDialog(Guid taskId)
@@ -481,17 +492,37 @@
         await UpdateStatusAsync(task, status);
     }
 
-    private async Task DeleteProjectAsync()
+    private async Task DeleteProjectAsync(Guid projectId)
     {
-        if (this.selectedProject is null || this.selectedProject.IsDefault)
+        var project = this.AppState.Projects.FirstOrDefault(p => p.Id == projectId);
+        if (project is null || project.IsDefault)
         {
             this.Snackbar.Add("Default project cannot be deleted.", Severity.Warning);
             return;
         }
 
-        await this.ProjectOrchestrator.DeleteAsync(this.selectedProject.Id);
+        var taskSnapshots = new List<TaskSnapshot>();
+        var projectTasks = await this.TaskOrchestrator.GetByProjectIdAsync(projectId);
+        foreach (var task in projectTasks)
+        {
+            taskSnapshots.Add(await CaptureTaskSnapshotAsync(task));
+        }
+
+        var projectSnapshot = new ProjectSnapshot(
+            project.Name,
+            project.Color,
+            project.Icon,
+            project.ViewType,
+            taskSnapshots);
+
+        this.UndoManager.Register("delete project", async () =>
+        {
+            await RestoreProjectSnapshotAsync(projectSnapshot);
+        });
+
+        await this.ProjectOrchestrator.DeleteAsync(projectId);
         await ReloadAllAsync();
-        this.Snackbar.Add("Project deleted.", Severity.Info);
+        this.Snackbar.Add("Project deleted. Press Ctrl/Cmd+Z to undo.", Severity.Info);
     }
 
     private async Task CreateTaskAsync()
@@ -803,8 +834,7 @@
             return;
         }
 
-        await ReloadCurrentTasksAsync();
-        await RecalculateProjectTaskCountsAsync();
+        await ReloadAllAsync();
         this.Snackbar.Add($"Undid: {undoResult.Description}", Severity.Success);
     }
 
@@ -828,12 +858,16 @@
             snapshots);
     }
 
-    private async Task RestoreTaskSnapshotAsync(TaskSnapshot snapshot, Guid? parentTaskId = null)
+    private async Task RestoreTaskSnapshotAsync(TaskSnapshot snapshot, Guid? parentTaskId = null, Guid? overrideProjectId = null)
     {
         TaskFlow.Domain.Task recreated;
         if (parentTaskId.HasValue)
         {
             recreated = await this.TaskOrchestrator.CreateSubTaskAsync(parentTaskId.Value, snapshot.Title, snapshot.Priority, snapshot.Note ?? string.Empty);
+        }
+        else if (overrideProjectId.HasValue)
+        {
+            recreated = await this.TaskOrchestrator.CreateAsync(overrideProjectId.Value, snapshot.Title, snapshot.Priority, snapshot.Note ?? string.Empty);
         }
         else if (snapshot.ProjectId.HasValue)
         {
@@ -861,7 +895,21 @@
 
         foreach (var child in snapshot.Children)
         {
-            await RestoreTaskSnapshotAsync(child, recreated.Id);
+            await RestoreTaskSnapshotAsync(child, recreated.Id, overrideProjectId);
+        }
+    }
+
+    private async Task RestoreProjectSnapshotAsync(ProjectSnapshot snapshot)
+    {
+        var restoredProject = await this.ProjectOrchestrator.CreateAsync(snapshot.Name, snapshot.Color, snapshot.Icon);
+        if (restoredProject.ViewType != snapshot.ViewType)
+        {
+            await this.ProjectOrchestrator.UpdateViewTypeAsync(restoredProject.Id, snapshot.ViewType);
+        }
+
+        foreach (var taskSnapshot in snapshot.Tasks)
+        {
+            await RestoreTaskSnapshotAsync(taskSnapshot, parentTaskId: null, overrideProjectId: restoredProject.Id);
         }
     }
 
@@ -916,6 +964,39 @@
         }
 
         await ToggleCompleteAsync(task);
+    }
+
+    private async Task HandleTaskToggleFocusRequestedAsync(Guid taskId)
+    {
+        var task = this.activeTasks.FirstOrDefault(x => x.Id == taskId);
+        if (task is null)
+        {
+            return;
+        }
+
+        await ToggleFocusAsync(task);
+    }
+
+    private async Task HandleTaskToggleImportantRequestedAsync(Guid taskId)
+    {
+        var task = this.activeTasks.FirstOrDefault(x => x.Id == taskId);
+        if (task is null)
+        {
+            return;
+        }
+
+        await ToggleImportantAsync(task);
+    }
+
+    private async Task HandleTaskToggleTodayRequestedAsync(Guid taskId)
+    {
+        var task = this.activeTasks.FirstOrDefault(x => x.Id == taskId);
+        if (task is null)
+        {
+            return;
+        }
+
+        await ToggleTodayMarkAsync(task);
     }
 
     private async Task HandleCreateTaskKeyDown(KeyboardEventArgs args)

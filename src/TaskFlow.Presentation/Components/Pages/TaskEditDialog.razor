@@ -4,11 +4,6 @@
 
 <MudDialog>
     <DialogContent>
-        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
-            <MudText Typo="Typo.h6">Edit Task</MudText>
-            <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="Close dialog" title="Close dialog" OnClick="CloseDialog" />
-        </MudStack>
-
         <TaskCard Item="Task"
                   BoardStatuses="BoardStatuses"
                   OnToggleComplete="() => OnToggleComplete.InvokeAsync(Task)"
@@ -21,6 +16,7 @@
                   OnToggleToday="() => OnToggleToday.InvokeAsync(Task)"
                   OnDuplicate="() => OnDuplicate.InvokeAsync(Task)"
                   OnDelete="() => OnDelete.InvokeAsync(Task)"
+                  ShowDeleteAction="false"
                   OnRequestMove="() => OnRequestMove.InvokeAsync(Task.Id)" />
 
         @if (SubTasks.Count > 0)
@@ -41,6 +37,7 @@
                                   OnToggleToday="() => OnToggleToday.InvokeAsync(subTask)"
                                   OnDuplicate="() => OnDuplicate.InvokeAsync(subTask)"
                                   OnDelete="() => OnDelete.InvokeAsync(subTask)"
+                                  ShowDeleteAction="false"
                                   OnRequestMove="() => OnRequestMove.InvokeAsync(subTask.Id)" />
                     </MudPaper>
                 }
@@ -59,7 +56,16 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Outlined" OnClick="CloseDialog">Close</MudButton>
+        <MudTooltip Text="Delete task">
+            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                           Color="Color.Error"
+                           aria-label="Delete task"
+                           title="Delete task"
+                           OnClick="DeleteTaskAndCloseAsync" />
+        </MudTooltip>
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" OnClick="CancelDialog">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OkDialog">OK</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -120,9 +126,20 @@
 
     private string newSubTaskTitle = string.Empty;
 
-    private void CloseDialog()
+    private void OkDialog()
     {
-        this.MudDialog.Close();
+        this.MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void CancelDialog()
+    {
+        this.MudDialog.Cancel();
+    }
+
+    private async Task DeleteTaskAndCloseAsync()
+    {
+        await this.OnDelete.InvokeAsync(this.Task);
+        this.MudDialog.Close(DialogResult.Ok(true));
     }
 
     private async Task CreateSubTaskAsync()

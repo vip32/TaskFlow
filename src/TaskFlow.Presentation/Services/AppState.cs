@@ -1,6 +1,6 @@
 using TaskFlow.Domain;
 
-namespace TaskFlow.Presentation.Components.Pages;
+namespace TaskFlow.Presentation.Services;
 
 public sealed class AppState
 {

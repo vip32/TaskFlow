@@ -4,13 +4,14 @@
 <div @onclick:stopPropagation="true">
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
     <MudTooltip Text="Complete task">
-        <MudCheckBox T="bool" Value="Item.IsCompleted" ValueChanged="OnCompleteChangedAsync" />
+        <MudCheckBox T="bool" Value="isCompleted" ValueChanged="OnCompleteChangedAsync" />
     </MudTooltip>
 
     <MudTooltip Text="Toggle focus pin">
-        <MudIconButton Icon="@(Item.IsFocused ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin)"
-                       Color="@(Item.IsFocused ? Color.Success : Color.Default)"
+        <MudIconButton Icon="@(isFocused ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin)"
+                       Color="@(isFocused ? Color.Success : Color.Default)"
                        aria-label="Toggle focus pin"
+                       Class="@(isFocused ? "tf-toggle-active" : string.Empty)"
                        title="Toggle focus pin"
                        OnClick="OnToggleFocusAsync" />
     </MudTooltip>
@@ -18,9 +19,10 @@
     @if (AllowImportant)
     {
         <MudTooltip Text="Toggle important">
-            <MudIconButton Icon="@(Item.IsImportant ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
-                           Color="@(Item.IsImportant ? Color.Warning : Color.Default)"
+            <MudIconButton Icon="@(isImportant ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
+                           Color="@(isImportant ? Color.Warning : Color.Default)"
                            aria-label="Toggle important"
+                           Class="@(isImportant ? "tf-toggle-active" : string.Empty)"
                            title="Toggle important"
                            OnClick="OnToggleImportantAsync" />
         </MudTooltip>
@@ -31,7 +33,7 @@
                   ValueChanged="OnTitleChangedAsync"
                   Variant="Variant.Text"
                   Immediate="true"
-                  Class="@(Item.IsCompleted ? "tf-task-title-done" : string.Empty)"
+                  Class="@(isCompleted ? "tf-task-title-done" : string.Empty)"
                   Style="min-width: 200px;" />
 
     <MudSelect T="TaskPriority" Value="Item.Priority" ValueChanged="OnPriorityChangedAsync" Dense="true" Variant="Variant.Text">
@@ -59,9 +61,12 @@
         <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove" aria-label="Move task" title="Move task" OnClick="OnMoveRequestedAsync" />
     </MudTooltip>
 
-    <MudTooltip Text="Delete task">
-        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" aria-label="Delete task" title="Delete task" OnClick="OnDeleteAsync" />
-    </MudTooltip>
+    @if (ShowDeleteAction)
+    {
+        <MudTooltip Text="Delete task">
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" aria-label="Delete task" title="Delete task" OnClick="OnDeleteAsync" />
+        </MudTooltip>
+    }
 </MudStack>
 
 <MudTextField T="string"
@@ -126,6 +131,27 @@
     [Parameter]
     public EventCallback OnRequestMove { get; set; }
 
+    [Parameter]
+    public bool ShowDeleteAction { get; set; } = true;
+
+    private bool isCompleted;
+    private bool isFocused;
+    private bool isImportant;
+    private Guid? boundTaskId;
+
+    protected override void OnParametersSet()
+    {
+        if (this.boundTaskId == this.Item.Id)
+        {
+            return;
+        }
+
+        this.boundTaskId = this.Item.Id;
+        this.isCompleted = this.Item.IsCompleted;
+        this.isFocused = this.Item.IsFocused;
+        this.isImportant = this.Item.IsImportant;
+    }
+
     private static Color PriorityColor(TaskPriority priority)
     {
         return priority switch
@@ -157,19 +183,55 @@
         return $"{Math.Floor(delta.TotalDays)}d ago";
     }
 
-    private System.Threading.Tasks.Task OnCompleteChangedAsync(bool _)
+    private async System.Threading.Tasks.Task OnCompleteChangedAsync(bool _)
     {
-        return this.OnToggleComplete.InvokeAsync();
+        var previous = this.isCompleted;
+        this.isCompleted = !this.isCompleted;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            await this.OnToggleComplete.InvokeAsync();
+        }
+        catch
+        {
+            this.isCompleted = previous;
+            await InvokeAsync(StateHasChanged);
+            throw;
+        }
     }
 
-    private System.Threading.Tasks.Task OnToggleFocusAsync(MouseEventArgs _)
+    private async System.Threading.Tasks.Task OnToggleFocusAsync(MouseEventArgs _)
     {
-        return this.OnToggleFocus.InvokeAsync();
+        var previous = this.isFocused;
+        this.isFocused = !this.isFocused;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            await this.OnToggleFocus.InvokeAsync();
+        }
+        catch
+        {
+            this.isFocused = previous;
+            await InvokeAsync(StateHasChanged);
+            throw;
+        }
     }
 
-    private System.Threading.Tasks.Task OnToggleImportantAsync(MouseEventArgs _)
+    private async System.Threading.Tasks.Task OnToggleImportantAsync(MouseEventArgs _)
     {
-        return this.OnToggleImportant.InvokeAsync();
+        var previous = this.isImportant;
+        this.isImportant = !this.isImportant;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            await this.OnToggleImportant.InvokeAsync();
+        }
+        catch
+        {
+            this.isImportant = previous;
+            await InvokeAsync(StateHasChanged);
+            throw;
+        }
     }
 
     private System.Threading.Tasks.Task OnTitleChangedAsync(string value)

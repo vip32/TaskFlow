@@ -42,7 +42,42 @@
                                  Value="context.IsCompleted"
                                  ValueChanged="_ => OnToggleCompleteRequested.InvokeAsync(context.Id)"
                                  Size="Size.Small"
-                                 Color="Color.Success" />
+                                 Color="Color.Success"
+                                 @onmousedown:stopPropagation="true"
+                                 @onclick:stopPropagation="true" />
+                    <MudTooltip Text="Toggle focus pin">
+                        <span @onmousedown:stopPropagation="true" @onclick:stopPropagation="true">
+                            <MudIconButton Icon="@(IsFocused(context) ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin)"
+                                           Color="@(IsFocused(context) ? Color.Success : Color.Default)"
+                                           Class="@(IsFocused(context) ? "tf-toggle-active" : string.Empty)"
+                                           Size="Size.Small"
+                                           aria-label="Toggle focus pin"
+                                           title="Toggle focus pin"
+                                           OnClick="() => ToggleFocusAsync(context)" />
+                        </span>
+                    </MudTooltip>
+                    <MudTooltip Text="Toggle important">
+                        <span @onmousedown:stopPropagation="true" @onclick:stopPropagation="true">
+                            <MudIconButton Icon="@(IsImportant(context) ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
+                                           Color="@(IsImportant(context) ? Color.Warning : Color.Default)"
+                                           Class="@(IsImportant(context) ? "tf-toggle-active" : string.Empty)"
+                                           Size="Size.Small"
+                                           aria-label="Toggle important"
+                                           title="Toggle important"
+                                           OnClick="() => ToggleImportantAsync(context)" />
+                        </span>
+                    </MudTooltip>
+                    <MudTooltip Text="Toggle today">
+                        <span @onmousedown:stopPropagation="true" @onclick:stopPropagation="true">
+                            <MudIconButton Icon="@Icons.Material.Filled.Today"
+                                           Color="@(IsMarkedForToday(context) ? Color.Primary : Color.Default)"
+                                           Class="@(IsMarkedForToday(context) ? "tf-toggle-active" : string.Empty)"
+                                           Size="Size.Small"
+                                           aria-label="Toggle today"
+                                           title="Toggle today"
+                                           OnClick="() => ToggleTodayAsync(context)" />
+                        </span>
+                    </MudTooltip>
                     @if (IsEditing(context.Id))
                     {
                         <MudTextField T="string"
@@ -93,6 +128,15 @@
     public EventCallback<Guid> OnToggleCompleteRequested { get; set; }
 
     [Parameter, EditorRequired]
+    public EventCallback<Guid> OnToggleFocusRequested { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<Guid> OnToggleImportantRequested { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<Guid> OnToggleTodayRequested { get; set; }
+
+    [Parameter, EditorRequired]
     public EventCallback<TitleUpdateRequest> OnUpdateTaskTitleRequested { get; set; }
 
     private readonly Dictionary<DomainTaskStatus, string> newTaskTitles = [];
@@ -108,14 +152,25 @@
         .Select(group => group.First())
         .ToList();
 
-    private string BoardRenderKey => $"{string.Join('|', this.BoardItems.Select(item => $"{item.Id:N}:{item.Status}"))}|edit:{this.editingTaskId?.ToString("N")}";
+    private string BoardRenderKey => $"{string.Join('|', this.BoardItems.Select(item => $"{item.Id:N}:{item.Status}:{IsFocused(item)}:{IsImportant(item)}:{IsMarkedForToday(item)}"))}|edit:{this.editingTaskId?.ToString("N")}";
     private Guid? editingTaskId;
     private Guid? pendingFocusTaskId;
     private string editingTitle = string.Empty;
+    private readonly Dictionary<Guid, bool> focusedStates = [];
+    private readonly Dictionary<Guid, bool> importantStates = [];
+    private readonly Dictionary<Guid, bool> todayStates = [];
 
     private bool IsEditing(Guid taskId)
     {
         return this.editingTaskId == taskId;
+    }
+
+    protected override void OnParametersSet()
+    {
+        var taskLookup = this.BoardItems.ToDictionary(task => task.Id);
+        SyncLocalStates(this.focusedStates, taskLookup, task => task.IsFocused);
+        SyncLocalStates(this.importantStates, taskLookup, task => task.IsImportant);
+        SyncLocalStates(this.todayStates, taskLookup, task => task.IsMarkedForToday);
     }
 
     private void BeginEdit(TaskFlow.Domain.Task task)
@@ -245,5 +300,98 @@
     private static string GetTaskTitleButtonClass(TaskFlow.Domain.Task task)
     {
         return task.IsCompleted ? "pa-0 ma-0 tf-task-title-done" : "pa-0 ma-0";
+    }
+
+    private bool IsImportant(TaskFlow.Domain.Task task)
+    {
+        return this.importantStates.TryGetValue(task.Id, out var state) ? state : task.IsImportant;
+    }
+
+    private bool IsFocused(TaskFlow.Domain.Task task)
+    {
+        return this.focusedStates.TryGetValue(task.Id, out var state) ? state : task.IsFocused;
+    }
+
+    private bool IsMarkedForToday(TaskFlow.Domain.Task task)
+    {
+        return this.todayStates.TryGetValue(task.Id, out var state) ? state : task.IsMarkedForToday;
+    }
+
+    private async System.Threading.Tasks.Task ToggleFocusAsync(TaskFlow.Domain.Task task)
+    {
+        var previous = IsFocused(task);
+        this.focusedStates[task.Id] = !previous;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await this.OnToggleFocusRequested.InvokeAsync(task.Id);
+        }
+        catch
+        {
+            this.focusedStates[task.Id] = previous;
+            await InvokeAsync(StateHasChanged);
+            throw;
+        }
+    }
+
+    private async System.Threading.Tasks.Task ToggleImportantAsync(TaskFlow.Domain.Task task)
+    {
+        var previous = IsImportant(task);
+        this.importantStates[task.Id] = !previous;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await this.OnToggleImportantRequested.InvokeAsync(task.Id);
+        }
+        catch
+        {
+            this.importantStates[task.Id] = previous;
+            await InvokeAsync(StateHasChanged);
+            throw;
+        }
+    }
+
+    private async System.Threading.Tasks.Task ToggleTodayAsync(TaskFlow.Domain.Task task)
+    {
+        var previous = IsMarkedForToday(task);
+        this.todayStates[task.Id] = !previous;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await this.OnToggleTodayRequested.InvokeAsync(task.Id);
+        }
+        catch
+        {
+            this.todayStates[task.Id] = previous;
+            await InvokeAsync(StateHasChanged);
+            throw;
+        }
+    }
+
+    private static void SyncLocalStates(
+        Dictionary<Guid, bool> localStates,
+        IReadOnlyDictionary<Guid, TaskFlow.Domain.Task> tasks,
+        Func<TaskFlow.Domain.Task, bool> selector)
+    {
+        foreach (var key in localStates.Keys.Where(key => !tasks.ContainsKey(key)).ToList())
+        {
+            localStates.Remove(key);
+        }
+
+        foreach (var (taskId, task) in tasks)
+        {
+            if (!localStates.TryGetValue(taskId, out var local))
+            {
+                continue;
+            }
+
+            if (local == selector(task))
+            {
+                localStates.Remove(taskId);
+            }
+        }
     }
 }
