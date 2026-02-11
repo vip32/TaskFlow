@@ -8,7 +8,6 @@
 @inject IMyTaskFlowSectionOrchestrator MyTaskFlowSectionOrchestrator
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
-@inject IJSRuntime JsRuntime
 @inject IAppExceptionHandler UiExceptionHandler
 @inject IUndoManager UndoManager
 @using Microsoft.AspNetCore.Components.Sections
@@ -59,15 +58,15 @@
     </MudStack>
 </SectionContent>
 
-<div class="tf-home" tabindex="0" @onkeydown="HandleShellKeyDown">
-    <section class="tf-main">
-        <header class="tf-toolbar">
-            <MudStack Row="true" Spacing="1">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-6" tabindex="0" @onkeydown="HandleShellKeyDown">
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+            <MudStack Row="true" Spacing="1" Class="flex-wrap">
                 <MudTooltip Text="Delete all completed tasks">
                     <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ClearCompletedAsync">Clear Completed</MudButton>
                 </MudTooltip>
                 <MudTooltip Text="Keyboard shortcuts">
-                    <MudButton Variant="Variant.Outlined" OnClick="ToggleShortcutsHelp">Shortcuts</MudButton>
+                    <MudButton Variant="Variant.Outlined" OnClick="OpenShortcutsDialogAsync">Shortcuts</MudButton>
                 </MudTooltip>
                 @if (selectedProject is not null)
                 {
@@ -82,25 +81,33 @@
                     </MudTooltip>
                 }
             </MudStack>
-        </header>
+        </MudStack>
 
-        <MudPaper Class="tf-create-row" Elevation="0">
-            <MudTextField @bind-Value="newTaskTitle"
-                          @ref="newTaskInputRef"
-                          Label="Create task"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          Immediate="true"
-                          TextUpdateSuppression="false"
-                          OnKeyUp="HandleCreateTaskKeyDown" />
-            <MudSelect T="TaskPriority" @bind-Value="newTaskPriority" Label="Priority" Variant="Variant.Outlined" Dense="true">
-                <MudSelectItem Value="@TaskPriority.High">High</MudSelectItem>
-                <MudSelectItem Value="@TaskPriority.Medium">Medium</MudSelectItem>
-                <MudSelectItem Value="@TaskPriority.Low">Low</MudSelectItem>
-            </MudSelect>
-            <MudTooltip Text="Add task">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateTaskAsync">Add</MudButton>
-            </MudTooltip>
+        <MudPaper Elevation="0" Class="pa-3">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="8">
+                    <MudTextField @bind-Value="newTaskTitle"
+                                  @ref="newTaskInputRef"
+                                  Label="Create task"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  TextUpdateSuppression="false"
+                                  OnKeyUp="HandleCreateTaskKeyDown" />
+                </MudItem>
+                <MudItem xs="8" md="3">
+                    <MudSelect T="TaskPriority" @bind-Value="newTaskPriority" Label="Priority" Variant="Variant.Outlined" Dense="true">
+                        <MudSelectItem Value="@TaskPriority.High">High</MudSelectItem>
+                        <MudSelectItem Value="@TaskPriority.Medium">Medium</MudSelectItem>
+                        <MudSelectItem Value="@TaskPriority.Low">Low</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="4" md="1">
+                    <MudTooltip Text="Add task">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="CreateTaskAsync">Add</MudButton>
+                    </MudTooltip>
+                </MudItem>
+            </MudGrid>
         </MudPaper>
 
         @if (isLoading)
@@ -131,25 +138,8 @@
                           OnUpdateTaskTitleRequested="HandleListTaskTitleUpdateAsync"
                           OnEditTaskRequested="OpenBoardTaskDialog" />
         }
-
-    </section>
-</div>
-
-@if (showShortcuts)
-{
-    <div id="shortcuts-backdrop" class="tf-shortcuts-backdrop" tabindex="0" @onclick="ToggleShortcutsHelp" @onkeydown="HandleShortcutsKeyDown">
-        <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true">
-            <MudText Typo="Typo.h6">Keyboard shortcuts</MudText>
-            <p>Ctrl/Cmd + Enter: complete selected task</p>
-            <p>Delete: delete selected task</p>
-            <p>Ctrl/Cmd + N: focus new task</p>
-            <p>Ctrl/Cmd + F: focus search</p>
-            <p>Ctrl/Cmd + P: toggle focus pin on selected task</p>
-            <p>Ctrl/Cmd + Z: undo last action</p>
-            <p>Ctrl/Cmd + /: toggle this help</p>
-        </MudPaper>
-    </div>
-}
+    </MudStack>
+</MudContainer>
 
 @code {
     private enum SortMode
@@ -162,7 +152,6 @@
 
     private readonly DomainTaskStatus[] boardStatuses = [DomainTaskStatus.Todo, DomainTaskStatus.Doing, DomainTaskStatus.Done];
     private readonly Dictionary<Guid, List<TaskFlow.Domain.Task>> subTasksByParent = [];
-    private readonly Dictionary<Guid, string> newSubTaskTitles = [];
     private List<TaskFlow.Domain.Task> activeTasks = [];
     private Guid? selectedTaskId;
     private string newTaskTitle = string.Empty;
@@ -171,17 +160,12 @@
     private TaskPriority? priorityFilter;
     private DomainTaskStatus? statusFilter;
     private bool showCompleted;
-    private bool showShortcuts;
-    private bool showBoardTaskDialog;
+    private bool isShortcutsDialogOpen;
     private bool isLoading;
-    private bool pendingShortcutsFocus;
     private SortMode? sortMode = SortMode.CreatedDesc;
     private string loadError;
     private MudTextField<string> newTaskInputRef;
     private MudTextField<string> searchInputRef;
-    private DotNetObjectReference<Home> escapeHandlerReference;
-    private Guid? boardTaskId;
-    private Guid? pendingSubTaskFocusParentId;
     private Guid? loadedProjectId;
     private Guid? loadedSectionId;
 
@@ -211,10 +195,6 @@
         : $"{FilteredTasks.Count} task(s)";
 
     private string ViewToggleLabel => this.selectedProject?.ViewType == ProjectViewType.Board ? "List View" : "Board View";
-
-    private TaskFlow.Domain.Task boardTask => this.boardTaskId.HasValue
-        ? this.activeTasks.FirstOrDefault(task => task.Id == this.boardTaskId.Value)
-        : null;
 
     private List<TaskFlow.Domain.Task> FilteredTasks
     {
@@ -265,33 +245,12 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && this.escapeHandlerReference is null)
-        {
-            this.escapeHandlerReference = DotNetObjectReference.Create(this);
-            await this.JsRuntime.InvokeVoidAsync("taskflowUi.registerEscapeHandler", this.escapeHandlerReference);
-        }
-
         if (this.loadedProjectId != this.AppState.SelectedProjectId
             || this.loadedSectionId != this.AppState.SelectedSectionId)
         {
             await ApplySelectionAsync();
             return;
         }
-
-        if (this.pendingShortcutsFocus && this.showShortcuts)
-        {
-            this.pendingShortcutsFocus = false;
-            await this.JsRuntime.InvokeVoidAsync("taskflowUi.focusById", "shortcuts-backdrop");
-        }
-
-        if (!this.pendingSubTaskFocusParentId.HasValue)
-        {
-            return;
-        }
-
-        var parentTaskId = this.pendingSubTaskFocusParentId.Value;
-        this.pendingSubTaskFocusParentId = null;
-        await this.JsRuntime.InvokeVoidAsync("taskflowUi.focusById", GetSubTaskInputId(parentTaskId));
     }
 
     private async Task ReloadAllAsync()
@@ -438,18 +397,46 @@
         }
     }
 
-    private Task OpenBoardTaskDialog(Guid taskId)
+    private async Task OpenBoardTaskDialog(Guid taskId)
     {
-        this.selectedTaskId = taskId;
-        this.boardTaskId = taskId;
-        this.showBoardTaskDialog = true;
-        return Task.CompletedTask;
-    }
+        var task = this.activeTasks.FirstOrDefault(item => item.Id == taskId);
+        if (task is null)
+        {
+            return;
+        }
 
-    private void CloseBoardTaskDialog()
-    {
-        this.showBoardTaskDialog = false;
-        this.boardTaskId = null;
+        this.selectedTaskId = taskId;
+        var subTasks = this.subTasksByParent.TryGetValue(task.Id, out var existingSubTasks)
+            ? existingSubTasks
+            : [];
+
+        var parameters = new DialogParameters<TaskEditDialog>
+        {
+            { x => x.Task, task },
+            { x => x.SubTasks, subTasks },
+            { x => x.BoardStatuses, this.boardStatuses },
+            { x => x.OnToggleComplete, EventCallback.Factory.Create<TaskFlow.Domain.Task>(this, ToggleCompleteAsync) },
+            { x => x.OnToggleFocus, EventCallback.Factory.Create<TaskFlow.Domain.Task>(this, ToggleFocusAsync) },
+            { x => x.OnToggleImportant, EventCallback.Factory.Create<TaskFlow.Domain.Task>(this, ToggleImportantAsync) },
+            { x => x.OnUpdateTitle, EventCallback.Factory.Create<TaskEditDialog.TaskStringChange>(this, HandleTaskTitleUpdateAsync) },
+            { x => x.OnUpdateNote, EventCallback.Factory.Create<TaskEditDialog.TaskStringChange>(this, HandleTaskNoteUpdateAsync) },
+            { x => x.OnUpdatePriority, EventCallback.Factory.Create<TaskEditDialog.TaskPriorityChange>(this, HandleTaskPriorityUpdateAsync) },
+            { x => x.OnUpdateStatus, EventCallback.Factory.Create<TaskEditDialog.TaskStatusChange>(this, HandleTaskStatusUpdateAsync) },
+            { x => x.OnToggleToday, EventCallback.Factory.Create<TaskFlow.Domain.Task>(this, ToggleTodayMarkAsync) },
+            { x => x.OnDuplicate, EventCallback.Factory.Create<TaskFlow.Domain.Task>(this, DuplicateTaskAsync) },
+            { x => x.OnDelete, EventCallback.Factory.Create<TaskFlow.Domain.Task>(this, DeleteTaskAsync) },
+            { x => x.OnRequestMove, EventCallback.Factory.Create<Guid>(this, OpenMoveTaskDialogAsync) },
+            { x => x.OnCreateSubTask, EventCallback.Factory.Create<string>(this, title => CreateSubTaskAsync(task.Id, title)) },
+        };
+
+        var dialog = await this.DialogService.ShowAsync<TaskEditDialog>("Edit Task", parameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Large,
+        });
+
+        await dialog.Result;
     }
 
     private async Task OpenMoveTaskDialogAsync(Guid taskId)
@@ -563,17 +550,14 @@
         this.Snackbar.Add("Task created.", Severity.Success);
     }
 
-    private async Task CreateSubTaskAsync(Guid parentTaskId)
+    private async Task CreateSubTaskAsync(Guid parentTaskId, string title)
     {
-        if (!this.newSubTaskTitles.TryGetValue(parentTaskId, out var title) || string.IsNullOrWhiteSpace(title))
+        if (string.IsNullOrWhiteSpace(title))
         {
             return;
         }
 
         await this.TaskOrchestrator.CreateSubTaskAsync(parentTaskId, title, TaskPriority.Medium, string.Empty);
-
-        this.newSubTaskTitles[parentTaskId] = string.Empty;
-        this.pendingSubTaskFocusParentId = parentTaskId;
         await ReloadCurrentTasksAsync();
         await InvokeAsync(StateHasChanged);
     }
@@ -660,10 +644,6 @@
         });
 
         await this.TaskOrchestrator.DeleteAsync(task.Id);
-        if (this.boardTaskId == task.Id)
-        {
-            CloseBoardTaskDialog();
-        }
         await ReloadCurrentTasksAsync();
         StateHasChanged();
         this.Snackbar.Add("Task deleted. Press Ctrl/Cmd+Z to undo.", Severity.Info);
@@ -885,21 +865,6 @@
         }
     }
 
-    private string GetNewSubTaskTitle(Guid parentTaskId)
-    {
-        return this.newSubTaskTitles.TryGetValue(parentTaskId, out var value) ? value : string.Empty;
-    }
-
-    private static string GetSubTaskInputId(Guid parentTaskId)
-    {
-        return $"subtask-input-{parentTaskId:N}";
-    }
-
-    private void SetNewSubTaskTitle(Guid parentTaskId, string value)
-    {
-        this.newSubTaskTitles[parentTaskId] = value;
-    }
-
     private Task HandleTaskTitleUpdateAsync(TaskEditDialog.TaskStringChange change)
     {
         return UpdateTitleAsync(change.Task, change.Value);
@@ -963,18 +928,6 @@
 
     private async Task HandleShellKeyDown(KeyboardEventArgs args)
     {
-        if (args.Key == "Escape")
-        {
-            if (this.showBoardTaskDialog)
-            {
-                CloseBoardTaskDialog();
-            }
-            else if (this.showShortcuts)
-            {
-                this.showShortcuts = false;
-            }
-        }
-
         if ((args.CtrlKey || args.MetaKey) && args.Key.Equals("Enter", StringComparison.OrdinalIgnoreCase) && this.selectedTaskId.HasValue)
         {
             var task = this.activeTasks.FirstOrDefault(x => x.Id == this.selectedTaskId.Value);
@@ -1025,75 +978,36 @@
 
         if ((args.CtrlKey || args.MetaKey) && args.Key == "/")
         {
-            ToggleShortcutsHelp();
+            await OpenShortcutsDialogAsync();
         }
     }
 
-    private void ToggleShortcutsHelp()
+    private async Task OpenShortcutsDialogAsync()
     {
-        this.showShortcuts = !this.showShortcuts;
-        this.pendingShortcutsFocus = this.showShortcuts;
-    }
-
-    [JSInvokable]
-    public Task HandleGlobalEscapeAsync()
-    {
-        if (!this.showBoardTaskDialog && !this.showShortcuts)
+        if (this.isShortcutsDialogOpen)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        if (this.showBoardTaskDialog)
+        try
         {
-            CloseBoardTaskDialog();
+            this.isShortcutsDialogOpen = true;
+            var dialog = await this.DialogService.ShowAsync<ShortcutsDialog>("Keyboard shortcuts", new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+            });
+            await dialog.Result;
         }
-
-        if (this.showShortcuts)
+        finally
         {
-            this.showShortcuts = false;
-        }
-
-        return InvokeAsync(StateHasChanged);
-    }
-
-    private void HandleShortcutsKeyDown(KeyboardEventArgs args)
-    {
-        if (args.Key == "Escape" && this.showShortcuts)
-        {
-            this.showShortcuts = false;
+            this.isShortcutsDialogOpen = false;
         }
     }
 
     public void Dispose()
     {
         this.AppState.Changed -= OnAppStateChanged;
-        if (this.escapeHandlerReference is not null)
-        {
-            _ = this.JsRuntime.InvokeVoidAsync("taskflowUi.unregisterEscapeHandler");
-            this.escapeHandlerReference.Dispose();
-            this.escapeHandlerReference = null;
-        }
     }
-}
-
-@if (showBoardTaskDialog && boardTask is not null)
-{
-    <TaskEditDialog Task="boardTask"
-                    SubTasks="(subTasksByParent.TryGetValue(boardTask.Id, out var subTasks) ? subTasks : new List<TaskFlow.Domain.Task>())"
-                    BoardStatuses="boardStatuses"
-                    OnToggleComplete="ToggleCompleteAsync"
-                    OnToggleFocus="ToggleFocusAsync"
-                    OnToggleImportant="ToggleImportantAsync"
-                    OnUpdateTitle="HandleTaskTitleUpdateAsync"
-                    OnUpdateNote="HandleTaskNoteUpdateAsync"
-                    OnUpdatePriority="HandleTaskPriorityUpdateAsync"
-                    OnUpdateStatus="HandleTaskStatusUpdateAsync"
-                    OnToggleToday="ToggleTodayMarkAsync"
-                    OnDuplicate="DuplicateTaskAsync"
-                    OnDelete="DeleteTaskAsync"
-                    OnRequestMove="OpenMoveTaskDialogAsync"
-                    NewSubTaskTitle="GetNewSubTaskTitle(boardTask.Id)"
-                    OnNewSubTaskTitleChanged="value => SetNewSubTaskTitle(boardTask.Id, value)"
-                    OnCreateSubTask="() => CreateSubTaskAsync(boardTask.Id)"
-                    OnClose="CloseBoardTaskDialog" />
 }

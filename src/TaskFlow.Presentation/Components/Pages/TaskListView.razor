@@ -1,10 +1,10 @@
 @using TaskFlow.Domain
 @inject IJSRuntime JsRuntime
 
-<div class="tf-list">
+<MudStack Spacing="2">
     @if (Tasks.Count == 0)
     {
-        <MudPaper Class="tf-empty" Elevation="0">
+        <MudPaper Elevation="0" Class="pa-4 text-center">
             <MudText Typo="Typo.h6">No tasks yet</MudText>
             <MudText Typo="Typo.body2">Create your first task and keep momentum going.</MudText>
         </MudPaper>
@@ -51,7 +51,7 @@
             </MudPaper>
         }
     }
-</div>
+</MudStack>
 
 @code {
     [Parameter, EditorRequired]

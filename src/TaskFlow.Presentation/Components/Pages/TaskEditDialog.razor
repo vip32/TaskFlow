@@ -2,11 +2,11 @@
 @using TaskFlow.Domain
 @using DomainTaskStatus = TaskFlow.Domain.TaskStatus
 
-<div class="tf-shortcuts-backdrop" tabindex="0" @onclick="HandleCloseAsync" @onkeydown="HandleKeyDownAsync">
-    <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true">
+<MudDialog>
+    <DialogContent>
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
             <MudText Typo="Typo.h6">Edit Task</MudText>
-            <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="Close dialog" title="Close dialog" OnClick="HandleCloseAsync" />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="Close dialog" title="Close dialog" OnClick="CloseDialog" />
         </MudStack>
 
         <TaskCard Item="Task"
@@ -25,10 +25,10 @@
 
         @if (SubTasks.Count > 0)
         {
-            <div class="tf-subtasks mt-2">
+            <MudStack Spacing="1" Class="mt-2">
                 @foreach (var subTask in SubTasks)
                 {
-                    <MudPaper Class="tf-subtask" Elevation="0">
+                    <MudPaper Elevation="0" Class="pa-2">
                         <TaskCard Item="subTask"
                                   BoardStatuses="BoardStatuses"
                                   AllowImportant="false"
@@ -44,22 +44,24 @@
                                   OnRequestMove="() => OnRequestMove.InvokeAsync(subTask.Id)" />
                     </MudPaper>
                 }
-            </div>
+            </MudStack>
         }
 
         <MudStack Row="true" Spacing="1" Class="mt-2">
             <MudTextField T="string"
-                          Value="NewSubTaskTitle"
-                          ValueChanged="OnNewSubTaskTitleChanged"
+                          @bind-Value="newSubTaskTitle"
                           Placeholder="Add subtask"
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           TextUpdateSuppression="false"
                           OnKeyUp="HandleCreateSubTaskKeyUp" />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => OnCreateSubTask.InvokeAsync()">Add</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateSubTaskAsync">Add</MudButton>
         </MudStack>
-    </MudPaper>
-</div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" OnClick="CloseDialog">Close</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
     public sealed record TaskStringChange(TaskFlow.Domain.Task Task, string Value);
@@ -110,35 +112,36 @@
     [Parameter, EditorRequired]
     public EventCallback<Guid> OnRequestMove { get; set; }
 
-    [Parameter]
-    public string NewSubTaskTitle { get; set; } = string.Empty;
-
     [Parameter, EditorRequired]
-    public EventCallback<string> OnNewSubTaskTitleChanged { get; set; }
+    public EventCallback<string> OnCreateSubTask { get; set; }
 
-    [Parameter, EditorRequired]
-    public EventCallback OnCreateSubTask { get; set; }
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter, EditorRequired]
-    public EventCallback OnClose { get; set; }
+    private string newSubTaskTitle = string.Empty;
 
-    private Task HandleCloseAsync()
+    private void CloseDialog()
     {
-        return this.OnClose.InvokeAsync();
+        this.MudDialog.Close();
     }
 
-    private Task HandleKeyDownAsync(KeyboardEventArgs args)
+    private async Task CreateSubTaskAsync()
     {
-        return args.Key == "Escape"
-            ? HandleCloseAsync()
-            : System.Threading.Tasks.Task.CompletedTask;
+        var title = this.newSubTaskTitle?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return;
+        }
+
+        await this.OnCreateSubTask.InvokeAsync(title);
+        this.newSubTaskTitle = string.Empty;
     }
 
     private async Task HandleCreateSubTaskKeyUp(KeyboardEventArgs args)
     {
         if (args.Key == "Enter" || args.Key == "NumpadEnter")
         {
-            await this.OnCreateSubTask.InvokeAsync();
+            await CreateSubTaskAsync();
         }
     }
 }

@@ -1,0 +1,51 @@
+<MudDialog>
+    <DialogContent>
+        <div tabindex="0" @ref="dialogRootRef" @onkeydown="HandleKeyDownAsync">
+            <MudText Typo="Typo.h6" Class="mb-2">Keyboard shortcuts</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem T="string">Ctrl/Cmd + Enter: complete selected task</MudListItem>
+                <MudListItem T="string">Delete: delete selected task</MudListItem>
+                <MudListItem T="string">Ctrl/Cmd + N: focus new task</MudListItem>
+                <MudListItem T="string">Ctrl/Cmd + F: focus search</MudListItem>
+                <MudListItem T="string">Ctrl/Cmd + P: toggle focus pin on selected task</MudListItem>
+                <MudListItem T="string">Ctrl/Cmd + Z: undo last action</MudListItem>
+                <MudListItem T="string">Ctrl/Cmd + /: open this help</MudListItem>
+            </MudList>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private ElementReference dialogRootRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await this.dialogRootRef.FocusAsync();
+    }
+
+    private void Close()
+    {
+        this.MudDialog.Close();
+    }
+
+    private Task HandleKeyDownAsync(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            Close();
+        }
+
+        return Task.CompletedTask;
+    }
+}

@@ -14,25 +14,27 @@
     </MudStack>
 </SectionContent>
 
-<div class="tf-home">
-    <section class="tf-main">
-        <MudPaper Class="tf-focus-timer tf-focus-timer-page" Elevation="0">
-            <MudText Typo="Typo.subtitle2">Session</MudText>
-            <MudText Typo="Typo.h4">@timerRemaining.ToString(@"mm\:ss")</MudText>
-            <MudSelect T="int" Value="selectedTimerMinutes" ValueChanged="OnTimerPresetChangedAsync" Label="Duration" Dense="true" Variant="Variant.Outlined">
-                <MudSelectItem Value="5">5 mins</MudSelectItem>
-                <MudSelectItem Value="15">15 mins</MudSelectItem>
-                <MudSelectItem Value="30">30 mins</MudSelectItem>
-                <MudSelectItem Value="60">60 mins</MudSelectItem>
-            </MudSelect>
-            <MudStack Row="true" Spacing="1">
-                <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="StartTimerAsync" Disabled="@timerRunning">Start</MudButton>
-                <MudButton Variant="Variant.Outlined" OnClick="PauseTimer" Disabled="@(!timerRunning)">Pause</MudButton>
-                <MudButton Variant="Variant.Text" OnClick="ResetTimer">Reset</MudButton>
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-6">
+    <MudCard Elevation="1">
+        <MudCardContent>
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle2">Session</MudText>
+                <MudText Typo="Typo.h4">@timerRemaining.ToString(@"mm\:ss")</MudText>
+                <MudSelect T="int" Value="selectedTimerMinutes" ValueChanged="OnTimerPresetChangedAsync" Label="Duration" Dense="true" Variant="Variant.Outlined">
+                    <MudSelectItem Value="5">5 mins</MudSelectItem>
+                    <MudSelectItem Value="15">15 mins</MudSelectItem>
+                    <MudSelectItem Value="30">30 mins</MudSelectItem>
+                    <MudSelectItem Value="60">60 mins</MudSelectItem>
+                </MudSelect>
+                <MudStack Row="true" Spacing="1">
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="StartTimerAsync" Disabled="@timerRunning">Start</MudButton>
+                    <MudButton Variant="Variant.Outlined" OnClick="PauseTimer" Disabled="@(!timerRunning)">Pause</MudButton>
+                    <MudButton Variant="Variant.Text" OnClick="ResetTimer">Reset</MudButton>
+                </MudStack>
             </MudStack>
-        </MudPaper>
-    </section>
-</div>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
 
 @code {
     private int selectedTimerMinutes = 30;

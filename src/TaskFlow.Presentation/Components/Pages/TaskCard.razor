@@ -31,7 +31,8 @@
                   ValueChanged="OnTitleChangedAsync"
                   Variant="Variant.Text"
                   Immediate="true"
-                  Class="@(Item.IsCompleted ? "tf-task-title tf-task-title-done" : "tf-task-title")" />
+                  Class="@(Item.IsCompleted ? "tf-task-title-done" : string.Empty)"
+                  Style="min-width: 200px;" />
 
     <MudSelect T="TaskPriority" Value="Item.Priority" ValueChanged="OnPriorityChangedAsync" Dense="true" Variant="Variant.Text">
         <MudSelectItem Value="@TaskPriority.High">High</MudSelectItem>
@@ -71,15 +72,14 @@
               Immediate="true"
               ValueChanged="OnNoteChangedAsync" />
 
-<div class="tf-task-meta">
-    <span class="@($"tf-task-meta-dot {PriorityClass(Item.Priority)}")"></span>
-    <span>@Item.Priority.ToString()</span>
-    <span>@($"Created {RelativeTime(Item.CreatedAt)}")</span>
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-1">
+    <MudChip T="string" Color="@PriorityColor(Item.Priority)" Variant="Variant.Text" Size="Size.Small">@Item.Priority.ToString()</MudChip>
+    <MudText Typo="Typo.caption">@($"Created {RelativeTime(Item.CreatedAt)}")</MudText>
     @if (Item.CompletedAt.HasValue)
     {
-        <span>@($"Completed {RelativeTime(Item.CompletedAt.Value)}")</span>
+        <MudText Typo="Typo.caption">@($"Completed {RelativeTime(Item.CompletedAt.Value)}")</MudText>
     }
-</div>
+</MudStack>
 
 </div>
 
@@ -126,13 +126,13 @@
     [Parameter]
     public EventCallback OnRequestMove { get; set; }
 
-    private static string PriorityClass(TaskPriority priority)
+    private static Color PriorityColor(TaskPriority priority)
     {
         return priority switch
         {
-            TaskPriority.High => "tf-task-meta-dot-high",
-            TaskPriority.Medium => "tf-task-meta-dot-medium",
-            _ => "tf-task-meta-dot-low",
+            TaskPriority.High => Color.Error,
+            TaskPriority.Medium => Color.Warning,
+            _ => Color.Success,
         };
     }
 

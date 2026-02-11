@@ -6,18 +6,19 @@
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 
-<div class="tf-drawer-root">
-    <div class="tf-drawer-top">
+<MudStack Style="height:100%;" Spacing="0">
+    <MudStack Spacing="0">
         @if (AppState.MyTaskFlowSections.Count > 0)
         {
-            <MudText Typo="Typo.caption" Class="tf-drawer-caption">My Task Flow</MudText>
+            <MudText Typo="Typo.overline" Class="mt-2 mb-1">My Task Flow</MudText>
             @foreach (var flowSection in AppState.MyTaskFlowSections)
             {
                 var isActive = AppState.SelectedSectionId == flowSection.Id;
                 <MudButton FullWidth="true"
                            Variant="@(isActive ? Variant.Filled : Variant.Text)"
                            Color="@(isActive ? Color.Primary : Color.Default)"
-                           Class="tf-drawer-button"
+                           Class="mb-1"
+                           Style="justify-content:flex-start; text-transform:none; min-height:42px;"
                            OnClick="() => SelectSection(flowSection.Id)">
                     @flowSection.Name
                 </MudButton>
@@ -26,7 +27,7 @@
 
         <MudDivider Class="my-2" />
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-            <MudText Typo="Typo.caption" Class="tf-drawer-caption mb-0">Projects</MudText>
+            <MudText Typo="Typo.overline" Class="mb-0">Projects</MudText>
             <MudIconButton Icon="@Icons.Material.Filled.Add"
                            Size="Size.Small"
                            Color="Color.Primary"
@@ -40,31 +41,33 @@
             <MudButton FullWidth="true"
                        Variant="@(isActive ? Variant.Filled : Variant.Text)"
                        Color="@(isActive ? Color.Primary : Color.Default)"
-                       Class="tf-drawer-button"
+                       Class="mb-1"
+                       Style="justify-content:flex-start; text-transform:none; min-height:42px;"
                        OnClick="() => SelectProject(project.Id)">
                 <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
-                <MudIcon Icon="@Icons.Material.Filled.Circle" Size="Size.Small" Color="@ResolveProjectColor(project.Color)" Class="tf-project-dot" />
-                <span class="tf-drawer-project-name">@project.Name</span>
-                <MudBadge Class="tf-project-count" Color="Color.Info" Content="@AppState.GetProjectTaskCount(project.Id)" />
+                <MudIcon Icon="@Icons.Material.Filled.Circle" Size="Size.Small" Color="@ResolveProjectColor(project.Color)" Class="mr-2" />
+                <MudText Typo="Typo.body2">@project.Name</MudText>
+                <MudSpacer />
+                <MudBadge Color="Color.Info" Content="@AppState.GetProjectTaskCount(project.Id)" />
             </MudButton>
         }
-    </div>
+    </MudStack>
 
-    <div class="tf-drawer-spacer"></div>
+    <MudSpacer />
 
-    <div class="tf-drawer-bottom">
+    <MudStack Spacing="0" Class="pb-1">
         <MudDivider Class="mb-2" />
-        <MudNavLink Href="focus-timer" Icon="@Icons.Material.Filled.Timer" Match="NavLinkMatch.Prefix" Class="tf-drawer-navlink">
+        <MudNavLink Href="focus-timer" Icon="@Icons.Material.Filled.Timer" Match="NavLinkMatch.Prefix" Class="mb-1" Style="min-height:42px; border-radius:8px;">
             Focus Timer
         </MudNavLink>
-        <MudNavLink Href="settings" Icon="@Icons.Material.Filled.Settings" Match="NavLinkMatch.Prefix" Class="tf-drawer-navlink">
+        <MudNavLink Href="settings" Icon="@Icons.Material.Filled.Settings" Match="NavLinkMatch.Prefix" Class="mb-1" Style="min-height:42px; border-radius:8px;">
             Settings
         </MudNavLink>
-        <MudNavLink Href="about" Icon="@Icons.Material.Filled.Info" Match="NavLinkMatch.Prefix" Class="tf-drawer-navlink">
+        <MudNavLink Href="about" Icon="@Icons.Material.Filled.Info" Match="NavLinkMatch.Prefix" Class="mb-1" Style="min-height:42px; border-radius:8px;">
             About
         </MudNavLink>
-    </div>
-</div>
+    </MudStack>
+</MudStack>
 
 @code {
     [CascadingParameter]
