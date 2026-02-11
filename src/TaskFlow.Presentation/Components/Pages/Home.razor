@@ -109,11 +109,13 @@
                            GetBoardTasks="GetBoardTasks"
                            OnDropTaskToStatus="HandleBoardDropAsync"
                            OnCreateTaskInStatus="CreateTaskInStatusAsync"
+                           OnUpdateTaskTitleRequested="HandleBoardTaskTitleUpdateAsync"
                            OnEditTaskRequested="OpenBoardTaskDialog" />
         }
         else
         {
             <HomeListView Tasks="FilteredTasks"
+                          OnUpdateTaskTitleRequested="HandleListTaskTitleUpdateAsync"
                           OnEditTaskRequested="OpenBoardTaskDialog" />
         }
 
@@ -932,6 +934,28 @@
     private Task HandleTaskStatusUpdateAsync(TaskEditDialog.TaskStatusChange change)
     {
         return UpdateStatusAsync(change.Task, change.Value);
+    }
+
+    private async Task HandleListTaskTitleUpdateAsync(HomeListView.TitleUpdateRequest request)
+    {
+        var task = this.activeTasks.FirstOrDefault(x => x.Id == request.TaskId);
+        if (task is null)
+        {
+            return;
+        }
+
+        await UpdateTitleAsync(task, request.Title);
+    }
+
+    private async Task HandleBoardTaskTitleUpdateAsync(TaskBoardView.TitleUpdateRequest request)
+    {
+        var task = this.activeTasks.FirstOrDefault(x => x.Id == request.TaskId);
+        if (task is null)
+        {
+            return;
+        }
+
+        await UpdateTitleAsync(task, request.Title);
     }
 
     private async Task HandleCreateTaskKeyDown(KeyboardEventArgs args)

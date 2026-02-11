@@ -1,4 +1,5 @@
 @using TaskFlow.Domain
+@inject IJSRuntime JsRuntime
 
 <div class="tf-list">
     @if (Tasks.Count == 0)
@@ -12,9 +13,32 @@
     {
         @foreach (var task in Tasks)
         {
-            <MudPaper Elevation="1" Class="pa-2">
+            <MudPaper id="@GetTaskContainerId(task.Id)" Elevation="1" Class="pa-2">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                    <MudText Typo="Typo.body1" Class="@(task.IsCompleted ? "tf-task-title-done" : string.Empty)">@task.Title</MudText>
+                    @if (IsEditing(task.Id))
+                    {
+                        <MudTextField T="string"
+                                      Value="editingTitle"
+                                      ValueChanged="OnEditingTitleChanged"
+                                      Variant="Variant.Text"
+                                      Immediate="true"
+                                      Margin="Margin.Dense"
+                                      Class="@(task.IsCompleted ? "tf-task-title-done" : string.Empty)"
+                                      @onmousedown:stopPropagation="true"
+                                      OnKeyDown="args => HandleEditKeyDownAsync(task, args)"
+                                      @onfocusout="() => CommitEditAsync(task)" />
+                    }
+                    else
+                    {
+                        <span @onmousedown:stopPropagation="true"
+                              @onmousedown="() => BeginEdit(task)">
+                            <MudText Typo="Typo.body1"
+                                     Class="@(task.IsCompleted ? "tf-task-title-done" : string.Empty)"
+                                     style="cursor:text">
+                                @task.Title
+                            </MudText>
+                        </span>
+                    }
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" aria-label="Edit task" title="Edit task" OnClick="() => OnEditTaskRequested.InvokeAsync(task.Id)" />
                 </MudStack>
             </MudPaper>
@@ -28,4 +52,91 @@
 
     [Parameter, EditorRequired]
     public EventCallback<Guid> OnEditTaskRequested { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<TitleUpdateRequest> OnUpdateTaskTitleRequested { get; set; }
+
+    public sealed record TitleUpdateRequest(Guid TaskId, string Title);
+
+    private Guid? editingTaskId;
+    private Guid? pendingFocusTaskId;
+    private string editingTitle = string.Empty;
+
+    private bool IsEditing(Guid taskId)
+    {
+        return this.editingTaskId == taskId;
+    }
+
+    private void BeginEdit(TaskFlow.Domain.Task task)
+    {
+        this.editingTaskId = task.Id;
+        this.pendingFocusTaskId = task.Id;
+        this.editingTitle = task.Title;
+    }
+
+    private void OnEditingTitleChanged(string value)
+    {
+        this.editingTitle = value;
+    }
+
+    private async System.Threading.Tasks.Task HandleEditKeyDownAsync(TaskFlow.Domain.Task task, KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CancelEdit();
+            return;
+        }
+
+        if (args.Key == "Enter" || args.Key == "NumpadEnter")
+        {
+            await CommitEditAsync(task);
+        }
+    }
+
+    private async System.Threading.Tasks.Task CommitEditAsync(TaskFlow.Domain.Task task)
+    {
+        if (this.editingTaskId != task.Id)
+        {
+            return;
+        }
+
+        var updatedTitle = this.editingTitle?.Trim() ?? string.Empty;
+        CancelEdit();
+
+        if (string.IsNullOrWhiteSpace(updatedTitle) || string.Equals(updatedTitle, task.Title, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        await this.OnUpdateTaskTitleRequested.InvokeAsync(new TitleUpdateRequest(task.Id, updatedTitle));
+    }
+
+    private void CancelEdit()
+    {
+        this.editingTaskId = null;
+        this.pendingFocusTaskId = null;
+        this.editingTitle = string.Empty;
+    }
+
+    protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!this.pendingFocusTaskId.HasValue || !this.editingTaskId.HasValue)
+        {
+            return;
+        }
+
+        if (this.pendingFocusTaskId.Value != this.editingTaskId.Value)
+        {
+            return;
+        }
+
+        var taskId = this.pendingFocusTaskId.Value;
+        this.pendingFocusTaskId = null;
+        await this.JsRuntime.InvokeVoidAsync("taskflowUi.focusInputInContainerById", GetTaskContainerId(taskId));
+    }
+
+    private static string GetTaskContainerId(Guid taskId)
+    {
+        return $"list-task-{taskId:N}";
+    }
 }

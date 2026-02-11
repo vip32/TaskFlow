@@ -85,4 +85,59 @@
         window.taskflowUi._escapeHandler = null;
     };
 
+    window.taskflowUi.selectFocusedInput = function () {
+        var active = document.activeElement;
+        if (!active) {
+            return;
+        }
+
+        if (typeof active.select === "function") {
+            active.select();
+        }
+    };
+
+    window.taskflowUi.focusInlineEditById = function (inlineEditId) {
+        if (!inlineEditId) {
+            return;
+        }
+
+        var selector = '[data-inline-edit-id="' + inlineEditId + '"] input';
+        var input = document.querySelector(selector);
+        if (!input) {
+            return;
+        }
+
+        if (typeof input.focus === "function") {
+            input.focus();
+        }
+
+        if (typeof input.select === "function") {
+            input.select();
+        }
+    };
+
+    window.taskflowUi.focusInputInContainerById = function (containerId) {
+        if (!containerId) {
+            return;
+        }
+
+        var container = document.getElementById(containerId);
+        if (!container) {
+            return;
+        }
+
+        var input = container.querySelector("input");
+        if (!input) {
+            return;
+        }
+
+        if (typeof input.focus === "function") {
+            input.focus();
+        }
+
+        if (typeof input.select === "function") {
+            input.select();
+        }
+    };
+
 })();
