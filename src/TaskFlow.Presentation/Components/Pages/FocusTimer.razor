@@ -1,0 +1,123 @@
+@page "/focus-timer"
+@using Task = System.Threading.Tasks.Task
+@implements IDisposable
+@inject ISnackbar Snackbar
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Focus Timer</PageTitle>
+
+<div class="tf-home">
+    <section class="tf-main">
+        <header class="tf-toolbar">
+            <div>
+                <MudText Typo="Typo.h5">Focus Timer</MudText>
+                <MudText Typo="Typo.caption">Single-task work session</MudText>
+            </div>
+        </header>
+
+        <MudPaper Class="tf-focus-timer tf-focus-timer-page" Elevation="0">
+            <MudText Typo="Typo.subtitle2">Session</MudText>
+            <MudText Typo="Typo.h4">@timerRemaining.ToString(@"mm\:ss")</MudText>
+            <MudSelect T="int" Value="selectedTimerMinutes" ValueChanged="OnTimerPresetChangedAsync" Label="Duration" Dense="true" Variant="Variant.Outlined">
+                <MudSelectItem Value="5">5 mins</MudSelectItem>
+                <MudSelectItem Value="15">15 mins</MudSelectItem>
+                <MudSelectItem Value="30">30 mins</MudSelectItem>
+                <MudSelectItem Value="60">60 mins</MudSelectItem>
+            </MudSelect>
+            <MudStack Row="true" Spacing="1">
+                <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="StartTimerAsync" Disabled="@timerRunning">Start</MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="PauseTimer" Disabled="@(!timerRunning)">Pause</MudButton>
+                <MudButton Variant="Variant.Text" OnClick="ResetTimer">Reset</MudButton>
+            </MudStack>
+        </MudPaper>
+    </section>
+</div>
+
+@code {
+    private int selectedTimerMinutes = 30;
+    private TimeSpan timerRemaining = TimeSpan.FromMinutes(30);
+    private bool timerRunning;
+    private PeriodicTimer timer;
+    private CancellationTokenSource timerCts;
+
+    private Task OnTimerPresetChangedAsync(int minutes)
+    {
+        this.selectedTimerMinutes = minutes;
+        if (!this.timerRunning)
+        {
+            this.timerRemaining = TimeSpan.FromMinutes(minutes);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task StartTimerAsync()
+    {
+        if (this.timerRunning)
+        {
+            return;
+        }
+
+        this.timerRunning = true;
+        this.timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        this.timerCts = new CancellationTokenSource();
+        await PlayTimerBeepAsync("start");
+        _ = RunTimerAsync(this.timer, this.timerCts.Token);
+    }
+
+    private async Task RunTimerAsync(PeriodicTimer localTimer, CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (await localTimer.WaitForNextTickAsync(cancellationToken))
+            {
+                if (this.timerRemaining <= TimeSpan.Zero)
+                {
+                    this.timerRunning = false;
+                    this.Snackbar.Add("Focus session complete.", Severity.Success);
+                    await PlayTimerBeepAsync("finish");
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                this.timerRemaining -= TimeSpan.FromSeconds(1);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private void PauseTimer()
+    {
+        this.timerRunning = false;
+        this.timerCts?.Cancel();
+        this.timer?.Dispose();
+        this.timer = null;
+    }
+
+    private void ResetTimer()
+    {
+        PauseTimer();
+        this.timerRemaining = TimeSpan.FromMinutes(this.selectedTimerMinutes);
+    }
+
+    private async Task PlayTimerBeepAsync(string eventType)
+    {
+        try
+        {
+            await this.JsRuntime.InvokeVoidAsync("taskflowAudio.beep", eventType);
+        }
+        catch
+        {
+        }
+    }
+
+    public void Dispose()
+    {
+        this.timerCts?.Cancel();
+        this.timer?.Dispose();
+        this.timerCts?.Dispose();
+    }
+}

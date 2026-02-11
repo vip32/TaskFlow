@@ -1,79 +1,105 @@
 @using TaskFlow.Presentation.Components.Pages
 @implements IDisposable
 @inject IProjectOrchestrator ProjectOrchestrator
+@inject IMyTaskFlowSectionOrchestrator MyTaskFlowSectionOrchestrator
+@inject ITaskOrchestrator TaskOrchestrator
+@inject NavigationManager NavigationManager
 
-<MudDrawerHeader>
-    <div class="tf-drawer-brand">
-        <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Medium" />
-        <div>
-            <div class="tf-drawer-brand-title">TaskFlow</div>
-            <div class="tf-drawer-brand-subtitle">Execution First</div>
-        </div>
+<div class="tf-drawer-root">
+    <div class="tf-drawer-top">
+        @if (AppState.MyTaskFlowSections.Count > 0)
+        {
+            <MudText Typo="Typo.caption" Class="tf-drawer-caption">My Task Flow</MudText>
+            @foreach (var flowSection in AppState.MyTaskFlowSections)
+            {
+                var isActive = AppState.SelectedSectionId == flowSection.Id;
+                <MudButton FullWidth="true"
+                           Variant="@(isActive ? Variant.Filled : Variant.Text)"
+                           Color="@(isActive ? Color.Primary : Color.Default)"
+                           Class="tf-drawer-button"
+                           OnClick="() => SelectSection(flowSection.Id)">
+                    @flowSection.Name
+                </MudButton>
+            }
+        }
+
+        @if (AppState.Projects.Count > 0)
+        {
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.caption" Class="tf-drawer-caption">Projects</MudText>
+            @foreach (var project in AppState.Projects)
+            {
+                var isActive = AppState.SelectedProjectId == project.Id;
+                <MudButton FullWidth="true"
+                           Variant="@(isActive ? Variant.Filled : Variant.Text)"
+                           Color="@(isActive ? Color.Primary : Color.Default)"
+                           Class="tf-drawer-button"
+                           OnClick="() => SelectProject(project.Id)">
+                    <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
+                    <span class="tf-project-dot" style="@($"background:{project.Color};")"></span>
+                    <span class="tf-drawer-project-name">@project.Name</span>
+                    <MudBadge Class="tf-project-count" Color="Color.Info" Content="@AppState.GetProjectTaskCount(project.Id)" />
+                </MudButton>
+            }
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2" Spacing="1">
+                <MudTextField @bind-Value="newProjectName"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              Placeholder="New project"
+                              Class="tf-drawer-input"
+                              OnKeyDown="HandleCreateProjectKeyDown" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateProjectAsync">Create</MudButton>
+            </MudStack>
+        }
     </div>
-</MudDrawerHeader>
 
-<MudNavMenu>
-    <MudNavLink Href="" Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All">Home</MudNavLink>
-</MudNavMenu>
+    <div class="tf-drawer-spacer"></div>
 
-@if (AppState.MyTaskFlowSections.Count > 0)
-{
-    <MudDivider Class="my-2" />
-    <MudText Typo="Typo.caption" Class="tf-drawer-caption">My Task Flow</MudText>
-    @foreach (var flowSection in AppState.MyTaskFlowSections)
-    {
-        var isActive = AppState.SelectedSectionId == flowSection.Id;
-        <MudButton FullWidth="true"
-                   Variant="@(isActive ? Variant.Filled : Variant.Text)"
-                   Color="@(isActive ? Color.Primary : Color.Default)"
-                   Class="tf-drawer-button"
-                   OnClick="() => AppState.SelectSection(flowSection.Id)">
-            @flowSection.Name
-        </MudButton>
-    }
-}
-
-@if (AppState.Projects.Count > 0)
-{
-    <MudDivider Class="my-2" />
-    <MudText Typo="Typo.caption" Class="tf-drawer-caption">Projects</MudText>
-    @foreach (var project in AppState.Projects)
-    {
-        var isActive = AppState.SelectedProjectId == project.Id;
-        <MudButton FullWidth="true"
-                   Variant="@(isActive ? Variant.Filled : Variant.Text)"
-                   Color="@(isActive ? Color.Primary : Color.Default)"
-                   Class="tf-drawer-button"
-                   OnClick="() => AppState.SelectProject(project.Id)">
-            <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
-            <span class="tf-project-dot" style="@($"background:{project.Color};")"></span>
-            <span class="tf-drawer-project-name">@project.Name</span>
-            <MudBadge Class="tf-project-count" Color="Color.Info" Content="@AppState.GetProjectTaskCount(project.Id)" />
-        </MudButton>
-    }
-
-    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2" Spacing="1">
-        <MudTextField @bind-Value="newProjectName"
-                      Variant="Variant.Outlined"
-                      Margin="Margin.Dense"
-                      Immediate="true"
-                      Placeholder="New project"
-                      Class="tf-drawer-input"
-                      OnKeyDown="HandleCreateProjectKeyDown" />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateProjectAsync">Create</MudButton>
-    </MudStack>
-}
+    <div class="tf-drawer-bottom">
+        <MudDivider Class="mb-2" />
+        <MudNavLink Href="focus-timer" Icon="@Icons.Material.Filled.Timer" Match="NavLinkMatch.Prefix" Class="tf-drawer-navlink">
+            Focus Timer
+        </MudNavLink>
+        <MudNavLink Href="settings" Icon="@Icons.Material.Filled.Settings" Match="NavLinkMatch.Prefix" Class="tf-drawer-navlink">
+            Settings
+        </MudNavLink>
+        <MudNavLink Href="about" Icon="@Icons.Material.Filled.Info" Match="NavLinkMatch.Prefix" Class="tf-drawer-navlink">
+            About
+        </MudNavLink>
+    </div>
+</div>
 
 @code {
     [CascadingParameter]
     public AppState AppState { get; set; } = null!;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         this.AppState.Changed += OnStateChanged;
+        await EnsureNavigationLoadedAsync();
     }
 
     private string newProjectName = string.Empty;
+
+    private void SelectSection(Guid sectionId)
+    {
+        this.AppState.SelectSection(sectionId);
+        if (!this.NavigationManager.Uri.EndsWith("/", StringComparison.OrdinalIgnoreCase))
+        {
+            this.NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private void SelectProject(Guid projectId)
+    {
+        this.AppState.SelectProject(projectId);
+        if (!this.NavigationManager.Uri.EndsWith("/", StringComparison.OrdinalIgnoreCase))
+        {
+            this.NavigationManager.NavigateTo("/");
+        }
+    }
 
     private async Task CreateProjectAsync()
     {
@@ -90,6 +116,38 @@
         updatedCounts[created.Id] = 0;
         this.AppState.SetNavigationData(updatedProjects, this.AppState.MyTaskFlowSections.ToList(), updatedCounts);
         this.AppState.SelectProject(created.Id);
+    }
+
+    private async Task EnsureNavigationLoadedAsync()
+    {
+        if (this.AppState.Projects.Count > 0 || this.AppState.MyTaskFlowSections.Count > 0)
+        {
+            return;
+        }
+
+        var projects = (await this.ProjectOrchestrator.GetAllAsync()).OrderBy(project => project.CreatedAt).ToList();
+        var sections = await this.MyTaskFlowSectionOrchestrator.GetAllAsync();
+        var counts = await BuildProjectTaskCountsAsync(projects);
+        this.AppState.SetNavigationData(projects, sections, counts);
+    }
+
+    private async Task<Dictionary<Guid, int>> BuildProjectTaskCountsAsync(IReadOnlyList<TaskFlow.Domain.Project> projects)
+    {
+        var counts = new Dictionary<Guid, int>();
+        foreach (var project in projects)
+        {
+            var projectTasks = await this.TaskOrchestrator.GetByProjectIdAsync(project.Id);
+            var count = projectTasks.Count(task => !task.IsCompleted);
+            foreach (var task in projectTasks)
+            {
+                var subtasks = await this.TaskOrchestrator.GetSubTasksAsync(task.Id);
+                count += subtasks.Count(subTask => !subTask.IsCompleted);
+            }
+
+            counts[project.Id] = count;
+        }
+
+        return counts;
     }
 
     private async Task HandleCreateProjectKeyDown(KeyboardEventArgs args)
