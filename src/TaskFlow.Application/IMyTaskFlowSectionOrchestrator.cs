@@ -61,4 +61,12 @@ public interface IMyTaskFlowSectionOrchestrator
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Tasks included in section.</returns>
     Task<List<Domain.Task>> GetSectionTasksAsync(Guid sectionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolves tasks shown for a provided section definition.
+    /// </summary>
+    /// <param name="section">Section definition to evaluate.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Tasks included in section.</returns>
+    Task<List<Domain.Task>> GetSectionTasksAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default);
 }

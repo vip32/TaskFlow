@@ -68,6 +68,14 @@ public sealed class MyTaskFlowSectionOrchestrator : IMyTaskFlowSectionOrchestrat
     public async Task<List<Domain.Task>> GetSectionTasksAsync(Guid sectionId, CancellationToken cancellationToken = default)
     {
         var section = await this.sectionRepository.GetByIdAsync(sectionId, cancellationToken);
+        return await GetSectionTasksAsync(section, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<Domain.Task>> GetSectionTasksAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(section);
+
         var allTasks = await this.taskRepository.GetAllAsync(cancellationToken);
 
         var timeZone = TimeZoneInfo.FindSystemTimeZoneById(this.currentSubscriptionAccessor.GetCurrentSubscription().TimeZoneId);

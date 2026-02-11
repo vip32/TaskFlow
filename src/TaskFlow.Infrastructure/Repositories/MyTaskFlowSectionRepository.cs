@@ -50,6 +50,12 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
 
         if (section is null)
         {
+            section = await db.MyTaskFlowSections
+                .FirstOrDefaultAsync(candidate => candidate.Id == sectionId, cancellationToken);
+        }
+
+        if (section is null)
+        {
             throw new KeyNotFoundException($"Section with id '{sectionId}' was not found.");
         }
 

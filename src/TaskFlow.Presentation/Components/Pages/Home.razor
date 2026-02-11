@@ -326,6 +326,13 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (this.loadedProjectId != this.AppState.SelectedProjectId
+            || this.loadedSectionId != this.AppState.SelectedSectionId)
+        {
+            await ApplySelectionAsync();
+            return;
+        }
+
         if (!this.pendingSubTaskFocusParentId.HasValue)
         {
             return;
@@ -400,7 +407,15 @@
 
     private async Task LoadSectionTasksAsync(Guid sectionId)
     {
-        this.activeTasks = await this.MyTaskFlowSectionOrchestrator.GetSectionTasksAsync(sectionId);
+        var section = this.AppState.MyTaskFlowSections.FirstOrDefault(item => item.Id == sectionId);
+        if (section is null)
+        {
+            this.activeTasks.Clear();
+            this.subTasksByParent.Clear();
+            return;
+        }
+
+        this.activeTasks = await this.MyTaskFlowSectionOrchestrator.GetSectionTasksAsync(section);
         this.subTasksByParent.Clear();
         foreach (var task in this.activeTasks.Where(x => !x.ParentTaskId.HasValue))
         {
