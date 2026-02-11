@@ -1,12 +1,12 @@
 using TaskFlow.Domain;
 using DomainTask = TaskFlow.Domain.Task;
 
-namespace TaskFlow.UnitTests;
+namespace TaskFlow.UnitTests.Domain;
 
 /// <summary>
 /// Tests task aggregate domain behavior.
 /// </summary>
-public class TaskDomainTests
+public class TaskTests
 {
     [Fact]
     public void Constructor_TitleTooLong_ThrowsArgumentException()
@@ -27,9 +27,6 @@ public class TaskDomainTests
         Assert.Null(task.Note);
     }
 
-    /// <summary>
-    /// Verifies task can be created unassigned.
-    /// </summary>
     [Fact]
     public void Constructor_EmptyProjectId_CreatesUnassignedTask()
     {
@@ -39,9 +36,15 @@ public class TaskDomainTests
         Assert.Null(task.ProjectId);
     }
 
-    /// <summary>
-    /// Verifies assigning and unassigning cascades to subtasks.
-    /// </summary>
+    [Fact]
+    public void AddSubTask_MismatchedSubscription_ThrowsInvalidOperationException()
+    {
+        var parent = new DomainTask(Guid.NewGuid(), "Parent", Guid.NewGuid());
+        var subTask = new DomainTask(Guid.NewGuid(), "Child", parent.ProjectId);
+
+        Assert.Throws<InvalidOperationException>(() => parent.AddSubTask(subTask));
+    }
+
     [Fact]
     public void AssignAndUnassign_SubTasks_CascadeProjectAssociation()
     {
@@ -60,9 +63,6 @@ public class TaskDomainTests
         Assert.Null(child.ProjectId);
     }
 
-    /// <summary>
-    /// Verifies due date-time is converted to UTC.
-    /// </summary>
     [Fact]
     public void SetDueDateTime_ValidInput_SetsUtcInstant()
     {
@@ -80,9 +80,6 @@ public class TaskDomainTests
         Assert.NotEqual(DateTime.MinValue, task.DueAtUtc);
     }
 
-    /// <summary>
-    /// Verifies relative reminder requires due date-time.
-    /// </summary>
     [Fact]
     public void AddRelativeReminder_NoDueDateTime_ThrowsInvalidOperationException()
     {
@@ -91,9 +88,6 @@ public class TaskDomainTests
         Assert.Throws<InvalidOperationException>(() => task.AddRelativeReminder(15));
     }
 
-    /// <summary>
-    /// Verifies relative reminder trigger is computed from due UTC instant.
-    /// </summary>
     [Fact]
     public void AddRelativeReminder_DueDateTime_SetsExpectedTrigger()
     {
@@ -103,13 +97,10 @@ public class TaskDomainTests
 
         var reminder = task.AddRelativeReminder(15);
 
-        Assert.Equal(task.DueAtUtc.Value.AddMinutes(-15), reminder.TriggerAtUtc);
+        Assert.Equal(task.DueAtUtc!.Value.AddMinutes(-15), reminder.TriggerAtUtc);
         Assert.Contains(task.Reminders, existing => existing.Id == reminder.Id);
     }
 
-    /// <summary>
-    /// Verifies date-only reminder mode uses fallback local time.
-    /// </summary>
     [Fact]
     public void AddDateOnlyReminder_DueDateOnly_SetsReminder()
     {
@@ -123,9 +114,6 @@ public class TaskDomainTests
         Assert.Equal(new TimeOnly(9, 0), reminder.FallbackLocalTime);
     }
 
-    /// <summary>
-    /// Verifies new subtasks receive incremental sibling sort order.
-    /// </summary>
     [Fact]
     public void AddSubTask_AppendsWithIncrementalSortOrder()
     {
@@ -141,9 +129,6 @@ public class TaskDomainTests
         Assert.Equal(1, second.SortOrder);
     }
 
-    /// <summary>
-    /// Verifies sort order cannot be negative.
-    /// </summary>
     [Fact]
     public void SetSortOrder_Negative_ThrowsArgumentException()
     {

@@ -2,21 +2,74 @@ using TaskFlow.Application;
 using TaskFlow.Domain;
 using DomainTask = TaskFlow.Domain.Task;
 
-namespace TaskFlow.UnitTests;
+namespace TaskFlow.UnitTests.Application;
 
-/// <summary>
-/// Tests My Task Flow section orchestration behavior.
-/// </summary>
 public class MyTaskFlowSectionOrchestratorTests
 {
-    /// <summary>
-    /// Verifies section tasks are resolved using rules and manual curation.
-    /// </summary>
+    [Fact]
+    public async System.Threading.Tasks.Task GetAllAsync_ForwardsToRepository()
+    {
+        var subscription = CreateSubscription();
+        var first = new MyTaskFlowSection(subscription.Id, "A", 1);
+        var second = new MyTaskFlowSection(subscription.Id, "B", 2);
+        var repository = new FakeSectionRepository(first, second);
+
+        var sut = new MyTaskFlowSectionOrchestrator(repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
+        var result = await sut.GetAllAsync();
+
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task CreateAsync_UsesCurrentSubscription()
+    {
+        var subscription = CreateSubscription();
+        var repository = new FakeSectionRepository();
+        var sut = new MyTaskFlowSectionOrchestrator(repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
+
+        var created = await sut.CreateAsync("Custom", 3);
+
+        Assert.Equal(subscription.Id, created.SubscriptionId);
+        Assert.Equal(1, repository.AddCallCount);
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task UpdateRuleAsync_UpdatesAndPersists()
+    {
+        var subscription = CreateSubscription();
+        var section = new MyTaskFlowSection(subscription.Id, "Custom", 1);
+        var repository = new FakeSectionRepository(section);
+        var sut = new MyTaskFlowSectionOrchestrator(repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
+
+        var updated = await sut.UpdateRuleAsync(section.Id, TaskFlowDueBucket.Upcoming, true, false, false, false);
+
+        Assert.Equal(TaskFlowDueBucket.Upcoming, updated.DueBucket);
+        Assert.False(updated.IncludeUnassignedTasks);
+        Assert.Equal(1, repository.UpdateCallCount);
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task IncludeAndRemoveTaskAsync_PersistsMembership()
+    {
+        var subscription = CreateSubscription();
+        var section = new MyTaskFlowSection(subscription.Id, "Custom", 1);
+        var taskId = Guid.NewGuid();
+        var repository = new FakeSectionRepository(section);
+        var sut = new MyTaskFlowSectionOrchestrator(repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
+
+        await sut.IncludeTaskAsync(section.Id, taskId);
+        var afterInclude = await repository.GetByIdAsync(section.Id);
+        Assert.Contains(afterInclude.ManualTasks, x => x.TaskId == taskId);
+
+        await sut.RemoveTaskAsync(section.Id, taskId);
+        var afterRemove = await repository.GetByIdAsync(section.Id);
+        Assert.DoesNotContain(afterRemove.ManualTasks, x => x.TaskId == taskId);
+    }
+
     [Fact]
     public async System.Threading.Tasks.Task GetSectionTasksAsync_RuleAndManualMembership_ReturnsExpectedTasks()
     {
-        var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true, "Europe/Berlin");
-        subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
+        var subscription = CreateSubscription();
 
         var todaySection = MyTaskFlowSection.CreateSystem(subscription.Id, "Today", 1, TaskFlowDueBucket.Today);
         var dueTask = new DomainTask(subscription.Id, "Due", Guid.NewGuid());
@@ -29,25 +82,19 @@ public class MyTaskFlowSectionOrchestratorTests
 
         var sectionRepository = new FakeSectionRepository(todaySection);
         var taskRepository = new FakeTaskRepository(dueTask, manualTask);
-        var accessor = new FakeCurrentSubscriptionAccessor(subscription);
-        var orchestrator = new MyTaskFlowSectionOrchestrator(sectionRepository, taskRepository, accessor);
+        var sut = new MyTaskFlowSectionOrchestrator(sectionRepository, taskRepository, new FakeCurrentSubscriptionAccessor(subscription));
 
-        var tasks = await orchestrator.GetSectionTasksAsync(todaySection.Id);
+        var tasks = await sut.GetSectionTasksAsync(todaySection.Id);
 
         Assert.Equal(2, tasks.Count);
         Assert.Contains(tasks, task => task.Id == dueTask.Id);
         Assert.Contains(tasks, task => task.Id == manualTask.Id);
     }
 
-    /// <summary>
-    /// Verifies important section returns only starred tasks.
-    /// </summary>
     [Fact]
     public async System.Threading.Tasks.Task GetSectionTasksAsync_ImportantSection_ReturnsOnlyImportantTasks()
     {
-        var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true, "Europe/Berlin");
-        subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
-
+        var subscription = CreateSubscription();
         var importantSection = MyTaskFlowSection.CreateSystem(subscription.Id, "Important", 2, TaskFlowDueBucket.Important);
 
         var starredTask = new DomainTask(subscription.Id, "Starred", Guid.NewGuid());
@@ -57,13 +104,19 @@ public class MyTaskFlowSectionOrchestratorTests
 
         var sectionRepository = new FakeSectionRepository(importantSection);
         var taskRepository = new FakeTaskRepository(starredTask, regularTask);
-        var accessor = new FakeCurrentSubscriptionAccessor(subscription);
-        var orchestrator = new MyTaskFlowSectionOrchestrator(sectionRepository, taskRepository, accessor);
+        var sut = new MyTaskFlowSectionOrchestrator(sectionRepository, taskRepository, new FakeCurrentSubscriptionAccessor(subscription));
 
-        var tasks = await orchestrator.GetSectionTasksAsync(importantSection.Id);
+        var tasks = await sut.GetSectionTasksAsync(importantSection);
 
         Assert.Single(tasks);
         Assert.Equal(starredTask.Id, tasks[0].Id);
+    }
+
+    private static Subscription CreateSubscription()
+    {
+        var subscription = new Subscription(Guid.NewGuid(), "Test", SubscriptionTier.Free, true, "Europe/Berlin");
+        subscription.AddOpenEndedSchedule(DateOnly.FromDateTime(DateTime.UtcNow));
+        return subscription;
     }
 
     private sealed class FakeCurrentSubscriptionAccessor : ICurrentSubscriptionAccessor
@@ -93,9 +146,13 @@ public class MyTaskFlowSectionOrchestratorTests
             }
         }
 
+        public int AddCallCount { get; private set; }
+
+        public int UpdateCallCount { get; private set; }
+
         public Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return System.Threading.Tasks.Task.FromResult(this.sections.Values.ToList());
+            return System.Threading.Tasks.Task.FromResult(this.sections.Values.OrderBy(x => x.SortOrder).ToList());
         }
 
         public Task<MyTaskFlowSection> GetByIdAsync(Guid sectionId, CancellationToken cancellationToken = default)
@@ -105,12 +162,14 @@ public class MyTaskFlowSectionOrchestratorTests
 
         public Task<MyTaskFlowSection> AddAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
         {
+            this.AddCallCount++;
             this.sections[section.Id] = section;
             return System.Threading.Tasks.Task.FromResult(section);
         }
 
         public Task<MyTaskFlowSection> UpdateAsync(MyTaskFlowSection section, CancellationToken cancellationToken = default)
         {
+            this.UpdateCallCount++;
             this.sections[section.Id] = section;
             return System.Threading.Tasks.Task.FromResult(section);
         }

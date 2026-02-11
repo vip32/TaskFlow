@@ -1,7 +1,7 @@
 using TaskFlow.Domain;
 using DomainTask = TaskFlow.Domain.Task;
 
-namespace TaskFlow.UnitTests;
+namespace TaskFlow.UnitTests.Domain;
 
 /// <summary>
 /// Tests My Task Flow section rule and manual curation behavior.

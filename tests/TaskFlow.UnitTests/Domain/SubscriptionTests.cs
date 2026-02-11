@@ -1,6 +1,6 @@
 using TaskFlow.Domain;
 
-namespace TaskFlow.UnitTests;
+namespace TaskFlow.UnitTests.Domain;
 
 /// <summary>
 /// Tests subscription aggregate behavior.

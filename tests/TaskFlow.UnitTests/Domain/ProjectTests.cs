@@ -1,8 +1,8 @@
 using TaskFlow.Domain;
 
-namespace TaskFlow.UnitTests;
+namespace TaskFlow.UnitTests.Domain;
 
-public class ProjectDomainTests
+public class ProjectTests
 {
     [Fact]
     public void Constructor_NameTooLong_ThrowsArgumentException()
@@ -20,5 +20,14 @@ public class ProjectDomainTests
         project.UpdateNote(" ");
 
         Assert.Null(project.Note);
+    }
+
+    [Fact]
+    public void AddTask_MismatchedSubscription_ThrowsInvalidOperationException()
+    {
+        var project = new Project(Guid.NewGuid(), "Work", "#40E0D0", "work");
+        var task = new TaskFlow.Domain.Task(Guid.NewGuid(), "Task", project.Id);
+
+        Assert.Throws<InvalidOperationException>(() => project.AddTask(task));
     }
 }
