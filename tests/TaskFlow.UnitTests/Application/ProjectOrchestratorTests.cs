@@ -21,6 +21,19 @@ public class ProjectOrchestratorTests
     }
 
     [Fact]
+    public async System.Threading.Tasks.Task GetByIdAsync_ForwardsToRepository()
+    {
+        var subscription = CreateSubscription();
+        var existing = new Project(subscription.Id, "One", "#111111", "work");
+        var repository = new FakeProjectRepository(existing);
+        var sut = new ProjectOrchestrator(repository, new FakeCurrentSubscriptionAccessor(subscription));
+
+        var result = await sut.GetByIdAsync(existing.Id);
+
+        Assert.Equal(existing.Id, result.Id);
+    }
+
+    [Fact]
     public async System.Threading.Tasks.Task CreateAsync_ValidInput_PersistsProjectWithCurrentSubscription()
     {
         var subscription = CreateSubscription();

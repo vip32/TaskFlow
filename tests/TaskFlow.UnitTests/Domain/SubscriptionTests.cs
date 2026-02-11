@@ -7,6 +7,14 @@ namespace TaskFlow.UnitTests.Domain;
 /// </summary>
 public class SubscriptionTests
 {
+    [Fact]
+    public void Constructor_InvalidArguments_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => new Subscription(Guid.Empty, "Name", SubscriptionTier.Free, true));
+        Assert.Throws<ArgumentException>(() => new Subscription(Guid.NewGuid(), " ", SubscriptionTier.Free, true));
+        Assert.Throws<ArgumentException>(() => new Subscription(Guid.NewGuid(), "Name", SubscriptionTier.Free, true, " "));
+    }
+
     /// <summary>
     /// Verifies tier transitions work as expected.
     /// </summary>
@@ -74,5 +82,28 @@ public class SubscriptionTests
         var subscription = new Subscription("Starter", SubscriptionTier.Free);
 
         Assert.Throws<ArgumentException>(() => subscription.SetTimeZone("invalid/timezone"));
+    }
+
+    [Fact]
+    public void EnableAfterDisable_ActiveAgainWhenScheduleMatches()
+    {
+        var subscription = new Subscription("Starter", SubscriptionTier.Free);
+        subscription.AddOpenEndedSchedule(new DateOnly(2026, 1, 1));
+        subscription.Disable();
+        subscription.Enable();
+
+        var isActive = subscription.IsActiveAt(new DateOnly(2026, 1, 2));
+
+        Assert.True(isActive);
+    }
+
+    [Fact]
+    public void IsActiveAt_NoSchedules_ReturnsFalse()
+    {
+        var subscription = new Subscription("Starter", SubscriptionTier.Free);
+
+        var isActive = subscription.IsActiveAt(new DateOnly(2026, 1, 10));
+
+        Assert.False(isActive);
     }
 }

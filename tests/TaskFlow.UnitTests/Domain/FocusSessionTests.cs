@@ -29,4 +29,36 @@ public class FocusSessionTests
 
         Assert.Throws<ArgumentException>(() => session.AttachToTask(Guid.Empty));
     }
+
+    [Fact]
+    public void Constructor_WithTask_AssignsTaskId()
+    {
+        var taskId = Guid.NewGuid();
+        var session = new FocusSession(Guid.NewGuid(), taskId);
+
+        Assert.Equal(taskId, session.TaskId);
+        Assert.False(session.IsCompleted);
+    }
+
+    [Fact]
+    public void End_MarksSessionCompleted()
+    {
+        var session = new FocusSession(Guid.NewGuid());
+
+        session.End();
+
+        Assert.True(session.IsCompleted);
+        Assert.NotEqual(DateTime.MinValue, session.EndedAt);
+    }
+
+    [Fact]
+    public void AttachToTask_AssignsTaskId()
+    {
+        var session = new FocusSession(Guid.NewGuid());
+        var taskId = Guid.NewGuid();
+
+        session.AttachToTask(taskId);
+
+        Assert.Equal(taskId, session.TaskId);
+    }
 }
