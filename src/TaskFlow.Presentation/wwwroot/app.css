@@ -27,7 +27,7 @@ a {
 }
 
 .tf-main-content {
-    padding: 1rem;
+    padding: 5.5rem 1rem 1rem;
 }
 
 .tf-app-drawer {
@@ -275,6 +275,10 @@ a {
 }
 
 @media (max-width: 1024px) {
+    .tf-main-content {
+        padding-top: 4.75rem;
+    }
+
     .tf-filters {
         grid-template-columns: 1fr 1fr;
     }
