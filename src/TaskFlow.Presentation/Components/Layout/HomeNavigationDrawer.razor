@@ -36,7 +36,7 @@
                            Class="tf-drawer-button"
                            OnClick="() => SelectProject(project.Id)">
                     <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
-                    <span class="tf-project-dot" style="@($"background:{project.Color};")"></span>
+                    <MudIcon Icon="@Icons.Material.Filled.Circle" Size="Size.Small" Color="@ResolveProjectColor(project.Color)" Class="tf-project-dot" />
                     <span class="tf-drawer-project-name">@project.Name</span>
                     <MudBadge Class="tf-project-count" Color="Color.Info" Content="@AppState.GetProjectTaskCount(project.Id)" />
                 </MudButton>
@@ -108,7 +108,7 @@
             return;
         }
 
-        var created = await this.ProjectOrchestrator.CreateAsync(this.newProjectName, "#2D9CFF", "folder");
+        var created = await this.ProjectOrchestrator.CreateAsync(this.newProjectName, ResolveProjectColorValue(Color.Primary), "folder");
         this.newProjectName = string.Empty;
 
         var updatedProjects = this.AppState.Projects.Concat([created]).OrderBy(project => project.CreatedAt).ToList();
@@ -167,6 +167,35 @@
             "code" => Icons.Material.Filled.Code,
             "flag" => Icons.Material.Filled.Flag,
             _ => Icons.Material.Filled.Folder,
+        };
+    }
+
+    private static Color ResolveProjectColor(string color)
+    {
+        return color?.ToLowerInvariant() switch
+        {
+            "primary" or "#2d9cff" => Color.Primary,
+            "success" or "#10b981" or "#30c76a" => Color.Success,
+            "warning" or "#f57c00" or "#f2b01e" or "#f97316" => Color.Warning,
+            "error" or "#ff6b6b" or "#ef4b6c" => Color.Error,
+            "info" or "#14b8a6" => Color.Info,
+            "secondary" or "#9b5de5" => Color.Secondary,
+            "dark" or "#64748b" => Color.Dark,
+            _ => Color.Primary,
+        };
+    }
+
+    private static string ResolveProjectColorValue(Color color)
+    {
+        return color switch
+        {
+            Color.Success => "success",
+            Color.Warning => "warning",
+            Color.Error => "error",
+            Color.Info => "info",
+            Color.Secondary => "secondary",
+            Color.Dark => "dark",
+            _ => "primary",
         };
     }
 

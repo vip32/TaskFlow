@@ -27,7 +27,7 @@
                                   Margin="Margin.Dense"
                                   TextUpdateSuppression="false"
                                   OnKeyUp="args => HandleCreateTaskKeyUp(status, args)" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="() => CreateTaskInStatusAsync(status)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" aria-label="Add task" title="Add task" OnClick="() => CreateTaskInStatusAsync(status)" />
                 </MudStack>
             </MudPaper>
         }
@@ -36,7 +36,7 @@
         <MudPaper Elevation="2" Class="pa-3 ma-2">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                 <MudText Typo="Typo.body1">@context.Title</MudText>
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="() => OnEditTaskRequested.Invoke(context.Id)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" aria-label="Edit task" title="Edit task" OnClick="() => OnEditTaskRequested.Invoke(context.Id)" />
             </MudStack>
         </MudPaper>
     </ItemRenderer>

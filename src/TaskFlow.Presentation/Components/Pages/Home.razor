@@ -7,6 +7,7 @@
 @inject ITaskOrchestrator TaskOrchestrator
 @inject IMyTaskFlowSectionOrchestrator MyTaskFlowSectionOrchestrator
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @inject IJSRuntime JsRuntime
 
 <PageTitle>TaskFlow</PageTitle>
@@ -28,10 +29,10 @@
                         <MudButton Variant="Variant.Outlined" OnClick="ToggleProjectViewAsync">@ViewToggleLabel</MudButton>
                     </MudTooltip>
                     <MudTooltip Text="Edit project">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="OpenEditProjectDialogAsync" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="Edit project" title="Edit project" OnClick="OpenEditProjectDialogAsync" />
                     </MudTooltip>
                     <MudTooltip Text="Delete project">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteProjectDialog">Delete Project</MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteProjectDialogAsync">Delete Project</MudButton>
                     </MudTooltip>
                 }
             </MudStack>
@@ -90,14 +91,24 @@
             </MudTooltip>
         </MudPaper>
 
-        @if (selectedProject?.ViewType == ProjectViewType.Board)
+        @if (isLoading)
+        {
+            <MudProgressLinear Class="mb-3" Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (!string.IsNullOrWhiteSpace(loadError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">
+                @loadError
+                <MudButton Variant="Variant.Text" Class="ml-2" OnClick="ReloadAllAsync">Retry</MudButton>
+            </MudAlert>
+        }
+        else if (selectedProject?.ViewType == ProjectViewType.Board)
         {
             <TaskBoardView BoardStatuses="boardStatuses"
                            GetBoardTasks="GetBoardTasks"
                            OnDropTaskToStatus="HandleBoardDropAsync"
                            OnCreateTaskInStatus="CreateTaskInStatusAsync"
-                           OnEditTaskRequested="OpenBoardTaskDialog"
-                           />
+                           OnEditTaskRequested="OpenBoardTaskDialog" />
         }
         else
         {
@@ -124,20 +135,6 @@
     </div>
 }
 
-@if (showDeleteProjectDialog)
-{
-    <div class="tf-shortcuts-backdrop" @onclick="CloseDeleteProjectDialog">
-        <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true">
-            <MudText Typo="Typo.h6">Delete this project?</MudText>
-            <p>This will remove the project and its tasks.</p>
-            <MudStack Row="true" Spacing="1" Class="mt-3">
-                <MudButton Variant="Variant.Outlined" OnClick="CloseDeleteProjectDialog">Cancel</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteProjectAsync">Delete</MudButton>
-            </MudStack>
-        </MudPaper>
-    </div>
-}
-
 @code {
     private const int MaxUndoActions = 20;
 
@@ -153,23 +150,8 @@
     private readonly Dictionary<Guid, List<TaskFlow.Domain.Task>> subTasksByParent = [];
     private readonly Dictionary<Guid, string> newSubTaskTitles = [];
     private readonly Stack<UndoAction> undoActions = new();
-    private readonly (string Hex, string Name)[] projectColorOptions =
-    [
-        ("#2D9CFF", "Ocean Blue"),
-        ("#30C76A", "Mint Green"),
-        ("#F2B01E", "Amber"),
-        ("#EF4B6C", "Coral Red"),
-        ("#9B5DE5", "Violet"),
-        ("#14B8A6", "Teal"),
-        ("#F97316", "Orange"),
-        ("#64748B", "Slate"),
-    ];
-
     private List<TaskFlow.Domain.Task> activeTasks = [];
     private Guid? selectedTaskId;
-    private string editProjectName = string.Empty;
-    private string editProjectColor = "#2D9CFF";
-    private string editProjectIcon = "folder";
     private string newTaskTitle = string.Empty;
     private TaskPriority newTaskPriority = TaskPriority.Medium;
     private string searchQuery = string.Empty;
@@ -177,21 +159,17 @@
     private DomainTaskStatus? statusFilter;
     private bool showCompleted;
     private bool showShortcuts;
-    private bool showDeleteProjectDialog;
-    private bool showEditProjectDialog;
-    private bool showMoveTaskDialog;
     private bool showBoardTaskDialog;
     private bool isApplyingUndo;
+    private bool isLoading;
     private SortMode sortMode = SortMode.CreatedDesc;
+    private string loadError;
     private MudTextField<string> newTaskInputRef;
     private MudTextField<string> searchInputRef;
-    private Guid? moveTaskId;
-    private Guid? moveTargetProjectId;
     private Guid? boardTaskId;
     private Guid? pendingSubTaskFocusParentId;
     private Guid? loadedProjectId;
     private Guid? loadedSectionId;
-    private DotNetObjectReference<Home> editProjectDialogCloserRef;
 
     private sealed record UndoAction(string Description, Func<Task> UndoAsync);
 
@@ -294,12 +272,25 @@
 
     private async Task ReloadAllAsync()
     {
-        var projects = (await this.ProjectOrchestrator.GetAllAsync()).OrderBy(project => project.CreatedAt).ToList();
-        var myTaskFlowSections = await this.MyTaskFlowSectionOrchestrator.GetAllAsync();
-        var taskCounts = await BuildProjectTaskCountsAsync(projects);
+        this.isLoading = true;
+        this.loadError = null;
+        try
+        {
+            var projects = (await this.ProjectOrchestrator.GetAllAsync()).OrderBy(project => project.CreatedAt).ToList();
+            var myTaskFlowSections = await this.MyTaskFlowSectionOrchestrator.GetAllAsync();
+            var taskCounts = await BuildProjectTaskCountsAsync(projects);
 
-        this.AppState.SetNavigationData(projects, myTaskFlowSections, taskCounts);
-        await ApplySelectionAsync();
+            this.AppState.SetNavigationData(projects, myTaskFlowSections, taskCounts);
+            await ApplySelectionAsync();
+        }
+        catch (Exception ex)
+        {
+            this.loadError = $"Could not load data: {ex.Message}";
+        }
+        finally
+        {
+            this.isLoading = false;
+        }
     }
 
     private void OnAppStateChanged()
@@ -309,6 +300,7 @@
 
     private async Task ApplySelectionAsync()
     {
+        this.loadError = null;
         if (this.loadedProjectId == this.AppState.SelectedProjectId
             && this.loadedSectionId == this.AppState.SelectedSectionId)
         {
@@ -316,32 +308,34 @@
             return;
         }
 
-        if (this.AppState.SelectedProjectId.HasValue)
+        try
         {
-            await LoadProjectTasksAsync(this.AppState.SelectedProjectId.Value);
-            this.loadedProjectId = this.AppState.SelectedProjectId;
-            this.loadedSectionId = null;
-            var currentProject = this.AppState.Projects.FirstOrDefault(project => project.Id == this.AppState.SelectedProjectId.Value);
-            if (currentProject is not null)
+            if (this.AppState.SelectedProjectId.HasValue)
             {
-                SetProjectEditor(currentProject);
+                await LoadProjectTasksAsync(this.AppState.SelectedProjectId.Value);
+                this.loadedProjectId = this.AppState.SelectedProjectId;
+                this.loadedSectionId = null;
             }
-        }
-        else if (this.AppState.SelectedSectionId.HasValue)
-        {
-            await LoadSectionTasksAsync(this.AppState.SelectedSectionId.Value);
-            this.loadedProjectId = null;
-            this.loadedSectionId = this.AppState.SelectedSectionId;
-        }
-        else
-        {
-            this.activeTasks.Clear();
-            this.subTasksByParent.Clear();
-            this.loadedProjectId = null;
-            this.loadedSectionId = null;
-        }
+            else if (this.AppState.SelectedSectionId.HasValue)
+            {
+                await LoadSectionTasksAsync(this.AppState.SelectedSectionId.Value);
+                this.loadedProjectId = null;
+                this.loadedSectionId = this.AppState.SelectedSectionId;
+            }
+            else
+            {
+                this.activeTasks.Clear();
+                this.subTasksByParent.Clear();
+                this.loadedProjectId = null;
+                this.loadedSectionId = null;
+            }
 
-        StateHasChanged();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            this.loadError = $"Could not load tasks: {ex.Message}";
+        }
     }
 
     private async Task LoadProjectTasksAsync(Guid projectId)
@@ -379,77 +373,48 @@
             return;
         }
 
-        SetProjectEditor(this.selectedProject);
-        this.editProjectDialogCloserRef?.Dispose();
-        this.editProjectDialogCloserRef = DotNetObjectReference.Create(this);
-        await this.JsRuntime.InvokeVoidAsync("taskflowUi.registerEditProjectCloser", this.editProjectDialogCloserRef);
-        this.showEditProjectDialog = true;
+        var parameters = new DialogParameters<EditProjectDialog>
+        {
+            { x => x.ProjectId, this.selectedProject.Id },
+            { x => x.InitialName, this.selectedProject.Name },
+            { x => x.InitialColor, this.selectedProject.Color },
+            { x => x.InitialIcon, this.selectedProject.Icon },
+        };
+
+        var dialog = await this.DialogService.ShowAsync<EditProjectDialog>("Edit Project", parameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Small,
+        });
+
+        await dialog.Result;
+        await ReloadAllAsync();
     }
 
-    private void CloseEditProjectDialog()
+    private async Task OpenDeleteProjectDialogAsync()
     {
-        this.showEditProjectDialog = false;
-        _ = this.JsRuntime.InvokeVoidAsync("taskflowUi.registerEditProjectCloser", (object)null);
-    }
-
-    private async Task OnProjectNameEditedAsync(string value)
-    {
-        if (this.selectedProject is null || string.Equals(this.selectedProject.Name, value, StringComparison.Ordinal))
+        if (this.selectedProject is null)
         {
             return;
         }
 
-        this.editProjectName = value;
-        await this.ProjectOrchestrator.UpdateNameAsync(this.selectedProject.Id, value);
-        await ReloadAllAsync();
-    }
-
-    private async Task OnProjectColorEditedAsync(string value)
-    {
-        if (this.selectedProject is null || string.Equals(this.selectedProject.Color, value, StringComparison.Ordinal))
+        var dialog = await this.DialogService.ShowAsync<DeleteProjectDialog>("Delete Project", new DialogOptions
         {
-            return;
-        }
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+        });
 
-        this.editProjectColor = value;
-        await this.ProjectOrchestrator.UpdateVisualsAsync(this.selectedProject.Id, value, this.editProjectIcon);
-        await ReloadAllAsync();
-    }
-
-    private async Task OnProjectIconEditedAsync(string value)
-    {
-        if (this.selectedProject is null || string.Equals(this.selectedProject.Icon, value, StringComparison.Ordinal))
+        var result = await dialog.Result;
+        if (!result.Canceled)
         {
-            return;
+            await DeleteProjectAsync();
         }
-
-        this.editProjectIcon = value;
-        await this.ProjectOrchestrator.UpdateVisualsAsync(this.selectedProject.Id, this.editProjectColor, value);
-        await ReloadAllAsync();
-    }
-
-    private void OpenDeleteProjectDialog()
-    {
-        this.showDeleteProjectDialog = true;
-    }
-
-    private void CloseDeleteProjectDialog()
-    {
-        this.showDeleteProjectDialog = false;
     }
 
     private void OpenMoveTaskDialog(Guid taskId)
     {
-        this.moveTaskId = taskId;
-        this.moveTargetProjectId = this.activeTasks.FirstOrDefault(task => task.Id == taskId)?.ProjectId;
-        this.showMoveTaskDialog = true;
-    }
-
-    private void CloseMoveTaskDialog()
-    {
-        this.showMoveTaskDialog = false;
-        this.moveTaskId = null;
-        this.moveTargetProjectId = null;
+        _ = OpenMoveTaskDialogAsync(taskId);
     }
 
     private void OpenBoardTaskDialog(Guid taskId)
@@ -465,22 +430,34 @@
         this.boardTaskId = null;
     }
 
-    private async Task ConfirmMoveTaskAsync()
+    private async Task OpenMoveTaskDialogAsync(Guid taskId)
     {
-        if (!this.moveTaskId.HasValue)
-        {
-            return;
-        }
-
-        var task = this.activeTasks.FirstOrDefault(item => item.Id == this.moveTaskId.Value);
+        var task = this.activeTasks.FirstOrDefault(item => item.Id == taskId);
         if (task is null)
         {
-            CloseMoveTaskDialog();
             return;
         }
 
-        await MoveTaskAsync(task, this.moveTargetProjectId);
-        CloseMoveTaskDialog();
+        var parameters = new DialogParameters<MoveTaskDialog>
+        {
+            { x => x.CurrentProjectId, task.ProjectId },
+            { x => x.Projects, this.AppState.Projects },
+        };
+
+        var dialog = await this.DialogService.ShowAsync<MoveTaskDialog>("Move Task", parameters, new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+        });
+
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            var targetProjectId = result.Data is Guid projectId
+                ? projectId
+                : (Guid?)null;
+            await MoveTaskAsync(task, targetProjectId);
+        }
     }
 
     private async Task HandleBoardDropAsync(TaskFlow.Domain.Task task, DomainTaskStatus status)
@@ -502,7 +479,6 @@
         }
 
         await this.ProjectOrchestrator.DeleteAsync(this.selectedProject.Id);
-        this.showDeleteProjectDialog = false;
         await ReloadAllAsync();
         this.Snackbar.Add("Project deleted.", Severity.Info);
     }
@@ -573,14 +549,6 @@
         this.pendingSubTaskFocusParentId = parentTaskId;
         await ReloadCurrentTasksAsync();
         await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task HandleCreateSubTaskKeyUp(Guid parentTaskId, KeyboardEventArgs args)
-    {
-        if (args.Key == "Enter" || args.Key == "NumpadEnter")
-        {
-            await CreateSubTaskAsync(parentTaskId);
-        }
     }
 
     private async Task ToggleCompleteAsync(TaskFlow.Domain.Task task)
@@ -819,26 +787,6 @@
         return counts;
     }
 
-    private void SetProjectEditor(Project project)
-    {
-        this.editProjectName = project.Name;
-        this.editProjectColor = project.Color;
-        this.editProjectIcon = project.Icon;
-    }
-
-    private string GetTaskContainerClass(TaskFlow.Domain.Task task, bool isSubTask)
-    {
-        var baseClass = isSubTask ? "tf-subtask" : "tf-task";
-        if (!task.CompletedAt.HasValue)
-        {
-            return baseClass;
-        }
-
-        return task.CompletedAt.Value >= DateTime.UtcNow.AddMinutes(-15)
-            ? $"{baseClass} tf-task-recent"
-            : baseClass;
-    }
-
     private void PushUndoAction(string description, Func<Task> undoAsync)
     {
         if (this.isApplyingUndo)
@@ -956,31 +904,8 @@
         }
     }
 
-    private Task HandleEditProjectDialogKeyDown(KeyboardEventArgs args)
-    {
-        if (string.Equals(args.Key, "Enter", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(args.Key, "NumpadEnter", StringComparison.OrdinalIgnoreCase))
-        {
-            CloseEditProjectDialog();
-        }
-
-        return Task.CompletedTask;
-    }
-
-    private Task HandleEditProjectSubmit()
-    {
-        CloseEditProjectDialog();
-        return Task.CompletedTask;
-    }
-
     private async Task HandleShellKeyDown(KeyboardEventArgs args)
     {
-        if (this.showEditProjectDialog && (args.Key == "Enter" || args.Key == "NumpadEnter"))
-        {
-            CloseEditProjectDialog();
-            return;
-        }
-
         if ((args.CtrlKey || args.MetaKey) && args.Key.Equals("Enter", StringComparison.OrdinalIgnoreCase) && this.selectedTaskId.HasValue)
         {
             var task = this.activeTasks.FirstOrDefault(x => x.Id == this.selectedTaskId.Value);
@@ -1040,59 +965,10 @@
         this.showShortcuts = !this.showShortcuts;
     }
 
-    [JSInvokable]
-    public Task CloseEditProjectFromJs()
-    {
-        return InvokeAsync(() =>
-        {
-            if (this.showEditProjectDialog)
-            {
-                CloseEditProjectDialog();
-                StateHasChanged();
-            }
-        });
-    }
-
     public void Dispose()
     {
         this.AppState.Changed -= OnAppStateChanged;
-        this.editProjectDialogCloserRef?.Dispose();
     }
-}
-
-@if (showEditProjectDialog)
-{
-    <div class="tf-shortcuts-backdrop" @onclick="CloseEditProjectDialog">
-        <div id="edit-project-dialog">
-        <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true">
-            <form @onsubmit="HandleEditProjectSubmit" @onkeydown="HandleEditProjectDialogKeyDown" @onkeyup="HandleEditProjectDialogKeyDown">
-            <MudText Typo="Typo.h6">Edit Project</MudText>
-            <MudTextField T="string" Value="editProjectName" ValueChanged="OnProjectNameEditedAsync" Label="Project name" Variant="Variant.Outlined" Margin="Margin.Dense" OnKeyUp="HandleEditProjectDialogKeyDown" />
-            <MudSelect T="string" Value="editProjectColor" ValueChanged="OnProjectColorEditedAsync" Label="Color" Variant="Variant.Outlined" Dense="true">
-                @foreach (var option in projectColorOptions)
-                {
-                    <MudSelectItem Value="@option.Hex">
-                        <span class="tf-color-option">
-                            <span class="tf-color-swatch" style="@($"background:{option.Hex}")"></span>
-                            <span>@option.Name</span>
-                        </span>
-                    </MudSelectItem>
-                }
-            </MudSelect>
-            <MudSelect T="string" Value="editProjectIcon" ValueChanged="OnProjectIconEditedAsync" Label="Icon" Variant="Variant.Outlined" Dense="true">
-                <MudSelectItem Value="@("folder")">Folder</MudSelectItem>
-                <MudSelectItem Value="@("inbox")">Inbox</MudSelectItem>
-                <MudSelectItem Value="@("work")">Work</MudSelectItem>
-                <MudSelectItem Value="@("code")">Code</MudSelectItem>
-                <MudSelectItem Value="@("flag")">Flag</MudSelectItem>
-            </MudSelect>
-            <MudStack Row="true" Spacing="1" Class="mt-3">
-                <MudButton Variant="Variant.Outlined" ButtonType="ButtonType.Submit" Class="tf-edit-done-btn">Done</MudButton>
-            </MudStack>
-            </form>
-        </MudPaper>
-        </div>
-    </div>
 }
 
 @if (showBoardTaskDialog && boardTask is not null)
@@ -1115,24 +991,4 @@
                     OnNewSubTaskTitleChanged="value => SetNewSubTaskTitle(boardTask.Id, value)"
                     OnCreateSubTask="() => CreateSubTaskAsync(boardTask.Id)"
                     OnClose="CloseBoardTaskDialog" />
-}
-
-@if (showMoveTaskDialog)
-{
-    <div class="tf-shortcuts-backdrop" @onclick="CloseMoveTaskDialog">
-        <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true">
-            <MudText Typo="Typo.h6">Move Task</MudText>
-            <MudSelect T="Guid?" Value="moveTargetProjectId" ValueChanged="value => moveTargetProjectId = value" Label="Select project" Variant="Variant.Outlined" Dense="true">
-                <MudSelectItem Value="@((Guid?)null)">Unassigned</MudSelectItem>
-                @foreach (var project in AppState.Projects)
-                {
-                    <MudSelectItem Value="@((Guid?)project.Id)">@project.Name</MudSelectItem>
-                }
-            </MudSelect>
-            <MudStack Row="true" Spacing="1" Class="mt-3">
-                <MudButton Variant="Variant.Outlined" OnClick="CloseMoveTaskDialog">Cancel</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmMoveTaskAsync">Move</MudButton>
-            </MudStack>
-        </MudPaper>
-    </div>
 }

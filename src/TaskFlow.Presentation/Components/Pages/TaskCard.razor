@@ -10,6 +10,8 @@
     <MudTooltip Text="Toggle focus pin">
         <MudIconButton Icon="@(Item.IsFocused ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.PushPin)"
                        Color="@(Item.IsFocused ? Color.Success : Color.Default)"
+                       aria-label="Toggle focus pin"
+                       title="Toggle focus pin"
                        OnClick="OnToggleFocusAsync" />
     </MudTooltip>
 
@@ -18,6 +20,8 @@
         <MudTooltip Text="Toggle important">
             <MudIconButton Icon="@(Item.IsImportant ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
                            Color="@(Item.IsImportant ? Color.Warning : Color.Default)"
+                           aria-label="Toggle important"
+                           title="Toggle important"
                            OnClick="OnToggleImportantAsync" />
         </MudTooltip>
     }
@@ -43,19 +47,19 @@
     </MudSelect>
 
     <MudTooltip Text="Mark for today">
-        <MudIconButton Icon="@Icons.Material.Filled.Today" Color="@(Item.IsMarkedForToday ? Color.Warning : Color.Default)" OnClick="OnToggleTodayAsync" />
+        <MudIconButton Icon="@Icons.Material.Filled.Today" Color="@(Item.IsMarkedForToday ? Color.Warning : Color.Default)" aria-label="Mark for today" title="Mark for today" OnClick="OnToggleTodayAsync" />
     </MudTooltip>
 
     <MudTooltip Text="Duplicate task">
-        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="OnDuplicateAsync" />
+        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" aria-label="Duplicate task" title="Duplicate task" OnClick="OnDuplicateAsync" />
     </MudTooltip>
 
     <MudTooltip Text="Move task">
-        <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove" OnClick="OnMoveRequestedAsync" />
+        <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove" aria-label="Move task" title="Move task" OnClick="OnMoveRequestedAsync" />
     </MudTooltip>
 
     <MudTooltip Text="Delete task">
-        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="OnDeleteAsync" />
+        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" aria-label="Delete task" title="Delete task" OnClick="OnDeleteAsync" />
     </MudTooltip>
 </MudStack>
 
@@ -68,7 +72,7 @@
               ValueChanged="OnNoteChangedAsync" />
 
 <div class="tf-task-meta">
-    <span class="tf-task-meta-dot" style="@($"background:{PriorityColor(Item.Priority)}")"></span>
+    <span class="@($"tf-task-meta-dot {PriorityClass(Item.Priority)}")"></span>
     <span>@Item.Priority.ToString()</span>
     <span>@($"Created {RelativeTime(Item.CreatedAt)}")</span>
     @if (Item.CompletedAt.HasValue)
@@ -122,13 +126,13 @@
     [Parameter]
     public EventCallback OnRequestMove { get; set; }
 
-    private static string PriorityColor(TaskPriority priority)
+    private static string PriorityClass(TaskPriority priority)
     {
         return priority switch
         {
-            TaskPriority.High => "#FF6B6B",
-            TaskPriority.Medium => "#F57C00",
-            _ => "#10B981",
+            TaskPriority.High => "tf-task-meta-dot-high",
+            TaskPriority.Medium => "tf-task-meta-dot-medium",
+            _ => "tf-task-meta-dot-low",
         };
     }
 

@@ -105,9 +105,7 @@ a {
 }
 
 .tf-project-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
+    font-size: 0.6rem;
     margin-right: 0.6rem;
 }
 
@@ -138,9 +136,6 @@ a {
 .tf-task,
 .tf-subtask {
     padding: 0.5rem;
-}
-
-.tf-task-recent {
 }
 
 .tf-board .tf-task,
@@ -176,6 +171,18 @@ a {
     width: 8px;
     height: 8px;
     border-radius: 999px;
+}
+
+.tf-task-meta-dot-high {
+    background: var(--mud-palette-error);
+}
+
+.tf-task-meta-dot-medium {
+    background: var(--mud-palette-warning);
+}
+
+.tf-task-meta-dot-low {
+    background: var(--mud-palette-success);
 }
 
 .tf-subtask-input {
@@ -235,13 +242,6 @@ a {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.tf-color-swatch {
-    width: 14px;
-    height: 14px;
-    border-radius: 999px;
-    display: inline-block;
 }
 
 .tf-shortcuts-backdrop {

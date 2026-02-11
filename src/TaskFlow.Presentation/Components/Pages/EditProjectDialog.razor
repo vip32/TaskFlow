@@ -21,9 +21,9 @@
                        Dense="true">
                 @foreach (var option in colorOptions)
                 {
-                    <MudSelectItem Value="@option.Hex">
+                    <MudSelectItem Value="@option.Value">
                         <span class="tf-color-option">
-                            <span class="tf-color-swatch" style="@($"background:{option.Hex}")"></span>
+                            <MudIcon Icon="@Icons.Material.Filled.Circle" Size="Size.Small" Color="@option.Color" Class="mr-1" />
                             <span>@option.Name</span>
                         </span>
                     </MudSelectItem>
@@ -53,16 +53,15 @@
 </MudDialog>
 
 @code {
-    private readonly (string Hex, string Name)[] colorOptions =
+    private readonly (string Value, string Name, Color Color)[] colorOptions =
     [
-        ("#2D9CFF", "Ocean Blue"),
-        ("#30C76A", "Mint Green"),
-        ("#F2B01E", "Amber"),
-        ("#EF4B6C", "Coral Red"),
-        ("#9B5DE5", "Violet"),
-        ("#14B8A6", "Teal"),
-        ("#F97316", "Orange"),
-        ("#64748B", "Slate"),
+        ("primary", "Primary", Color.Primary),
+        ("success", "Success", Color.Success),
+        ("warning", "Warning", Color.Warning),
+        ("error", "Error", Color.Error),
+        ("info", "Info", Color.Info),
+        ("secondary", "Secondary", Color.Secondary),
+        ("dark", "Dark", Color.Dark),
     ];
 
     [CascadingParameter]
@@ -75,19 +74,19 @@
     public string InitialName { get; set; } = string.Empty;
 
     [Parameter]
-    public string InitialColor { get; set; } = "#2D9CFF";
+    public string InitialColor { get; set; } = "primary";
 
     [Parameter]
     public string InitialIcon { get; set; } = "folder";
 
     private string projectName = string.Empty;
-    private string projectColor = "#2D9CFF";
+    private string projectColor = "primary";
     private string projectIcon = "folder";
 
     protected override void OnParametersSet()
     {
         this.projectName = this.InitialName;
-        this.projectColor = this.InitialColor;
+        this.projectColor = NormalizeProjectColor(this.InitialColor);
         this.projectIcon = this.InitialIcon;
     }
 
@@ -99,8 +98,8 @@
 
     private async System.Threading.Tasks.Task OnColorChangedAsync(string value)
     {
-        this.projectColor = value;
-        await this.ProjectOrchestrator.UpdateVisualsAsync(this.ProjectId, value, this.projectIcon);
+        this.projectColor = NormalizeProjectColor(value);
+        await this.ProjectOrchestrator.UpdateVisualsAsync(this.ProjectId, this.projectColor, this.projectIcon);
     }
 
     private async System.Threading.Tasks.Task OnIconChangedAsync(string value)
@@ -118,5 +117,20 @@
     private void Close()
     {
         this.MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private static string NormalizeProjectColor(string value)
+    {
+        return value?.ToLowerInvariant() switch
+        {
+            "#2d9cff" or "primary" => "primary",
+            "#10b981" or "#30c76a" or "success" => "success",
+            "#f57c00" or "#f2b01e" or "#f97316" or "warning" => "warning",
+            "#ff6b6b" or "#ef4b6c" or "error" => "error",
+            "#14b8a6" or "info" => "info",
+            "#9b5de5" or "secondary" => "secondary",
+            "#64748b" or "dark" => "dark",
+            _ => "primary",
+        };
     }
 }

@@ -12,10 +12,10 @@
         <CascadingValue Value="homeAppState">
         <MudLayout>
             <MudAppBar Elevation="1">
-                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" aria-label="Toggle navigation" title="Toggle navigation" OnClick="ToggleDrawer" />
                 <MudText Typo="Typo.h6" Class="ml-2">TaskFlow</MudText>
                 <MudSpacer />
-                <MudIconButton Icon="@(isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)" Color="Color.Inherit" Edge="Edge.End" OnClick="ToggleThemeAsync" />
+                <MudIconButton Icon="@(isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)" Color="Color.Inherit" Edge="Edge.End" aria-label="Toggle theme" title="Toggle theme" OnClick="ToggleThemeAsync" />
             </MudAppBar>
 
             <MudDrawer Open="@homeAppState.IsDrawerOpen"

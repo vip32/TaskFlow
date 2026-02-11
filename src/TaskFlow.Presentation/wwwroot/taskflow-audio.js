@@ -52,42 +52,4 @@
         }
     };
 
-    window.taskflowUi.registerEditProjectCloser = function (dotNetRef) {
-        window.taskflowUi._editProjectCloser = dotNetRef;
-    };
-
-    if (!window.taskflowUi._editDialogEnterBound) {
-        window.addEventListener("keydown", function (event) {
-            if (event.key !== "Enter" && event.key !== "NumpadEnter") {
-                return;
-            }
-
-            var dialog = document.getElementById("edit-project-dialog");
-            if (!dialog) {
-                return;
-            }
-
-            var dialog = document.getElementById("edit-project-dialog");
-            if (!dialog) {
-                return;
-            }
-
-            var closer = window.taskflowUi._editProjectCloser;
-            if (!closer || typeof closer.invokeMethodAsync !== "function") {
-                return;
-            }
-
-            event.preventDefault();
-            console.debug("taskflow: invoking CloseEditProjectFromJs");
-            closer.invokeMethodAsync("CloseEditProjectFromJs")
-                .then(function () {
-                    console.debug("taskflow: CloseEditProjectFromJs resolved");
-                })
-                .catch(function (error) {
-                    console.error("taskflow: CloseEditProjectFromJs failed", error);
-                });
-        }, true);
-
-        window.taskflowUi._editDialogEnterBound = true;
-    }
 })();
