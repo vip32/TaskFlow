@@ -10,7 +10,11 @@
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["TaskFlow.Presentation.styles.css"]" />
     <ImportMap />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#1F86FF" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png" />
     <HeadOutlet />
 </head>
 
@@ -19,6 +23,7 @@
     <ReconnectModal />
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="app.js?v=2"></script>
+    <script>window.taskflowPwa && window.taskflowPwa.register();</script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 

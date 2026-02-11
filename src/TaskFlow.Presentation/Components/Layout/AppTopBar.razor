@@ -1,0 +1,31 @@
+@using Microsoft.AspNetCore.Components.Sections
+
+<MudAppBar Elevation="1">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                   Color="Color.Inherit"
+                   Edge="Edge.Start"
+                   aria-label="Toggle navigation"
+                   title="Toggle navigation"
+                   OnClick="OnToggleDrawerRequested" />
+    <SectionOutlet SectionName="AppTopBarTitle" />
+    <MudSpacer />
+    <SectionOutlet SectionName="AppTopBarContent" />
+    <MudSpacer />
+    <MudIconButton Icon="@(IsDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                   Color="Color.Inherit"
+                   Edge="Edge.End"
+                   aria-label="Toggle theme"
+                   title="Toggle theme"
+                   OnClick="OnToggleThemeRequested" />
+</MudAppBar>
+
+@code {
+    [Parameter]
+    public bool IsDarkMode { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnToggleDrawerRequested { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnToggleThemeRequested { get; set; }
+}

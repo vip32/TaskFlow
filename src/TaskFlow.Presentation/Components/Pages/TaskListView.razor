@@ -15,30 +15,37 @@
         {
             <MudPaper id="@GetTaskContainerId(task.Id)" Elevation="1" Class="pa-2">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                    @if (IsEditing(task.Id))
-                    {
-                        <MudTextField T="string"
-                                      Value="editingTitle"
-                                      ValueChanged="OnEditingTitleChanged"
-                                      Variant="Variant.Text"
-                                      Immediate="true"
-                                      Margin="Margin.Dense"
-                                      Class="@(task.IsCompleted ? "tf-task-title-done" : string.Empty)"
-                                      @onmousedown:stopPropagation="true"
-                                      OnKeyDown="args => HandleEditKeyDownAsync(task, args)"
-                                      @onfocusout="() => CommitEditAsync(task)" />
-                    }
-                    else
-                    {
-                        <span @onmousedown:stopPropagation="true"
-                              @onmousedown="() => BeginEdit(task)">
-                            <MudText Typo="Typo.body1"
-                                     Class="@(task.IsCompleted ? "tf-task-title-done" : string.Empty)"
-                                     style="cursor:text">
-                                @task.Title
-                            </MudText>
-                        </span>
-                    }
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudCheckBox T="bool"
+                                     Value="task.IsCompleted"
+                                     ValueChanged="_ => OnToggleCompleteRequested.InvokeAsync(task.Id)"
+                                     Size="Size.Small"
+                                     Color="Color.Success" />
+                        @if (IsEditing(task.Id))
+                        {
+                            <MudTextField T="string"
+                                          Value="editingTitle"
+                                          ValueChanged="OnEditingTitleChanged"
+                                          Variant="Variant.Text"
+                                          Immediate="true"
+                                          Margin="Margin.Dense"
+                                          Class="@(task.IsCompleted ? "tf-task-title-done" : string.Empty)"
+                                          @onmousedown:stopPropagation="true"
+                                          OnKeyDown="args => HandleEditKeyDownAsync(task, args)"
+                                          @onfocusout="() => CommitEditAsync(task)" />
+                        }
+                        else
+                        {
+                            <span @onmousedown:stopPropagation="true"
+                                  @onmousedown="() => BeginEdit(task)">
+                                <MudText Typo="Typo.body1"
+                                         Class="@(task.IsCompleted ? "tf-task-title-done" : string.Empty)"
+                                         style="cursor:text">
+                                    @task.Title
+                                </MudText>
+                            </span>
+                        }
+                    </MudStack>
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" aria-label="Edit task" title="Edit task" OnClick="() => OnEditTaskRequested.InvokeAsync(task.Id)" />
                 </MudStack>
             </MudPaper>
@@ -52,6 +59,9 @@
 
     [Parameter, EditorRequired]
     public EventCallback<Guid> OnEditTaskRequested { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<Guid> OnToggleCompleteRequested { get; set; }
 
     [Parameter, EditorRequired]
     public EventCallback<TitleUpdateRequest> OnUpdateTaskTitleRequested { get; set; }

@@ -1,20 +1,21 @@
 @page "/focus-timer"
 @using Task = System.Threading.Tasks.Task
+@using Microsoft.AspNetCore.Components.Sections
 @implements IDisposable
 @inject ISnackbar Snackbar
 @inject IJSRuntime JsRuntime
 
 <PageTitle>Focus Timer</PageTitle>
 
+<SectionContent SectionName="AppTopBarTitle">
+    <MudStack Class="ml-2" Spacing="0">
+        <MudText Typo="Typo.subtitle1">Focus Timer</MudText>
+        <MudText Typo="Typo.caption">Single-task work session</MudText>
+    </MudStack>
+</SectionContent>
+
 <div class="tf-home">
     <section class="tf-main">
-        <header class="tf-toolbar">
-            <div>
-                <MudText Typo="Typo.h5">Focus Timer</MudText>
-                <MudText Typo="Typo.caption">Single-task work session</MudText>
-            </div>
-        </header>
-
         <MudPaper Class="tf-focus-timer tf-focus-timer-page" Elevation="0">
             <MudText Typo="Typo.subtitle2">Session</MudText>
             <MudText Typo="Typo.h4">@timerRemaining.ToString(@"mm\:ss")</MudText>

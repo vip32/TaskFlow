@@ -37,28 +37,36 @@
     <ItemRenderer>
         <MudPaper id="@GetTaskContainerId(context.Id)" Elevation="2" Class="pa-3 ma-2">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                @if (IsEditing(context.Id))
-                {
-                    <MudTextField T="string"
-                                  Value="editingTitle"
-                                  ValueChanged="OnEditingTitleChanged"
-                                  Variant="Variant.Text"
-                                  Immediate="true"
-                                  Margin="Margin.Dense"
-                                  @onmousedown:stopPropagation="true"
-                                  OnKeyDown="args => HandleEditKeyDownAsync(context, args)"
-                                  @onfocusout="() => CommitEditAsync(context)" />
-                }
-                else
-                {
-                    <MudButton Variant="Variant.Text"
-                               Color="Color.Default"
-                               Class="pa-0 ma-0"
-                               Style="min-width: 0; text-transform: none; justify-content: flex-start;"
-                               OnClick="() => BeginEdit(context)">
-                        @context.Title
-                    </MudButton>
-                }
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool"
+                                 Value="context.IsCompleted"
+                                 ValueChanged="_ => OnToggleCompleteRequested.InvokeAsync(context.Id)"
+                                 Size="Size.Small"
+                                 Color="Color.Success" />
+                    @if (IsEditing(context.Id))
+                    {
+                        <MudTextField T="string"
+                                      Value="editingTitle"
+                                      ValueChanged="OnEditingTitleChanged"
+                                      Variant="Variant.Text"
+                                      Immediate="true"
+                                      Margin="Margin.Dense"
+                                      Class="@(context.IsCompleted ? "tf-task-title-done" : string.Empty)"
+                                      @onmousedown:stopPropagation="true"
+                                      OnKeyDown="args => HandleEditKeyDownAsync(context, args)"
+                                      @onfocusout="() => CommitEditAsync(context)" />
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Default"
+                                   Class="@GetTaskTitleButtonClass(context)"
+                                   Style="min-width: 0; text-transform: none; justify-content: flex-start;"
+                                   OnClick="() => BeginEdit(context)">
+                            @context.Title
+                        </MudButton>
+                    }
+                </MudStack>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" aria-label="Edit task" title="Edit task" OnClick="() => OnEditTaskRequested.InvokeAsync(context.Id)" />
             </MudStack>
         </MudPaper>
@@ -80,6 +88,9 @@
 
     [Parameter, EditorRequired]
     public EventCallback<Guid> OnEditTaskRequested { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<Guid> OnToggleCompleteRequested { get; set; }
 
     [Parameter, EditorRequired]
     public EventCallback<TitleUpdateRequest> OnUpdateTaskTitleRequested { get; set; }
@@ -229,5 +240,10 @@
     private static string GetTaskContainerId(Guid taskId)
     {
         return $"board-task-{taskId:N}";
+    }
+
+    private static string GetTaskTitleButtonClass(TaskFlow.Domain.Task task)
+    {
+        return task.IsCompleted ? "pa-0 ma-0 tf-task-title-done" : "pa-0 ma-0";
     }
 }

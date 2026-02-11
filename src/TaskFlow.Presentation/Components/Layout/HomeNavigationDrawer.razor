@@ -4,6 +4,7 @@
 @inject IMyTaskFlowSectionOrchestrator MyTaskFlowSectionOrchestrator
 @inject ITaskOrchestrator TaskOrchestrator
 @inject NavigationManager NavigationManager
+@inject IDialogService DialogService
 
 <div class="tf-drawer-root">
     <div class="tf-drawer-top">
@@ -23,35 +24,29 @@
             }
         }
 
-        @if (AppState.Projects.Count > 0)
+        <MudDivider Class="my-2" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+            <MudText Typo="Typo.caption" Class="tf-drawer-caption mb-0">Projects</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                           Size="Size.Small"
+                           Color="Color.Primary"
+                           aria-label="Create project"
+                           title="Create project"
+                           OnClick="OpenCreateProjectDialogAsync" />
+        </MudStack>
+        @foreach (var project in AppState.Projects)
         {
-            <MudDivider Class="my-2" />
-            <MudText Typo="Typo.caption" Class="tf-drawer-caption">Projects</MudText>
-            @foreach (var project in AppState.Projects)
-            {
-                var isActive = AppState.SelectedProjectId == project.Id;
-                <MudButton FullWidth="true"
-                           Variant="@(isActive ? Variant.Filled : Variant.Text)"
-                           Color="@(isActive ? Color.Primary : Color.Default)"
-                           Class="tf-drawer-button"
-                           OnClick="() => SelectProject(project.Id)">
-                    <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
-                    <MudIcon Icon="@Icons.Material.Filled.Circle" Size="Size.Small" Color="@ResolveProjectColor(project.Color)" Class="tf-project-dot" />
-                    <span class="tf-drawer-project-name">@project.Name</span>
-                    <MudBadge Class="tf-project-count" Color="Color.Info" Content="@AppState.GetProjectTaskCount(project.Id)" />
-                </MudButton>
-            }
-
-            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-2" Spacing="1">
-                <MudTextField @bind-Value="newProjectName"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Immediate="true"
-                              Placeholder="New project"
-                              Class="tf-drawer-input"
-                              OnKeyDown="HandleCreateProjectKeyDown" />
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateProjectAsync">Create</MudButton>
-            </MudStack>
+            var isActive = AppState.SelectedProjectId == project.Id;
+            <MudButton FullWidth="true"
+                       Variant="@(isActive ? Variant.Filled : Variant.Text)"
+                       Color="@(isActive ? Color.Primary : Color.Default)"
+                       Class="tf-drawer-button"
+                       OnClick="() => SelectProject(project.Id)">
+                <MudIcon Icon="@ResolveProjectIcon(project.Icon)" Size="Size.Small" Class="mr-2" />
+                <MudIcon Icon="@Icons.Material.Filled.Circle" Size="Size.Small" Color="@ResolveProjectColor(project.Color)" Class="tf-project-dot" />
+                <span class="tf-drawer-project-name">@project.Name</span>
+                <MudBadge Class="tf-project-count" Color="Color.Info" Content="@AppState.GetProjectTaskCount(project.Id)" />
+            </MudButton>
         }
     </div>
 
@@ -81,8 +76,6 @@
         await EnsureNavigationLoadedAsync();
     }
 
-    private string newProjectName = string.Empty;
-
     private void SelectSection(Guid sectionId)
     {
         this.AppState.SelectSection(sectionId);
@@ -101,15 +94,27 @@
         }
     }
 
-    private async Task CreateProjectAsync()
+    private async Task OpenCreateProjectDialogAsync()
     {
-        if (string.IsNullOrWhiteSpace(this.newProjectName))
+        var dialog = await this.DialogService.ShowAsync<ProjectCreateDialog>("New Project", new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true,
+        });
+
+        var result = await dialog.Result;
+        if (result.Canceled || result.Data is not string title || string.IsNullOrWhiteSpace(title))
         {
             return;
         }
 
-        var created = await this.ProjectOrchestrator.CreateAsync(this.newProjectName, ResolveProjectColorValue(Color.Primary), "folder");
-        this.newProjectName = string.Empty;
+        await CreateProjectAsync(title.Trim());
+    }
+
+    private async Task CreateProjectAsync(string projectName)
+    {
+        var created = await this.ProjectOrchestrator.CreateAsync(projectName, ResolveProjectColorValue(Color.Primary), "folder");
 
         var updatedProjects = this.AppState.Projects.Concat([created]).OrderBy(project => project.CreatedAt).ToList();
         var updatedCounts = this.AppState.ProjectTaskCounts.ToDictionary(entry => entry.Key, entry => entry.Value);
@@ -148,14 +153,6 @@
         }
 
         return counts;
-    }
-
-    private async Task HandleCreateProjectKeyDown(KeyboardEventArgs args)
-    {
-        if (args.Key == "Enter" || args.Key == "NumpadEnter")
-        {
-            await CreateProjectAsync();
-        }
     }
 
     private string ResolveProjectIcon(string icon)

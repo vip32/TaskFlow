@@ -148,4 +148,34 @@
         }
     };
 
+    // Focuses the first text input inside the currently open MudBlazor dialog.
+    window.taskflowUi.focusFirstDialogInput = function () {
+        var input = document.querySelector(".mud-dialog input");
+        if (!input) {
+            return;
+        }
+
+        if (typeof input.focus === "function") {
+            input.focus();
+        }
+
+        if (typeof input.select === "function") {
+            input.select();
+        }
+    };
+
+    window.taskflowPwa = window.taskflowPwa || {};
+    // Registers the service worker to enable installability and static asset caching.
+    window.taskflowPwa.register = function () {
+        if (!("serviceWorker" in navigator)) {
+            return;
+        }
+
+        window.addEventListener("load", function () {
+            navigator.serviceWorker.register("/sw.js").catch(function () {
+                // Ignore registration failures to avoid breaking the app runtime.
+            });
+        });
+    };
+
 })();

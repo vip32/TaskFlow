@@ -1,0 +1,61 @@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-2">New Project</MudText>
+        <form @onsubmit="HandleSubmitAsync">
+            <MudTextField T="string"
+                          @ref="projectNameInputRef"
+                          @bind-Value="projectName"
+                          Label="Project name"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Immediate="true"
+                          AutoFocus="true" />
+            <button type="submit" class="tf-hidden-submit" aria-hidden="true" tabindex="-1"></button>
+        </form>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@string.IsNullOrWhiteSpace(this.projectName)" OnClick="HandleSubmitAsync">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Inject]
+    private IJSRuntime JsRuntime { get; set; } = null!;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private string projectName = string.Empty;
+    private MudTextField<string> projectNameInputRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || this.projectNameInputRef is null)
+        {
+            return;
+        }
+
+        await this.projectNameInputRef.FocusAsync();
+        await Task.Delay(50);
+        await this.JsRuntime.InvokeVoidAsync("taskflowUi.focusFirstDialogInput");
+    }
+
+    private Task HandleSubmitAsync()
+    {
+        var title = this.projectName?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return Task.CompletedTask;
+        }
+
+        this.MudDialog.Close(DialogResult.Ok(title));
+        return Task.CompletedTask;
+    }
+
+    private void Cancel()
+    {
+        this.MudDialog.Cancel();
+    }
+}

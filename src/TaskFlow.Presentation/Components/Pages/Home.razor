@@ -10,17 +10,62 @@
 @inject IDialogService DialogService
 @inject IJSRuntime JsRuntime
 @inject IAppExceptionHandler UiExceptionHandler
+@inject IUndoManager UndoManager
+@using Microsoft.AspNetCore.Components.Sections
 
 <PageTitle>TaskFlow</PageTitle>
+
+<SectionContent SectionName="AppTopBarTitle">
+    <MudStack Class="ml-2" Spacing="0">
+        <MudText Typo="Typo.subtitle1">@CurrentTitle</MudText>
+        <MudText Typo="Typo.caption">@CurrentSubtitle</MudText>
+    </MudStack>
+</SectionContent>
+
+<SectionContent SectionName="AppTopBarContent">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+        <MudTextField @bind-Value="searchQuery"
+                      @ref="searchInputRef"
+                      Placeholder="Search tasks"
+                      Immediate="true"
+                      DebounceInterval="150"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Clearable="true"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Style="min-width: 260px;" />
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudSelect T="TaskPriority?" @bind-Value="priorityFilter" Label="Priority" Variant="Variant.Outlined" Dense="true" Clearable="true">
+                    <MudSelectItem T="TaskPriority?" Value="@TaskPriority.High">High</MudSelectItem>
+                    <MudSelectItem T="TaskPriority?" Value="@TaskPriority.Medium">Medium</MudSelectItem>
+                    <MudSelectItem T="TaskPriority?" Value="@TaskPriority.Low">Low</MudSelectItem>
+                </MudSelect>
+                <MudSelect T="DomainTaskStatus?" @bind-Value="statusFilter" Label="Status" Variant="Variant.Outlined" Dense="true" Clearable="true">
+                    <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.Todo">Todo</MudSelectItem>
+                    <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.Doing">Doing</MudSelectItem>
+                    <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.Done">Done</MudSelectItem>
+                </MudSelect>
+                <MudSelect T="SortMode?" @bind-Value="sortMode" Label="Sort" Variant="Variant.Outlined" Dense="true" Clearable="true">
+                    <MudSelectItem T="SortMode?" Value="@SortMode.CreatedDesc">Newest</MudSelectItem>
+                    <MudSelectItem T="SortMode?" Value="@SortMode.CreatedAsc">Oldest</MudSelectItem>
+                    <MudSelectItem T="SortMode?" Value="@SortMode.Priority">Priority</MudSelectItem>
+                    <MudSelectItem T="SortMode?" Value="@SortMode.Focused">Focused</MudSelectItem>
+                </MudSelect>
+                <MudSwitch @bind-Value="showCompleted" Label="Show completed" Color="Color.Primary" />
+            </MudStack>
+        </MudHidden>
+    </MudStack>
+</SectionContent>
 
 <div class="tf-home" tabindex="0" @onkeydown="HandleShellKeyDown">
     <section class="tf-main">
         <header class="tf-toolbar">
-            <div>
-                <MudText Typo="Typo.h5">@CurrentTitle</MudText>
-                <MudText Typo="Typo.caption">@CurrentSubtitle</MudText>
-            </div>
             <MudStack Row="true" Spacing="1">
+                <MudTooltip Text="Delete all completed tasks">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ClearCompletedAsync">Clear Completed</MudButton>
+                </MudTooltip>
                 <MudTooltip Text="Keyboard shortcuts">
                     <MudButton Variant="Variant.Outlined" OnClick="ToggleShortcutsHelp">Shortcuts</MudButton>
                 </MudTooltip>
@@ -38,40 +83,6 @@
                 }
             </MudStack>
         </header>
-
-        <MudPaper Class="tf-filters" Elevation="0">
-            <MudTextField @bind-Value="searchQuery"
-                          @ref="searchInputRef"
-                          Placeholder="Search tasks"
-                          Immediate="true"
-                          DebounceInterval="150"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" />
-            <MudSelect T="TaskPriority?" @bind-Value="priorityFilter" Label="Priority" Variant="Variant.Outlined" Dense="true">
-                <MudSelectItem T="TaskPriority?" Value="null">All</MudSelectItem>
-                <MudSelectItem T="TaskPriority?" Value="@TaskPriority.High">High</MudSelectItem>
-                <MudSelectItem T="TaskPriority?" Value="@TaskPriority.Medium">Medium</MudSelectItem>
-                <MudSelectItem T="TaskPriority?" Value="@TaskPriority.Low">Low</MudSelectItem>
-            </MudSelect>
-            <MudSelect T="DomainTaskStatus?" @bind-Value="statusFilter" Label="Status" Variant="Variant.Outlined" Dense="true">
-                <MudSelectItem T="DomainTaskStatus?" Value="null">All</MudSelectItem>
-                <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.Todo">Todo</MudSelectItem>
-                <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.Doing">Doing</MudSelectItem>
-                <MudSelectItem T="DomainTaskStatus?" Value="@DomainTaskStatus.Done">Done</MudSelectItem>
-            </MudSelect>
-            <MudSelect T="SortMode" @bind-Value="sortMode" Label="Sort" Variant="Variant.Outlined" Dense="true">
-                <MudSelectItem Value="@SortMode.CreatedDesc">Newest</MudSelectItem>
-                <MudSelectItem Value="@SortMode.CreatedAsc">Oldest</MudSelectItem>
-                <MudSelectItem Value="@SortMode.Priority">Priority</MudSelectItem>
-                <MudSelectItem Value="@SortMode.Focused">Focused</MudSelectItem>
-            </MudSelect>
-            <MudSwitch @bind-Value="showCompleted" Label="Show completed" Color="Color.Primary" />
-            <MudTooltip Text="Delete all completed tasks">
-                <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ClearCompletedAsync">Clear Completed</MudButton>
-            </MudTooltip>
-        </MudPaper>
 
         <MudPaper Class="tf-create-row" Elevation="0">
             <MudTextField @bind-Value="newTaskTitle"
@@ -109,12 +120,14 @@
                            GetBoardTasks="GetBoardTasks"
                            OnDropTaskToStatus="HandleBoardDropAsync"
                            OnCreateTaskInStatus="CreateTaskInStatusAsync"
+                           OnToggleCompleteRequested="HandleTaskToggleCompleteRequestedAsync"
                            OnUpdateTaskTitleRequested="HandleBoardTaskTitleUpdateAsync"
                            OnEditTaskRequested="OpenBoardTaskDialog" />
         }
         else
         {
-            <HomeListView Tasks="FilteredTasks"
+            <TaskListView Tasks="FilteredTasks"
+                          OnToggleCompleteRequested="HandleTaskToggleCompleteRequestedAsync"
                           OnUpdateTaskTitleRequested="HandleListTaskTitleUpdateAsync"
                           OnEditTaskRequested="OpenBoardTaskDialog" />
         }
@@ -139,8 +152,6 @@
 }
 
 @code {
-    private const int MaxUndoActions = 20;
-
     private enum SortMode
     {
         CreatedDesc,
@@ -152,7 +163,6 @@
     private readonly DomainTaskStatus[] boardStatuses = [DomainTaskStatus.Todo, DomainTaskStatus.Doing, DomainTaskStatus.Done];
     private readonly Dictionary<Guid, List<TaskFlow.Domain.Task>> subTasksByParent = [];
     private readonly Dictionary<Guid, string> newSubTaskTitles = [];
-    private readonly Stack<UndoAction> undoActions = new();
     private List<TaskFlow.Domain.Task> activeTasks = [];
     private Guid? selectedTaskId;
     private string newTaskTitle = string.Empty;
@@ -163,10 +173,9 @@
     private bool showCompleted;
     private bool showShortcuts;
     private bool showBoardTaskDialog;
-    private bool isApplyingUndo;
     private bool isLoading;
     private bool pendingShortcutsFocus;
-    private SortMode sortMode = SortMode.CreatedDesc;
+    private SortMode? sortMode = SortMode.CreatedDesc;
     private string loadError;
     private MudTextField<string> newTaskInputRef;
     private MudTextField<string> searchInputRef;
@@ -175,8 +184,6 @@
     private Guid? pendingSubTaskFocusParentId;
     private Guid? loadedProjectId;
     private Guid? loadedSectionId;
-
-    private sealed record UndoAction(string Description, Func<Task> UndoAsync);
 
     private sealed record TaskSnapshot(
         string Title,
@@ -233,12 +240,12 @@
                 query = query.Where(task => task.Status == this.statusFilter.Value);
             }
 
-            if (!this.showCompleted && this.selectedProject?.ViewType != ProjectViewType.Board)
+            if (!this.showCompleted)
             {
                 query = query.Where(task => !task.IsCompleted);
             }
 
-            query = this.sortMode switch
+            query = (this.sortMode ?? SortMode.CreatedDesc) switch
             {
                 SortMode.CreatedAsc => query.OrderBy(task => task.CreatedAt),
                 SortMode.Priority => query.OrderByDescending(task => task.Priority).ThenByDescending(task => task.CreatedAt),
@@ -392,7 +399,7 @@
             return;
         }
 
-        var parameters = new DialogParameters<EditProjectDialog>
+        var parameters = new DialogParameters<ProjectEditDialog>
         {
             { x => x.ProjectId, this.selectedProject.Id },
             { x => x.InitialName, this.selectedProject.Name },
@@ -400,7 +407,7 @@
             { x => x.InitialIcon, this.selectedProject.Icon },
         };
 
-        var dialog = await this.DialogService.ShowAsync<EditProjectDialog>("Edit Project", parameters, new DialogOptions
+        var dialog = await this.DialogService.ShowAsync<ProjectEditDialog>("Edit Project", parameters, new DialogOptions
         {
             CloseOnEscapeKey = true,
             FullWidth = true,
@@ -418,7 +425,7 @@
             return;
         }
 
-        var dialog = await this.DialogService.ShowAsync<DeleteProjectDialog>("Delete Project", new DialogOptions
+        var dialog = await this.DialogService.ShowAsync<ProjectDeleteDialog>("Delete Project", new DialogOptions
         {
             CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.ExtraSmall,
@@ -453,13 +460,13 @@
             return;
         }
 
-        var parameters = new DialogParameters<MoveTaskDialog>
+        var parameters = new DialogParameters<TaskMoveDialog>
         {
             { x => x.CurrentProjectId, task.ProjectId },
             { x => x.Projects, this.AppState.Projects },
         };
 
-        var dialog = await this.DialogService.ShowAsync<MoveTaskDialog>("Move Task", parameters, new DialogOptions
+        var dialog = await this.DialogService.ShowAsync<TaskMoveDialog>("Move Task", parameters, new DialogOptions
         {
             CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.ExtraSmall,
@@ -575,7 +582,7 @@
     {
         var target = task.IsCompleted ? DomainTaskStatus.Todo : DomainTaskStatus.Done;
         var previousStatus = task.Status;
-        PushUndoAction("toggle completion", async () =>
+        this.UndoManager.Register("toggle completion", async () =>
         {
             await this.TaskOrchestrator.SetStatusAsync(task.Id, previousStatus);
         });
@@ -623,7 +630,7 @@
     private async Task ToggleFocusAsync(TaskFlow.Domain.Task task)
     {
         var wasFocused = task.IsFocused;
-        PushUndoAction("toggle focus", async () =>
+        this.UndoManager.Register("toggle focus", async () =>
         {
             var current = this.activeTasks.FirstOrDefault(x => x.Id == task.Id);
             if (current is null || current.IsFocused != wasFocused)
@@ -647,7 +654,7 @@
     private async Task DeleteTaskAsync(TaskFlow.Domain.Task task)
     {
         var snapshot = await CaptureTaskSnapshotAsync(task);
-        PushUndoAction("delete task", async () =>
+        this.UndoManager.Register("delete task", async () =>
         {
             await RestoreTaskSnapshotAsync(snapshot);
         });
@@ -689,7 +696,7 @@
     private async Task MoveTaskAsync(TaskFlow.Domain.Task task, Guid? projectId)
     {
         var previousProjectId = task.ProjectId;
-        PushUndoAction("move task", async () =>
+        this.UndoManager.Register("move task", async () =>
         {
             if (previousProjectId.HasValue)
             {
@@ -741,7 +748,7 @@
             snapshots.Add(await CaptureTaskSnapshotAsync(task));
         }
 
-        PushUndoAction("clear completed tasks", async () =>
+        this.UndoManager.Register("clear completed tasks", async () =>
         {
             foreach (var snapshot in snapshots)
             {
@@ -807,41 +814,18 @@
         return counts;
     }
 
-    private void PushUndoAction(string description, Func<Task> undoAsync)
-    {
-        if (this.isApplyingUndo)
-        {
-            return;
-        }
-
-        if (this.undoActions.Count >= MaxUndoActions)
-        {
-            this.undoActions.Clear();
-        }
-
-        this.undoActions.Push(new UndoAction(description, undoAsync));
-    }
-
     private async Task UndoLastActionAsync()
     {
-        if (!this.undoActions.TryPop(out var action))
+        var undoResult = await this.UndoManager.UndoAsync();
+        if (!undoResult.HasAction)
         {
             this.Snackbar.Add("Nothing to undo.", Severity.Normal);
             return;
         }
 
-        try
-        {
-            this.isApplyingUndo = true;
-            await action.UndoAsync();
-            await ReloadCurrentTasksAsync();
-            await RecalculateProjectTaskCountsAsync();
-            this.Snackbar.Add($"Undid: {action.Description}", Severity.Success);
-        }
-        finally
-        {
-            this.isApplyingUndo = false;
-        }
+        await ReloadCurrentTasksAsync();
+        await RecalculateProjectTaskCountsAsync();
+        this.Snackbar.Add($"Undid: {undoResult.Description}", Severity.Success);
     }
 
     private async Task<TaskSnapshot> CaptureTaskSnapshotAsync(TaskFlow.Domain.Task task)
@@ -936,7 +920,7 @@
         return UpdateStatusAsync(change.Task, change.Value);
     }
 
-    private async Task HandleListTaskTitleUpdateAsync(HomeListView.TitleUpdateRequest request)
+    private async Task HandleListTaskTitleUpdateAsync(TaskListView.TitleUpdateRequest request)
     {
         var task = this.activeTasks.FirstOrDefault(x => x.Id == request.TaskId);
         if (task is null)
@@ -956,6 +940,17 @@
         }
 
         await UpdateTitleAsync(task, request.Title);
+    }
+
+    private async Task HandleTaskToggleCompleteRequestedAsync(Guid taskId)
+    {
+        var task = this.activeTasks.FirstOrDefault(x => x.Id == taskId);
+        if (task is null)
+        {
+            return;
+        }
+
+        await ToggleCompleteAsync(task);
     }
 
     private async Task HandleCreateTaskKeyDown(KeyboardEventArgs args)

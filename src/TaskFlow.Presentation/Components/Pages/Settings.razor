@@ -1,16 +1,17 @@
 @page "/settings"
+@using Microsoft.AspNetCore.Components.Sections
 
 <PageTitle>Settings</PageTitle>
 
+<SectionContent SectionName="AppTopBarTitle">
+    <MudStack Class="ml-2" Spacing="0">
+        <MudText Typo="Typo.subtitle1">Settings</MudText>
+        <MudText Typo="Typo.caption">Configuration page placeholder</MudText>
+    </MudStack>
+</SectionContent>
+
 <div class="tf-home">
     <section class="tf-main">
-        <header class="tf-toolbar">
-            <div>
-                <MudText Typo="Typo.h5">Settings</MudText>
-                <MudText Typo="Typo.caption">Configuration page placeholder</MudText>
-            </div>
-        </header>
-
         <MudPaper Class="tf-focus-timer tf-focus-timer-page" Elevation="0">
             <MudText Typo="Typo.body1">Settings page is ready. We can fill in preferences and account controls next.</MudText>
         </MudPaper>

@@ -26,6 +26,7 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
 });
 builder.Services.AddScoped<IAppExceptionHandler, AppExceptionHandler>();
+builder.Services.AddTransient<IUndoManager, UndoManager>();
 
 builder.Services.AddTaskFlowApplicationServices();
 

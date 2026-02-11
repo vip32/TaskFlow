@@ -1,18 +1,53 @@
 @page "/about"
+@using Microsoft.AspNetCore.Components.Sections
+@using System.Reflection
 
 <PageTitle>About</PageTitle>
 
-<div class="tf-home">
-    <section class="tf-main">
-        <header class="tf-toolbar">
-            <div>
-                <MudText Typo="Typo.h5">About</MudText>
-                <MudText Typo="Typo.caption">TaskFlow product information</MudText>
-            </div>
-        </header>
+<SectionContent SectionName="AppTopBarTitle">
+    <MudStack Class="ml-2" Spacing="0">
+        <MudText Typo="Typo.subtitle1">About</MudText>
+        <MudText Typo="Typo.caption">TaskFlow product information</MudText>
+    </MudStack>
+</SectionContent>
 
-        <MudPaper Class="tf-focus-timer tf-focus-timer-page" Elevation="0">
-            <MudText Typo="Typo.body1">TaskFlow helps you execute work with project planning, focused task flow views, and quick daily momentum.</MudText>
-        </MudPaper>
-    </section>
-</div>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+    <MudCard Elevation="1">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Build momentum, not just lists</MudText>
+                <MudText Typo="Typo.caption">Focus-first task management</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudDivider />
+        <MudCardContent>
+            <MudText Typo="Typo.body1" Class="mb-3">
+                TaskFlow is a focus-first task app built to help you finish meaningful work. Plan by project, run your day in list or board view,
+                and keep progress moving with quick actions, keyboard shortcuts, and undo support.
+            </MudText>
+            <MudText Typo="Typo.body2">
+                Instead of storing tasks forever, TaskFlow nudges execution: decide what matters now, keep work visible, and close loops fast.
+            </MudText>
+        </MudCardContent>
+        <MudDivider />
+        <MudCardActions>
+            <MudText Typo="Typo.caption">Version @AppVersion</MudText>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private static string AppVersion => GetAppVersion();
+
+    private static string GetAppVersion()
+    {
+        var assembly = typeof(TaskFlowTheme).Assembly;
+        var informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (!string.IsNullOrWhiteSpace(informationalVersion))
+        {
+            return informationalVersion.Split('+')[0];
+        }
+
+        return assembly.GetName().Version?.ToString() ?? "unknown";
+    }
+}
