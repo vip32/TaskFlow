@@ -122,7 +122,7 @@
 
 @if (showShortcuts)
 {
-    <div class="tf-shortcuts-backdrop" @onclick="ToggleShortcutsHelp">
+    <div id="shortcuts-backdrop" class="tf-shortcuts-backdrop" tabindex="0" @onclick="ToggleShortcutsHelp" @onkeydown="HandleShortcutsKeyDown">
         <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true">
             <MudText Typo="Typo.h6">Keyboard shortcuts</MudText>
             <p>Ctrl/Cmd + Enter: complete selected task</p>
@@ -163,10 +163,12 @@
     private bool showBoardTaskDialog;
     private bool isApplyingUndo;
     private bool isLoading;
+    private bool pendingShortcutsFocus;
     private SortMode sortMode = SortMode.CreatedDesc;
     private string loadError;
     private MudTextField<string> newTaskInputRef;
     private MudTextField<string> searchInputRef;
+    private DotNetObjectReference<Home> escapeHandlerReference;
     private Guid? boardTaskId;
     private Guid? pendingSubTaskFocusParentId;
     private Guid? loadedProjectId;
@@ -254,11 +256,23 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender && this.escapeHandlerReference is null)
+        {
+            this.escapeHandlerReference = DotNetObjectReference.Create(this);
+            await this.JsRuntime.InvokeVoidAsync("taskflowUi.registerEscapeHandler", this.escapeHandlerReference);
+        }
+
         if (this.loadedProjectId != this.AppState.SelectedProjectId
             || this.loadedSectionId != this.AppState.SelectedSectionId)
         {
             await ApplySelectionAsync();
             return;
+        }
+
+        if (this.pendingShortcutsFocus && this.showShortcuts)
+        {
+            this.pendingShortcutsFocus = false;
+            await this.JsRuntime.InvokeVoidAsync("taskflowUi.focusById", "shortcuts-backdrop");
         }
 
         if (!this.pendingSubTaskFocusParentId.HasValue)
@@ -420,11 +434,12 @@
         _ = OpenMoveTaskDialogAsync(taskId);
     }
 
-    private void OpenBoardTaskDialog(Guid taskId)
+    private Task OpenBoardTaskDialog(Guid taskId)
     {
         this.selectedTaskId = taskId;
         this.boardTaskId = taskId;
         this.showBoardTaskDialog = true;
+        return Task.CompletedTask;
     }
 
     private void CloseBoardTaskDialog()
@@ -909,6 +924,18 @@
 
     private async Task HandleShellKeyDown(KeyboardEventArgs args)
     {
+        if (args.Key == "Escape")
+        {
+            if (this.showBoardTaskDialog)
+            {
+                CloseBoardTaskDialog();
+            }
+            else if (this.showShortcuts)
+            {
+                this.showShortcuts = false;
+            }
+        }
+
         if ((args.CtrlKey || args.MetaKey) && args.Key.Equals("Enter", StringComparison.OrdinalIgnoreCase) && this.selectedTaskId.HasValue)
         {
             var task = this.activeTasks.FirstOrDefault(x => x.Id == this.selectedTaskId.Value);
@@ -966,11 +993,47 @@
     private void ToggleShortcutsHelp()
     {
         this.showShortcuts = !this.showShortcuts;
+        this.pendingShortcutsFocus = this.showShortcuts;
+    }
+
+    [JSInvokable]
+    public Task HandleGlobalEscapeAsync()
+    {
+        if (!this.showBoardTaskDialog && !this.showShortcuts)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (this.showBoardTaskDialog)
+        {
+            CloseBoardTaskDialog();
+        }
+
+        if (this.showShortcuts)
+        {
+            this.showShortcuts = false;
+        }
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleShortcutsKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape" && this.showShortcuts)
+        {
+            this.showShortcuts = false;
+        }
     }
 
     public void Dispose()
     {
         this.AppState.Changed -= OnAppStateChanged;
+        if (this.escapeHandlerReference is not null)
+        {
+            _ = this.JsRuntime.InvokeVoidAsync("taskflowUi.unregisterEscapeHandler");
+            this.escapeHandlerReference.Dispose();
+            this.escapeHandlerReference = null;
+        }
     }
 }
 

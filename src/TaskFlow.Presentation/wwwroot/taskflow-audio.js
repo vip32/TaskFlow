@@ -52,4 +52,37 @@
         }
     };
 
+    window.taskflowUi.registerEscapeHandler = function (dotNetReference) {
+        if (!dotNetReference) {
+            return;
+        }
+
+        if (window.taskflowUi._escapeHandler) {
+            document.removeEventListener("keydown", window.taskflowUi._escapeHandler, true);
+        }
+
+        window.taskflowUi._escapeHandler = function (event) {
+            if (event.key === "Escape") {
+                var shortcutsBackdrop = document.getElementById("shortcuts-backdrop");
+                if (shortcutsBackdrop) {
+                    shortcutsBackdrop.click();
+                    return;
+                }
+
+                dotNetReference.invokeMethodAsync("HandleGlobalEscapeAsync");
+            }
+        };
+
+        document.addEventListener("keydown", window.taskflowUi._escapeHandler, true);
+    };
+
+    window.taskflowUi.unregisterEscapeHandler = function () {
+        if (!window.taskflowUi._escapeHandler) {
+            return;
+        }
+
+        document.removeEventListener("keydown", window.taskflowUi._escapeHandler, true);
+        window.taskflowUi._escapeHandler = null;
+    };
+
 })();

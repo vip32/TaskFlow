@@ -2,7 +2,7 @@
 @using TaskFlow.Domain
 @using DomainTaskStatus = TaskFlow.Domain.TaskStatus
 
-<div class="tf-shortcuts-backdrop" @onclick="HandleCloseAsync">
+<div class="tf-shortcuts-backdrop" tabindex="0" @onclick="HandleCloseAsync" @onkeydown="HandleKeyDownAsync">
     <MudPaper Class="tf-shortcuts-dialog" @onclick:stopPropagation="true">
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
             <MudText Typo="Typo.h6">Edit Task</MudText>
@@ -119,6 +119,13 @@
     private Task HandleCloseAsync()
     {
         return this.OnClose.InvokeAsync();
+    }
+
+    private Task HandleKeyDownAsync(KeyboardEventArgs args)
+    {
+        return args.Key == "Escape"
+            ? HandleCloseAsync()
+            : System.Threading.Tasks.Task.CompletedTask;
     }
 
     private async Task HandleCreateSubTaskKeyUp(KeyboardEventArgs args)

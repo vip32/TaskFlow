@@ -36,7 +36,7 @@
         <MudPaper Elevation="2" Class="pa-3 ma-2">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                 <MudText Typo="Typo.body1">@context.Title</MudText>
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" aria-label="Edit task" title="Edit task" OnClick="() => OnEditTaskRequested.Invoke(context.Id)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" aria-label="Edit task" title="Edit task" OnClick="() => OnEditTaskRequested.InvokeAsync(context.Id)" />
             </MudStack>
         </MudPaper>
     </ItemRenderer>
@@ -56,7 +56,7 @@
     public Func<DomainTaskStatus, string, System.Threading.Tasks.Task> OnCreateTaskInStatus { get; set; } = null!;
 
     [Parameter, EditorRequired]
-    public Action<Guid> OnEditTaskRequested { get; set; } = null!;
+    public EventCallback<Guid> OnEditTaskRequested { get; set; }
 
     private readonly Dictionary<DomainTaskStatus, string> newTaskTitles = [];
 
