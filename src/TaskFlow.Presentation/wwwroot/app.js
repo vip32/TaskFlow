@@ -1,4 +1,5 @@
 (function () {
+    // Plays a single sine tone with the given frequency, duration, and gain.
     function beepTone(frequency, durationMs, gainValue) {
         var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextCtor) {
@@ -25,6 +26,7 @@
     }
 
     window.taskflowAudio = window.taskflowAudio || {};
+    // Plays TaskFlow feedback sounds for timer events.
     window.taskflowAudio.beep = function (eventType) {
         if (eventType === "finish") {
             beepTone(988, 180, 0.08);
@@ -36,6 +38,7 @@
     };
 
     window.taskflowUi = window.taskflowUi || {};
+    // Focuses an element by id and selects its text content when supported.
     window.taskflowUi.focusById = function (id) {
         if (!id) {
             return;
@@ -52,6 +55,7 @@
         }
     };
 
+    // Installs a global Escape key handler and forwards close requests to Blazor.
     window.taskflowUi.registerEscapeHandler = function (dotNetReference) {
         if (!dotNetReference) {
             return;
@@ -76,6 +80,7 @@
         document.addEventListener("keydown", window.taskflowUi._escapeHandler, true);
     };
 
+    // Removes the global Escape key handler installed by registerEscapeHandler.
     window.taskflowUi.unregisterEscapeHandler = function () {
         if (!window.taskflowUi._escapeHandler) {
             return;
@@ -85,6 +90,7 @@
         window.taskflowUi._escapeHandler = null;
     };
 
+    // Selects the currently focused input-like element, if selectable.
     window.taskflowUi.selectFocusedInput = function () {
         var active = document.activeElement;
         if (!active) {
@@ -96,6 +102,7 @@
         }
     };
 
+    // Finds an inline editor input by data attribute, then focuses and selects it.
     window.taskflowUi.focusInlineEditById = function (inlineEditId) {
         if (!inlineEditId) {
             return;
@@ -116,6 +123,7 @@
         }
     };
 
+    // Focuses and selects the first input inside a container element by id.
     window.taskflowUi.focusInputInContainerById = function (containerId) {
         if (!containerId) {
             return;
