@@ -1,11 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
 using Serilog;
-using TaskFlow.Application;
 using TaskFlow.Presentation.Components;
-using TaskFlow.Presentation.Components.Pages;
 using TaskFlow.Infrastructure;
 using TaskFlow.Infrastructure.Persistence;
 
