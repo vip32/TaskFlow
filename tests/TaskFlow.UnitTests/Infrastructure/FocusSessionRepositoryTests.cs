@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskFlow.Domain;
 using TaskFlow.Infrastructure.Repositories;
 
@@ -10,7 +11,7 @@ public class FocusSessionRepositoryTests
     {
         var subscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
-        var repository = new FocusSessionRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new FocusSessionRepository(NullLogger<FocusSessionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var session = new FocusSession(subscriptionId, Guid.NewGuid());
         await repository.AddAsync(session);
@@ -37,7 +38,7 @@ public class FocusSessionRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new FocusSessionRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new FocusSessionRepository(NullLogger<FocusSessionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var running = await repository.GetRunningAsync();
 
@@ -61,7 +62,7 @@ public class FocusSessionRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new FocusSessionRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new FocusSessionRepository(NullLogger<FocusSessionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var recent = await repository.GetRecentAsync(0);
 
@@ -73,6 +74,7 @@ public class FocusSessionRepositoryTests
     {
         var subscriptionId = Guid.NewGuid();
         var repository = new FocusSessionRepository(
+            NullLogger<FocusSessionRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 

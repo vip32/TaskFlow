@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TaskFlow.Domain;
 using TaskFlow.Infrastructure.Persistence;
 
@@ -12,14 +13,17 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
 {
     private readonly IDbContextFactory<AppDbContext> factory;
     private readonly ICurrentSubscriptionAccessor currentSubscriptionAccessor;
+    private readonly ILogger<MyTaskFlowSectionRepository> logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MyTaskFlowSectionRepository"/> class.
     /// </summary>
+    /// <param name="logger">Logger instance.</param>
     /// <param name="factory">DbContext factory.</param>
     /// <param name="currentSubscriptionAccessor">Current subscription accessor.</param>
-    public MyTaskFlowSectionRepository(IDbContextFactory<AppDbContext> factory, ICurrentSubscriptionAccessor currentSubscriptionAccessor)
+    public MyTaskFlowSectionRepository(ILogger<MyTaskFlowSectionRepository> logger, IDbContextFactory<AppDbContext> factory, ICurrentSubscriptionAccessor currentSubscriptionAccessor)
     {
+        this.logger = logger;
         this.factory = factory;
         this.currentSubscriptionAccessor = currentSubscriptionAccessor;
     }
@@ -28,6 +32,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     public async Task<List<MyTaskFlowSection>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        this.logger.LogDebug("MyTaskFlowSection - GetAll (Repository): getting all sections for subscription {SubscriptionId}", subscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         return await db.MyTaskFlowSections
@@ -42,6 +47,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     public async Task<MyTaskFlowSection> GetByIdAsync(Guid sectionId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        this.logger.LogDebug("MyTaskFlowSection - GetById (Repository): getting section {SectionId} for subscription {SubscriptionId}", sectionId, subscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         var section = await db.MyTaskFlowSections
@@ -49,13 +55,15 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
 
         if (section is null)
         {
+            this.logger.LogDebug("MyTaskFlowSection - GetById (Repository): section {SectionId} not found in scoped lookup. Falling back to global lookup", sectionId);
             section = await db.MyTaskFlowSections
                 .FirstOrDefaultAsync(candidate => candidate.Id == sectionId, cancellationToken);
         }
 
         if (section is null)
         {
-            throw new KeyNotFoundException($"Section with id '{sectionId}' was not found.");
+            this.logger.LogWarning("MyTaskFlowSection - GetById (Repository): section {SectionId} not found", sectionId);
+            throw new EntityNotFoundException(nameof(MyTaskFlowSection), sectionId);
         }
 
         return section;
@@ -66,6 +74,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     {
         ArgumentNullException.ThrowIfNull(section);
         EnsureSubscriptionMatch(section.SubscriptionId);
+        this.logger.LogInformation("MyTaskFlowSection - Add (Repository): adding section {SectionId} for subscription {SubscriptionId}", section.Id, section.SubscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         db.MyTaskFlowSections.Add(section);
@@ -78,6 +87,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     {
         ArgumentNullException.ThrowIfNull(section);
         EnsureSubscriptionMatch(section.SubscriptionId);
+        this.logger.LogInformation("MyTaskFlowSection - Update (Repository): updating section {SectionId} for subscription {SubscriptionId}", section.Id, section.SubscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         db.MyTaskFlowSections.Update(section);
@@ -89,6 +99,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
     public async Task<bool> DeleteAsync(Guid sectionId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        this.logger.LogInformation("MyTaskFlowSection - Delete (Repository): deleting section {SectionId} for subscription {SubscriptionId}", sectionId, subscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         var section = await db.MyTaskFlowSections
@@ -96,6 +107,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
 
         if (section is null)
         {
+            this.logger.LogWarning("MyTaskFlowSection - Delete (Repository): section {SectionId} was not found for deletion in subscription {SubscriptionId}", sectionId, subscriptionId);
             return false;
         }
 
@@ -109,6 +121,7 @@ public sealed class MyTaskFlowSectionRepository : IMyTaskFlowSectionRepository
         var currentSubscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         if (entitySubscriptionId != currentSubscriptionId)
         {
+            this.logger.LogWarning("MyTaskFlowSection - EnsureSubscriptionMatch (Repository): subscription mismatch. EntitySubscriptionId={EntitySubscriptionId}, CurrentSubscriptionId={CurrentSubscriptionId}", entitySubscriptionId, currentSubscriptionId);
             throw new InvalidOperationException("Section subscription does not match current subscription context.");
         }
     }

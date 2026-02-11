@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskFlow.Domain;
 using TaskFlow.Infrastructure.Repositories;
 
@@ -20,7 +21,7 @@ public class MyTaskFlowSectionRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new MyTaskFlowSectionRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new MyTaskFlowSectionRepository(NullLogger<MyTaskFlowSectionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var result = await repository.GetAllAsync();
 
@@ -43,7 +44,7 @@ public class MyTaskFlowSectionRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new MyTaskFlowSectionRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new MyTaskFlowSectionRepository(NullLogger<MyTaskFlowSectionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var fetched = await repository.GetByIdAsync(foreignSection.Id);
 
@@ -55,6 +56,7 @@ public class MyTaskFlowSectionRepositoryTests
     {
         var subscriptionId = Guid.NewGuid();
         var repository = new MyTaskFlowSectionRepository(
+            NullLogger<MyTaskFlowSectionRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 
@@ -75,6 +77,7 @@ public class MyTaskFlowSectionRepositoryTests
     {
         var subscriptionId = Guid.NewGuid();
         var repository = new MyTaskFlowSectionRepository(
+            NullLogger<MyTaskFlowSectionRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 
@@ -87,6 +90,7 @@ public class MyTaskFlowSectionRepositoryTests
     public async System.Threading.Tasks.Task DeleteAsync_MissingSection_ReturnsFalse()
     {
         var repository = new MyTaskFlowSectionRepository(
+            NullLogger<MyTaskFlowSectionRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(Guid.NewGuid()));
 

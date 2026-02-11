@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskFlow.Application;
 using TaskFlow.Domain;
 using DomainTask = TaskFlow.Domain.Task;
@@ -14,7 +15,7 @@ public class MyTaskFlowSectionOrchestratorTests
         var second = new MyTaskFlowSection(subscription.Id, "B", 2);
         var repository = new FakeSectionRepository(first, second);
 
-        var sut = new MyTaskFlowSectionOrchestrator(repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new MyTaskFlowSectionOrchestrator(NullLogger<MyTaskFlowSectionOrchestrator>.Instance, repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
         var result = await sut.GetAllAsync();
 
         Assert.Equal(2, result.Count);
@@ -25,7 +26,7 @@ public class MyTaskFlowSectionOrchestratorTests
     {
         var subscription = CreateSubscription();
         var repository = new FakeSectionRepository();
-        var sut = new MyTaskFlowSectionOrchestrator(repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new MyTaskFlowSectionOrchestrator(NullLogger<MyTaskFlowSectionOrchestrator>.Instance, repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
 
         var created = await sut.CreateAsync("Custom", 3);
 
@@ -39,7 +40,7 @@ public class MyTaskFlowSectionOrchestratorTests
         var subscription = CreateSubscription();
         var section = new MyTaskFlowSection(subscription.Id, "Custom", 1);
         var repository = new FakeSectionRepository(section);
-        var sut = new MyTaskFlowSectionOrchestrator(repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new MyTaskFlowSectionOrchestrator(NullLogger<MyTaskFlowSectionOrchestrator>.Instance, repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
 
         var updated = await sut.UpdateRuleAsync(section.Id, TaskFlowDueBucket.Upcoming, true, false, false, false);
 
@@ -55,7 +56,7 @@ public class MyTaskFlowSectionOrchestratorTests
         var section = new MyTaskFlowSection(subscription.Id, "Custom", 1);
         var taskId = Guid.NewGuid();
         var repository = new FakeSectionRepository(section);
-        var sut = new MyTaskFlowSectionOrchestrator(repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new MyTaskFlowSectionOrchestrator(NullLogger<MyTaskFlowSectionOrchestrator>.Instance, repository, new FakeTaskRepository(), new FakeCurrentSubscriptionAccessor(subscription));
 
         await sut.IncludeTaskAsync(section.Id, taskId);
         var afterInclude = await repository.GetByIdAsync(section.Id);
@@ -82,7 +83,7 @@ public class MyTaskFlowSectionOrchestratorTests
 
         var sectionRepository = new FakeSectionRepository(todaySection);
         var taskRepository = new FakeTaskRepository(dueTask, manualTask);
-        var sut = new MyTaskFlowSectionOrchestrator(sectionRepository, taskRepository, new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new MyTaskFlowSectionOrchestrator(NullLogger<MyTaskFlowSectionOrchestrator>.Instance, sectionRepository, taskRepository, new FakeCurrentSubscriptionAccessor(subscription));
 
         var tasks = await sut.GetSectionTasksAsync(todaySection.Id);
 
@@ -104,7 +105,7 @@ public class MyTaskFlowSectionOrchestratorTests
 
         var sectionRepository = new FakeSectionRepository(importantSection);
         var taskRepository = new FakeTaskRepository(starredTask, regularTask);
-        var sut = new MyTaskFlowSectionOrchestrator(sectionRepository, taskRepository, new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new MyTaskFlowSectionOrchestrator(NullLogger<MyTaskFlowSectionOrchestrator>.Instance, sectionRepository, taskRepository, new FakeCurrentSubscriptionAccessor(subscription));
 
         var tasks = await sut.GetSectionTasksAsync(importantSection);
 

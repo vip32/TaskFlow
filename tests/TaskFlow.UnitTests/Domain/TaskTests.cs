@@ -200,11 +200,11 @@ public class TaskTests
     }
 
     [Fact]
-    public void MarkReminderSent_UnknownId_ThrowsKeyNotFoundException()
+    public void MarkReminderSent_UnknownId_ThrowsEntityNotFoundException()
     {
         var task = new DomainTask(Guid.NewGuid(), "Task", null);
 
-        Assert.Throws<KeyNotFoundException>(() => task.MarkReminderSent(Guid.NewGuid(), DateTime.UtcNow));
+        Assert.Throws<EntityNotFoundException>(() => task.MarkReminderSent(Guid.NewGuid(), DateTime.UtcNow));
     }
 
     [Fact]

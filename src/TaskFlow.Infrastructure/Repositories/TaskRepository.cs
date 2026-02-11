@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TaskFlow.Domain;
 using TaskFlow.Infrastructure.Persistence;
 using DomainTask = TaskFlow.Domain.Task;
@@ -13,14 +14,17 @@ public sealed class TaskRepository : ITaskRepository
 {
     private readonly IDbContextFactory<AppDbContext> factory;
     private readonly ICurrentSubscriptionAccessor currentSubscriptionAccessor;
+    private readonly ILogger<TaskRepository> logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskRepository"/> class.
     /// </summary>
+    /// <param name="logger">Logger instance.</param>
     /// <param name="factory">DbContext factory used to create per-call contexts.</param>
     /// <param name="currentSubscriptionAccessor">Current subscription context accessor.</param>
-    public TaskRepository(IDbContextFactory<AppDbContext> factory, ICurrentSubscriptionAccessor currentSubscriptionAccessor)
+    public TaskRepository(ILogger<TaskRepository> logger, IDbContextFactory<AppDbContext> factory, ICurrentSubscriptionAccessor currentSubscriptionAccessor)
     {
+        this.logger = logger;
         this.factory = factory;
         this.currentSubscriptionAccessor = currentSubscriptionAccessor;
     }
@@ -29,34 +33,41 @@ public sealed class TaskRepository : ITaskRepository
     public async Task<List<DomainTask>> GetByProjectIdAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        this.logger.LogDebug("Task - GetByProjectId (Repository): getting top-level tasks for subscription {SubscriptionId}, project {ProjectId}", subscriptionId, projectId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
-        return await db.Tasks
+        var tasks = await db.Tasks
             .AsNoTracking()
             .Where(t => t.SubscriptionId == subscriptionId && t.ProjectId == projectId && !t.ParentTaskId.HasValue)
             .OrderBy(t => t.SortOrder)
             .ThenBy(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
+        this.logger.LogDebug("Task - GetByProjectId (Repository): retrieved {TaskCount} top-level task(s) for project {ProjectId}", tasks.Count, projectId);
+        return tasks;
     }
 
     /// <inheritdoc/>
     public async Task<List<DomainTask>> GetSubTasksAsync(Guid parentTaskId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        this.logger.LogDebug("Task - GetSubTasks (Repository): getting subtasks for subscription {SubscriptionId}, parent task {ParentTaskId}", subscriptionId, parentTaskId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
-        return await db.Tasks
+        var tasks = await db.Tasks
             .AsNoTracking()
             .Where(t => t.SubscriptionId == subscriptionId && t.ParentTaskId == parentTaskId)
             .OrderBy(t => t.SortOrder)
             .ThenBy(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
+        this.logger.LogDebug("Task - GetSubTasks (Repository): retrieved {TaskCount} subtask(s) for parent task {ParentTaskId}", tasks.Count, parentTaskId);
+        return tasks;
     }
 
     /// <inheritdoc/>
     public async Task<int> GetNextSortOrderAsync(Guid? projectId, Guid? parentTaskId, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        this.logger.LogDebug("Task - GetNextSortOrder (Repository): calculating next sort order for subscription {SubscriptionId}, project {ProjectId}, parentTask {ParentTaskId}", subscriptionId, projectId, parentTaskId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         var maxSortOrder = await db.Tasks
@@ -68,7 +79,9 @@ public sealed class TaskRepository : ITaskRepository
             .Select(t => (int?)t.SortOrder)
             .MaxAsync(cancellationToken);
 
-        return maxSortOrder.HasValue ? maxSortOrder.Value + 1 : 0;
+        var next = maxSortOrder.HasValue ? maxSortOrder.Value + 1 : 0;
+        this.logger.LogDebug("Task - GetNextSortOrder (Repository): next sort order resolved to {SortOrder}", next);
+        return next;
     }
 
     /// <inheritdoc/>
@@ -91,13 +104,15 @@ public sealed class TaskRepository : ITaskRepository
 
         if (string.IsNullOrWhiteSpace(query))
         {
+            this.logger.LogDebug("Task - Search (Repository): skipping search due to blank query for project {ProjectId}", projectId);
             return [];
         }
 
         var normalized = query.Trim().ToLowerInvariant();
+        this.logger.LogDebug("Task - Search (Repository): searching tasks for subscription {SubscriptionId}, project {ProjectId}, query length {QueryLength}", subscriptionId, projectId, normalized.Length);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
-        return await db.Tasks
+        var tasks = await db.Tasks
             .AsNoTracking()
             .Where(t => t.SubscriptionId == subscriptionId && t.ProjectId == projectId)
             .Where(t =>
@@ -105,6 +120,8 @@ public sealed class TaskRepository : ITaskRepository
                 EF.Functions.Like((t.Note ?? string.Empty).ToLower(), $"%{normalized}%"))
             .OrderBy(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
+        this.logger.LogDebug("Task - Search (Repository): search returned {TaskCount} result(s) for project {ProjectId}", tasks.Count, projectId);
+        return tasks;
     }
 
     /// <inheritdoc/>
@@ -124,6 +141,7 @@ public sealed class TaskRepository : ITaskRepository
     public async Task<List<DomainTask>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        this.logger.LogDebug("Task - GetAll (Repository): getting all tasks for subscription {SubscriptionId}", subscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         return await db.Tasks
@@ -232,6 +250,7 @@ public sealed class TaskRepository : ITaskRepository
     {
         ArgumentNullException.ThrowIfNull(task);
         EnsureSubscriptionMatch(task.SubscriptionId);
+        this.logger.LogInformation("Task - Add (Repository): adding task {TaskId} for subscription {SubscriptionId}", task.Id, task.SubscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         db.Tasks.Add(task);
@@ -244,6 +263,7 @@ public sealed class TaskRepository : ITaskRepository
     {
         ArgumentNullException.ThrowIfNull(task);
         EnsureSubscriptionMatch(task.SubscriptionId);
+        this.logger.LogInformation("Task - Update (Repository): updating task {TaskId} for subscription {SubscriptionId}", task.Id, task.SubscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         db.Tasks.Update(task);
@@ -264,9 +284,11 @@ public sealed class TaskRepository : ITaskRepository
 
         if (list.Count == 0)
         {
+            this.logger.LogDebug("Task - UpdateRange (Repository): skipping range update because task list is empty");
             return [];
         }
 
+        this.logger.LogInformation("Task - UpdateRange (Repository): updating {TaskCount} task(s) in range operation", list.Count);
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
         db.Tasks.UpdateRange(list);
         await db.SaveChangesAsync(cancellationToken);
@@ -277,12 +299,14 @@ public sealed class TaskRepository : ITaskRepository
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        this.logger.LogInformation("Task - Delete (Repository): deleting task {TaskId} for subscription {SubscriptionId}", id, subscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
 
         var task = await db.Tasks.FirstOrDefaultAsync(t => t.SubscriptionId == subscriptionId && t.Id == id, cancellationToken);
         if (task is null)
         {
+            this.logger.LogWarning("Task - Delete (Repository): task {TaskId} was not found for deletion in subscription {SubscriptionId}", id, subscriptionId);
             return false;
         }
 
@@ -295,6 +319,7 @@ public sealed class TaskRepository : ITaskRepository
     public async Task<DomainTask> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var subscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
+        this.logger.LogDebug("Task - GetById (Repository): getting task {TaskId} for subscription {SubscriptionId}", id, subscriptionId);
 
         await using var db = await this.factory.CreateDbContextAsync(cancellationToken);
 
@@ -304,7 +329,8 @@ public sealed class TaskRepository : ITaskRepository
 
         if (task is null)
         {
-            throw new KeyNotFoundException($"Task with id '{id}' was not found.");
+            this.logger.LogWarning("Task - GetById (Repository): task {TaskId} not found for subscription {SubscriptionId}", id, subscriptionId);
+            throw new EntityNotFoundException(nameof(DomainTask), id);
         }
 
         return task;
@@ -315,6 +341,7 @@ public sealed class TaskRepository : ITaskRepository
         var currentSubscriptionId = this.currentSubscriptionAccessor.GetCurrentSubscription().Id;
         if (entitySubscriptionId != currentSubscriptionId)
         {
+            this.logger.LogWarning("Task - EnsureSubscriptionMatch (Repository): subscription mismatch. EntitySubscriptionId={EntitySubscriptionId}, CurrentSubscriptionId={CurrentSubscriptionId}", entitySubscriptionId, currentSubscriptionId);
             throw new InvalidOperationException("Task subscription does not match current subscription context.");
         }
     }

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskFlow.Application;
 using TaskFlow.Domain;
 
@@ -11,7 +12,7 @@ public class FocusTimerOrchestratorTests
         var subscription = CreateSubscription();
         var running = new FocusSession(subscription.Id, Guid.NewGuid());
         var repository = new FakeFocusSessionRepository(running);
-        var sut = new FocusTimerOrchestrator(repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new FocusTimerOrchestrator(NullLogger<FocusTimerOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
 
         var created = await sut.StartAsync(Guid.NewGuid());
 
@@ -26,7 +27,7 @@ public class FocusTimerOrchestratorTests
     {
         var subscription = CreateSubscription();
         var repository = new FakeFocusSessionRepository();
-        var sut = new FocusTimerOrchestrator(repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new FocusTimerOrchestrator(NullLogger<FocusTimerOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
 
         var created = await sut.StartAsync(Guid.Empty);
 
@@ -38,7 +39,7 @@ public class FocusTimerOrchestratorTests
     {
         var subscription = CreateSubscription();
         var repository = new FakeFocusSessionRepository();
-        var sut = new FocusTimerOrchestrator(repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new FocusTimerOrchestrator(NullLogger<FocusTimerOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
 
         var ended = await sut.EndCurrentAsync();
 
@@ -51,7 +52,7 @@ public class FocusTimerOrchestratorTests
         var subscription = CreateSubscription();
         var running = new FocusSession(subscription.Id);
         var repository = new FakeFocusSessionRepository(running);
-        var sut = new FocusTimerOrchestrator(repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new FocusTimerOrchestrator(NullLogger<FocusTimerOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
 
         var ended = await sut.EndCurrentAsync();
 
@@ -66,7 +67,7 @@ public class FocusTimerOrchestratorTests
         var subscription = CreateSubscription();
         var repository = new FakeFocusSessionRepository();
         repository.Recent.Add(new FocusSession(subscription.Id));
-        var sut = new FocusTimerOrchestrator(repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new FocusTimerOrchestrator(NullLogger<FocusTimerOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
 
         var recent = await sut.GetRecentAsync(10);
 

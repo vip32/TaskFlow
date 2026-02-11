@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskFlow.Domain;
 using TaskFlow.Infrastructure.Repositories;
 
@@ -18,7 +19,7 @@ public class ProjectRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new ProjectRepository(factory, new TestCurrentSubscriptionAccessor(currentSubscriptionId));
+        var repository = new ProjectRepository(NullLogger<ProjectRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(currentSubscriptionId));
 
         var result = await repository.GetAllAsync();
 
@@ -31,7 +32,7 @@ public class ProjectRepositoryTests
     {
         var currentSubscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
-        var repository = new ProjectRepository(factory, new TestCurrentSubscriptionAccessor(currentSubscriptionId));
+        var repository = new ProjectRepository(NullLogger<ProjectRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(currentSubscriptionId));
 
         var project = new Project(currentSubscriptionId, "Initial", "#123456", "work");
         await repository.AddAsync(project);
@@ -51,6 +52,7 @@ public class ProjectRepositoryTests
     {
         var currentSubscriptionId = Guid.NewGuid();
         var repository = new ProjectRepository(
+            NullLogger<ProjectRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(currentSubscriptionId));
 
@@ -60,13 +62,14 @@ public class ProjectRepositoryTests
     }
 
     [Fact]
-    public async System.Threading.Tasks.Task GetByIdAsync_NotFound_ThrowsKeyNotFoundException()
+    public async System.Threading.Tasks.Task GetByIdAsync_NotFound_ThrowsEntityNotFoundException()
     {
         var currentSubscriptionId = Guid.NewGuid();
         var repository = new ProjectRepository(
+            NullLogger<ProjectRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(currentSubscriptionId));
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => repository.GetByIdAsync(Guid.NewGuid()));
+        await Assert.ThrowsAsync<EntityNotFoundException>(() => repository.GetByIdAsync(Guid.NewGuid()));
     }
 }

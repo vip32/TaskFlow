@@ -5,6 +5,7 @@ using Serilog;
 using TaskFlow.Presentation.Components;
 using TaskFlow.Infrastructure;
 using TaskFlow.Infrastructure.Persistence;
+using TaskFlow.Presentation.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
 });
+builder.Services.AddScoped<IAppExceptionHandler, AppExceptionHandler>();
 
 builder.Services.AddTaskFlowApplicationServices();
 
@@ -85,13 +87,8 @@ app.MapGet("/health", async (IDbContextFactory<AppDbContext> dbFactory, Cancella
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {
-    Log.Information("TaskFlow {AppName} v{AppVersion} started. Content root: {ContentRoot}",
-        appName,
-        appVersion,
-        contentRoot);
-    var urls = app.Urls.Count == 0
-        ? "(no urls configured)"
-        : string.Join(", ", app.Urls);
+    Log.Information("TaskFlow {AppName} v{AppVersion} started. Content root: {ContentRoot}", appName, appVersion, contentRoot);
+    var urls = app.Urls.Count == 0 ? "(no urls configured)" : string.Join(", ", app.Urls);
     Log.Information("Startup complete. Listening on {Urls}.", urls);
 });
 
@@ -109,9 +106,7 @@ static async Task LogMigrationSummaryAsync(IServiceProvider services)
     var appliedList = applied.ToList();
     var pendingList = pending.ToList();
 
-    Log.Information("Migrations summary: applied {AppliedCount}, pending {PendingCount}.",
-        appliedList.Count,
-        pendingList.Count);
+    Log.Information("Migrations summary: applied {AppliedCount}, pending {PendingCount}.", appliedList.Count, pendingList.Count);
 
     if (pendingList.Count > 0)
     {

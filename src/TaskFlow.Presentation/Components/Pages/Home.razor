@@ -9,6 +9,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IJSRuntime JsRuntime
+@inject IAppExceptionHandler UiExceptionHandler
 
 <PageTitle>TaskFlow</PageTitle>
 
@@ -285,7 +286,8 @@
         }
         catch (Exception ex)
         {
-            this.loadError = $"Could not load data: {ex.Message}";
+            this.UiExceptionHandler.Handle(ex, "Home - ReloadAll");
+            this.loadError = "Could not load data. Please try again.";
         }
         finally
         {
@@ -334,7 +336,8 @@
         }
         catch (Exception ex)
         {
-            this.loadError = $"Could not load tasks: {ex.Message}";
+            this.UiExceptionHandler.Handle(ex, "Home - ApplySelection");
+            this.loadError = "Could not load tasks. Please try again.";
         }
     }
 

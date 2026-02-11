@@ -1,6 +1,18 @@
-﻿<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router>
+<TaskFlowErrorBoundary>
+    <ChildContent>
+        <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+            <Found Context="routeData">
+                <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+                <FocusOnNavigate RouteData="routeData" Selector="h1" />
+            </Found>
+        </Router>
+    </ChildContent>
+    <ErrorContent Context="exception">
+        <MudPaper Class="pa-6 ma-6">
+            <MudAlert Severity="Severity.Error" Dense="true">
+                Something went wrong while rendering this view.
+            </MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" Href=".">Reload</MudButton>
+        </MudPaper>
+    </ErrorContent>
+</TaskFlowErrorBoundary>

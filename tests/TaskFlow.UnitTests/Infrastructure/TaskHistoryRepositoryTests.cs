@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskFlow.Domain;
 using TaskFlow.Infrastructure.Repositories;
 
@@ -10,7 +11,7 @@ public class TaskHistoryRepositoryTests
     {
         var subscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
-        var repository = new TaskHistoryRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new TaskHistoryRepository(NullLogger<TaskHistoryRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         await repository.RegisterUsageAsync(" ", false);
 
@@ -23,7 +24,7 @@ public class TaskHistoryRepositoryTests
     {
         var subscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
-        var repository = new TaskHistoryRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new TaskHistoryRepository(NullLogger<TaskHistoryRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         await repository.RegisterUsageAsync("Plan", false);
         await repository.RegisterUsageAsync("plan", false);
@@ -53,7 +54,7 @@ public class TaskHistoryRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskHistoryRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new TaskHistoryRepository(NullLogger<TaskHistoryRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var suggestions = await repository.GetSuggestionsAsync("Pla", false, 10);
 

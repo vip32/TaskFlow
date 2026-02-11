@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskFlow.Application;
 using TaskFlow.Domain;
 using DomainTask = TaskFlow.Domain.Task;
@@ -300,7 +301,7 @@ public class TaskOrchestratorTests
 
     private static TaskOrchestrator CreateSut(Subscription subscription, FakeTaskRepository repository, FakeTaskHistoryRepository history)
     {
-        return new TaskOrchestrator(repository, history, new FakeCurrentSubscriptionAccessor(subscription));
+        return new TaskOrchestrator(NullLogger<TaskOrchestrator>.Instance, repository, history, new FakeCurrentSubscriptionAccessor(subscription));
     }
 
     private static Subscription CreateSubscription()

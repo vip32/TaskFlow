@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using TaskFlow.Infrastructure.Repositories;
 using DomainTask = TaskFlow.Domain.Task;
 
@@ -32,7 +33,7 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
         var result = await repository.GetByProjectIdAsync(projectId);
 
         Assert.Equal(3, result.Count);
@@ -60,7 +61,7 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
         var result = await repository.GetSubTasksAsync(parent.Id);
 
         Assert.Equal(2, result.Count);
@@ -85,7 +86,7 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var next = await repository.GetNextSortOrderAsync(projectId, null);
 
@@ -97,6 +98,7 @@ public class TaskRepositoryTests
     {
         var subscriptionId = Guid.NewGuid();
         var repository = new TaskRepository(
+            NullLogger<TaskRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 
@@ -130,7 +132,7 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var onDate = await repository.GetDueOnDateAsync(today);
         var inRange = await repository.GetDueInRangeAsync(today, today.AddDays(1));
@@ -146,6 +148,7 @@ public class TaskRepositoryTests
     {
         var subscriptionId = Guid.NewGuid();
         var repository = new TaskRepository(
+            NullLogger<TaskRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 
@@ -172,7 +175,7 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var byIds = await repository.GetByIdsAsync([mine.Id, foreign.Id]);
         var deletedMine = await repository.DeleteAsync(mine.Id);

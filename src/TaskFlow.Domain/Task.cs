@@ -597,7 +597,7 @@ public class Task
         var reminder = this.reminders.FirstOrDefault(x => x.Id == reminderId);
         if (reminder is null)
         {
-            throw new KeyNotFoundException($"Reminder with id '{reminderId}' was not found.");
+            throw new EntityNotFoundException(nameof(TaskReminder), reminderId);
         }
 
         reminder.MarkSent(sentAtUtc);
