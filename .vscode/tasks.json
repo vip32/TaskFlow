@@ -262,7 +262,7 @@
         "--configuration",
         "Release",
         "--output",
-        "artifacts/publish"
+        ".artifacts/publish"
       ],
       "group": "build",
       "problemMatcher": "$msCompile",
@@ -308,6 +308,18 @@
         "src/TaskFlow.Presentation/TaskFlow.Presentation.csproj"
       ],
       "group": "none",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "dotnet: test coverage + html (unit)",
+      "type": "shell",
+      "command": "dotnet tool restore; dotnet test tests/TaskFlow.UnitTests/TaskFlow.UnitTests.csproj --configuration Debug --settings coverlet.runsettings --collect \"XPlat Code Coverage\" --results-directory .artifacts/TestResults/UnitCoverage; $report = Get-ChildItem '.artifacts/TestResults/UnitCoverage' -Recurse -Filter 'coverage.cobertura.xml' | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1; if (-not $report) { throw 'coverage.cobertura.xml not found.' }; dotnet tool run reportgenerator \"-reports:$($report.FullName)\" \"-targetdir:.artifacts/coverage/unit\" \"-reporttypes:Html\"; $index = Resolve-Path '.artifacts/coverage/unit/index.html' -ErrorAction Stop; Start-Process $index.Path",
+      "group": "test",
       "problemMatcher": "$msCompile",
       "presentation": {
         "reveal": "always",

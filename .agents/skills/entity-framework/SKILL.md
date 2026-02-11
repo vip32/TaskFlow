@@ -1,9 +1,6 @@
 ---
 name: entity-framework
-description: |
-  Handles Entity Framework Core database access, migrations, and repository patterns for PostgreSQL.
-  Use when: Creating DbContext classes, writing migrations, implementing repositories, configuring entity relationships, or optimizing database queries.
-allowed-tools: Read, Edit, Write, Glob, Grep, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs
+description: Handles Entity Framework Core database access, migrations, and repository patterns for PostgreSQL. Use when Creating DbContext classes, writing migrations, implementing repositories, configuring entity relationships, or optimizing database queries.
 ---
 
 # Entity Framework Core Skill
@@ -62,10 +59,10 @@ if (pending.Any())
 public async Task<WalletEntity?> GetByAddressAsync(string address, bool includeAddresses = false)
 {
     IQueryable<WalletEntity> query = _context.Wallets;
-    
+
     if (includeAddresses)
         query = query.Include(w => w.Addresses);
-    
+
     return await query.AsNoTracking().FirstOrDefaultAsync(w => w.Address == address);
 }
 ```

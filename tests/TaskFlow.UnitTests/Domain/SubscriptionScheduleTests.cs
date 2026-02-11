@@ -1,12 +1,24 @@
 using TaskFlow.Domain;
 
-namespace TaskFlow.UnitTests;
+namespace TaskFlow.UnitTests.Domain;
 
 /// <summary>
 /// Tests subscription schedule domain behavior.
 /// </summary>
 public class SubscriptionScheduleTests
 {
+    [Fact]
+    public void CreateOpenEnded_EmptySubscriptionId_ThrowsArgumentException()
+    {
+        Assert.Throws<ArgumentException>(() => SubscriptionSchedule.CreateOpenEnded(Guid.Empty, new DateOnly(2026, 1, 1)));
+    }
+
+    [Fact]
+    public void CreateWindow_EmptySubscriptionId_ThrowsArgumentException()
+    {
+        Assert.Throws<ArgumentException>(() => SubscriptionSchedule.CreateWindow(Guid.Empty, new DateOnly(2026, 1, 1), new DateOnly(2026, 1, 2)));
+    }
+
     /// <summary>
     /// Verifies open-ended schedules are marked correctly.
     /// </summary>
@@ -54,3 +66,4 @@ public class SubscriptionScheduleTests
         Assert.False(schedule.IsActiveAt(new DateOnly(2026, 2, 1)));
     }
 }
+

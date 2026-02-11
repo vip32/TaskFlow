@@ -85,11 +85,11 @@ public static class InMemoryDbContextFactory
     public static TenantDbContext Create(string? databaseName = null)
     {
         databaseName ??= Guid.NewGuid().ToString(); // Isolation per test
-        
+
         var options = new DbContextOptionsBuilder<TenantDbContext>()
             .UseInMemoryDatabase(databaseName)
             .Options;
-        
+
         var context = new TenantDbContext(options, "public");
         context.Database.EnsureCreated();
         return context;
@@ -155,7 +155,7 @@ public class WalletRepositoryTests : IDisposable
 dotnet ef migrations bundle \
     --project src/Common/Sorcha.Wallet.Core \
     --startup-project src/Services/Sorcha.Wallet.Service \
-    --output ./artifacts/efbundle.exe
+    --output ./.artifacts/efbundle.exe
 
 # Execute in production
 ./efbundle.exe --connection "Host=prod;Database=sorcha;..."
