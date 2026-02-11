@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Include>
+            <ModulePath>.*TaskFlow\..*\.dll</ModulePath>
+          </Include>
+
+          <Exclude>
+            <ModulePath>.*TaskFlow\.UnitTests.*\.dll</ModulePath>
+            <ModulePath>.*TaskFlow\.IntegrationTests.*\.dll</ModulePath>
+            <ModulePath>.*TaskFlow\.Benchmarks.*\.dll</ModulePath>
+            <ModulePath>.*xunit\..*\.dll</ModulePath>
+            <ModulePath>.*Microsoft\..*\.dll</ModulePath>
+            <ModulePath>.*System\..*\.dll</ModulePath>
+          </Exclude>
+
+          <ExcludeByAttribute>
+            ExcludeFromCodeCoverageAttribute,
+            CompilerGeneratedAttribute,
+            GeneratedCodeAttribute,
+            System.CodeDom.Compiler.GeneratedCodeAttribute
+          </ExcludeByAttribute>
+
+          <ExcludeByFile>
+            **/Migrations/*.cs,
+            **/Designer.cs,
+            **/*Generated*.cs,
+            **/*generated*.cs,
+            **/*Resources*.cs,
+            **/*.g.cs,
+            **/*.g.i.cs,
+            **/Program.cs,
+            **/ProgramExtensions.cs,
+            **/*AssemblyInfo.cs
+          </ExcludeByFile>
+
+          <SkipAutoProps>true</SkipAutoProps>
+          <Verbose>true</Verbose>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

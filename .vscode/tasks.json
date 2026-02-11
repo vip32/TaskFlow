@@ -5,10 +5,7 @@
       "label": "dotnet: restore (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": [
-        "restore",
-        "TaskFlow.sln"
-      ],
+      "args": ["restore", "TaskFlow.sln"],
       "group": "build",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -21,12 +18,7 @@
       "label": "dotnet: build (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": [
-        "build",
-        "TaskFlow.sln",
-        "--configuration",
-        "Debug"
-      ],
+      "args": ["build", "TaskFlow.sln", "--configuration", "Debug"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -42,12 +34,7 @@
       "label": "dotnet: build (solution, Release)",
       "type": "process",
       "command": "dotnet",
-      "args": [
-        "build",
-        "TaskFlow.sln",
-        "--configuration",
-        "Release"
-      ],
+      "args": ["build", "TaskFlow.sln", "--configuration", "Release"],
       "group": "build",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -60,10 +47,7 @@
       "label": "dotnet: clean (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": [
-        "clean",
-        "TaskFlow.sln"
-      ],
+      "args": ["clean", "TaskFlow.sln"],
       "group": "build",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -115,12 +99,7 @@
       "label": "docker: build (TaskFlow)",
       "type": "process",
       "command": "docker",
-      "args": [
-        "build",
-        "-t",
-        "taskflow:dev",
-        "."
-      ],
+      "args": ["build", "-t", "taskflow:dev", "."],
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -133,13 +112,7 @@
       "label": "docker: run (TaskFlow)",
       "type": "process",
       "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-p",
-        "8080:8080",
-        "taskflow:dev"
-      ],
+      "args": ["run", "--rm", "-p", "8080:8080", "taskflow:dev"],
       "group": "none",
       "problemMatcher": [],
       "presentation": {
@@ -152,12 +125,7 @@
       "label": "dotnet: test (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": [
-        "test",
-        "TaskFlow.sln",
-        "--configuration",
-        "Debug"
-      ],
+      "args": ["test", "TaskFlow.sln", "--configuration", "Debug"],
       "group": "test",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -170,10 +138,7 @@
       "label": "dotnet: outdated (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": [
-        "outdated",
-        "TaskFlow.sln"
-      ],
+      "args": ["outdated", "TaskFlow.sln"],
       "group": "none",
       "problemMatcher": [],
       "presentation": {
@@ -186,11 +151,7 @@
       "label": "dotnet: outdated update (solution)",
       "type": "process",
       "command": "dotnet",
-      "args": [
-        "outdated",
-        "TaskFlow.sln",
-        "--upgrade"
-      ],
+      "args": ["outdated", "TaskFlow.sln", "--upgrade"],
       "group": "none",
       "problemMatcher": [],
       "presentation": {
@@ -203,10 +164,7 @@
       "label": "dotnet: tool restore",
       "type": "process",
       "command": "dotnet",
-      "args": [
-        "tool",
-        "restore"
-      ],
+      "args": ["tool", "restore"],
       "group": "none",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -219,12 +177,7 @@
       "label": "dotnet: tool update (local, all)",
       "type": "process",
       "command": "dotnet",
-      "args": [
-        "tool",
-        "update",
-        "--local",
-        "--all"
-      ],
+      "args": ["tool", "update", "--local", "--all"],
       "group": "none",
       "problemMatcher": "$msCompile",
       "presentation": {
@@ -262,7 +215,7 @@
         "--configuration",
         "Release",
         "--output",
-        "artifacts/publish"
+        ".artifacts/publish"
       ],
       "group": "build",
       "problemMatcher": "$msCompile",
@@ -316,11 +269,20 @@
       }
     },
     {
+      "label": "dotnet: test coverage + html (unit)",
+      "type": "shell",
+      "command": "dotnet tool restore; dotnet test tests/TaskFlow.UnitTests/TaskFlow.UnitTests.csproj --configuration Debug --settings coverlet.runsettings --collect \"XPlat Code Coverage\" --results-directory .artifacts/TestResults/UnitCoverage; $report = Get-ChildItem '.artifacts/TestResults/UnitCoverage' -Recurse -Filter 'coverage.cobertura.xml' | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1; if (-not $report) { throw 'coverage.cobertura.xml not found.' }; dotnet tool run reportgenerator \"-reports:$($report.FullName)\" \"-targetdir:.artifacts/coverage/unit\" \"-reporttypes:Html\"; $index = Resolve-Path '.artifacts/coverage/unit/index.html' -ErrorAction Stop; Start-Process $index.Path",
+      "group": "test",
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
       "label": "dotnet: restore + build (solution)",
-      "dependsOn": [
-        "dotnet: restore (solution)",
-        "dotnet: build (solution)"
-      ],
+      "dependsOn": ["dotnet: restore (solution)", "dotnet: build (solution)"],
       "dependsOrder": "sequence",
       "problemMatcher": []
     }
