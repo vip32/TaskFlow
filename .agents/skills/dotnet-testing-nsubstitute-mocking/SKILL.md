@@ -1,36 +1,29 @@
 ---
 name: dotnet-testing-nsubstitute-mocking
-description: |
-  使用 NSubstitute 建立測試替身(Mock、Stub、Spy)的專門技能。當需要隔離外部依賴、模擬介面行為、驗證方法呼叫時使用。涵蓋 Substitute.For、Returns、Received、Throws 等完整指引。
-  Keywords: mock, stub, spy, nsubstitute, 模擬, test double, 測試替身, IRepository, IService, Substitute.For, Returns, Received, Throws, Arg.Any, Arg.Is, 隔離依賴, 模擬外部服務, dependency injection testing
-license: MIT
-metadata:
-  author: Kevin Tseng
-  version: "1.0.0"
-  tags: ".NET, testing, NSubstitute, mock, stub, test double"
+description: Specialized skill for creating test doubles (Mock, Stub, Spy) using NSubstitute. Use when isolating external dependencies, simulating interface behavior, and verifying method calls. Covers complete guidance on Substitute.For, Returns, Received, Throws, etc.
 ---
 
 # NSubstitute Mocking Skill
 
-## 技能說明
+## Skill Overview
 
-此技能專注於使用 NSubstitute 建立和管理測試替身，涵蓋 Test Double 五大類型、依賴隔離策略、行為設定與驗證的最佳實踐。
+This skill focuses on using NSubstitute to create and manage test doubles, covering all five Test Double types, dependency isolation strategies, behavior setup, and verification best practices.
 
-## 為什麼需要測試替身？
+## Why Test Doubles?
 
-真實世界的程式碼通常依賴外部資源，這些依賴會讓測試變得：
+Real-world code typically depends on external resources, making tests:
 
-1. **緩慢** - 需要實際操作資料庫、檔案系統、網路
-2. **不穩定** - 外部服務異常導致測試失敗
-3. **難以重複** - 時間、隨機數導致結果不一致
-4. **環境依賴** - 需要特定的外部環境設定
-5. **開發阻塞** - 必須等待外部系統準備就緒
+1. **Slow** - Requires actual database, file system, or network operations
+2. **Unstable** - External service failures cause test failures
+3. **Non-reproducible** - Time, random numbers cause inconsistent results
+4. **Environment-dependent** - Requires specific external environment setup
+5. **Development-blocking** - Must wait for external systems to be ready
 
-測試替身（Test Double）讓我們能夠隔離這些依賴，專注測試業務邏輯。
+Test doubles enable us to isolate these dependencies and focus on testing business logic.
 
-## 前置需求
+## Prerequisites
 
-### 套件安裝
+### Package Installation
 
 ```xml
 <PackageReference Include="NSubstitute" Version="5.3.0" />
@@ -39,7 +32,7 @@ metadata:
 <PackageReference Include="AwesomeAssertions" Version="9.1.0" />
 ```
 
-### 基本 using 指令
+### Basic using Statements
 
 ```csharp
 using NSubstitute;
@@ -49,13 +42,13 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 ```
 
-## Test Double 五大類型
+## Five Test Double Types
 
-根據 Gerard Meszaros 在《xUnit Test Patterns》中的定義：
+Based on Gerard Meszaros' definitions in *xUnit Test Patterns*:
 
-### 1. Dummy - 填充物件
+### 1. Dummy - Filler Object
 
-僅用於滿足方法簽章，不會被實際使用。
+Used only to satisfy method signatures, never actually used.
 
 ```csharp
 public interface IEmailService
@@ -64,182 +57,182 @@ public interface IEmailService
 }
 
 [Fact]
-public void ProcessOrder_不使用Logger_應成功處理訂單()
+public void ProcessOrder_LoggerNotUsed_ShouldProcessOrderSuccessfully()
 {
-    // Dummy：只是為了滿足參數要求
+    // Dummy: Just to satisfy parameter requirements
     var dummyLogger = Substitute.For<ILogger>();
-    
+
     var service = new OrderService();
     var result = service.ProcessOrder(order, dummyLogger);
-    
+
     result.Success.Should().BeTrue();
-    // 不關心 logger 是否被調用
+    // Don't care if logger was called
 }
 ```
 
-### 2. Stub - 預設回傳值
+### 2. Stub - Predefined Return Values
 
-提供預先定義的回傳值，用於測試特定情境。
+Provides predefined return values for testing specific scenarios.
 
 ```csharp
 [Fact]
-public void GetUser_有效的使用者ID_應回傳使用者資料()
+public void GetUser_ValidUserId_ShouldReturnUserData()
 {
-    // Arrange - Stub：預設回傳值
+    // Arrange - Stub: Predefined return value
     var stubRepository = Substitute.For<IUserRepository>();
     stubRepository.GetById(123).Returns(new User { Id = 123, Name = "John" });
-    
+
     var service = new UserService(stubRepository);
-    
+
     // Act
     var actual = service.GetUser(123);
-    
+
     // Assert
     actual.Name.Should().Be("John");
-    // 不關心 GetById 被呼叫了幾次
+    // Don't care how many times GetById was called
 }
 ```
 
-### 3. Fake - 簡化實作
+### 3. Fake - Simplified Implementation
 
-有實際功能但簡化的實作，通常用於整合測試。
+Has actual functionality but simplified, typically used for integration tests.
 
 ```csharp
 public class FakeUserRepository : IUserRepository
 {
     private readonly Dictionary<int, User> _users = new();
-    
+
     public User GetById(int id) => _users.TryGetValue(id, out var user) ? user : null;
     public void Save(User user) => _users[user.Id] = user;
     public void Delete(int id) => _users.Remove(id);
 }
 
 [Fact]
-public void CreateUser_建立使用者_應儲存並可查詢()
+public void CreateUser_CreateUser_ShouldSaveAndRetrieve()
 {
-    // Fake：有真實邏輯的簡化實作
+    // Fake: Simplified implementation with real logic
     var fakeRepository = new FakeUserRepository();
     var service = new UserService(fakeRepository);
-    
+
     service.CreateUser(new User { Id = 1, Name = "John" });
     var actual = service.GetUser(1);
-    
+
     actual.Name.Should().Be("John");
 }
 ```
 
-### 4. Spy - 記錄呼叫
+### 4. Spy - Call Recording
 
-記錄被如何呼叫，可以事後驗證。
+Records how it's called, can verify calls afterward.
 
 ```csharp
 [Fact]
-public void CreateUser_建立使用者_應記錄建立資訊()
+public void CreateUser_CreateUser_ShouldLogCreationInfo()
 {
     // Arrange
     var spyLogger = Substitute.For<ILogger<UserService>>();
     var repository = Substitute.For<IUserRepository>();
     var service = new UserService(repository, spyLogger);
-    
+
     // Act
     service.CreateUser(new User { Name = "John" });
-    
-    // Assert - Spy：驗證呼叫記錄
+
+    // Assert - Spy: Verify call records
     spyLogger.Received(1).LogInformation("User created: {Name}", "John");
 }
 ```
 
-### 5. Mock - 行為驗證
+### 5. Mock - Behavior Verification
 
-預設期望的互動行為，測試失敗如果期望沒有滿足。
+Expects specific interaction behavior, test fails if expectations aren't met.
 
 ```csharp
 [Fact]
-public void RegisterUser_註冊使用者_應發送歡迎郵件()
+public void RegisterUser_RegisterUser_ShouldSendWelcomeEmail()
 {
     // Arrange
     var mockEmailService = Substitute.For<IEmailService>();
     var repository = Substitute.For<IUserRepository>();
     var service = new UserService(repository, mockEmailService);
-    
+
     // Act
     service.RegisterUser("john@example.com", "John");
-    
-    // Assert - Mock：驗證特定的互動行為
+
+    // Assert - Mock: Verify specific interaction behavior
     mockEmailService.Received(1).SendWelcomeEmail("john@example.com", "John");
 }
 ```
 
-## NSubstitute 核心功能
+## NSubstitute Core Features
 
-### 基本替代語法
+### Basic Substitution Syntax
 
 ```csharp
-// 建立介面替代
+// Create interface substitute
 var substitute = Substitute.For<IUserRepository>();
 
-// 建立類別替代（需要虛擬成員）
+// Create class substitute (needs virtual members)
 var classSubstitute = Substitute.For<BaseService>();
 
-// 建立多重介面替代
+// Create multiple interface substitute
 var multiSubstitute = Substitute.For<IService, IDisposable>();
 ```
 
-### 回傳值設定
+### Return Value Setup
 
-#### 基本回傳值
+#### Basic Return Values
 
 ```csharp
-// 精確參數匹配
+// Exact parameter matching
 _repository.GetById(1).Returns(new User { Id = 1, Name = "John" });
 
-// 任意參數匹配
+// Any parameter matching
 _service.Process(Arg.Any<string>()).Returns("processed");
 
-// 回傳序列值
+// Return sequence values
 _generator.GetNext().Returns(1, 2, 3, 4, 5);
 ```
 
-#### 條件回傳值
+#### Conditional Return Values
 
 ```csharp
-// 使用委派計算回傳值
+// Use delegate to calculate return value
 _calculator.Add(Arg.Any<int>(), Arg.Any<int>())
            .Returns(x => (int)x[0] + (int)x[1]);
 
-// 條件匹配
+// Conditional matching
 _service.Process(Arg.Is<string>(x => x.StartsWith("test")))
         .Returns("test-result");
 ```
 
-#### 拋出例外
+#### Throw Exceptions
 
 ```csharp
-// 同步方法拋出例外
+// Synchronous method throws exception
 _service.RiskyOperation()
         .Throws(new InvalidOperationException("Something went wrong"));
 
-// 非同步方法拋出例外
+// Async method throws exception
 _service.RiskyOperationAsync()
         .Throws(new InvalidOperationException("Async operation failed"));
 ```
 
-### 引數匹配器
+### Argument Matchers
 
 ```csharp
-// 任意值
+// Any value
 _service.Process(Arg.Any<string>()).Returns("result");
 
-// 特定條件
+// Specific condition
 _service.Process(Arg.Is<string>(x => x.Length > 5)).Returns("long-result");
 
-// 引數擷取
+// Argument capture
 string capturedArg = null;
 _service.Process(Arg.Do<string>(x => capturedArg = x)).Returns("result");
 _service.Process("test");
 capturedArg.Should().Be("test");
 
-// 引數檢查
+// Argument validation
 _service.Process(Arg.Is<string>(x =>
 {
     x.Should().StartWith("prefix");
@@ -247,22 +240,22 @@ _service.Process(Arg.Is<string>(x =>
 })).Returns("result");
 ```
 
-### 呼叫驗證
+### Call Verification
 
 ```csharp
-// 驗證被呼叫（至少一次）
+// Verify called (at least once)
 _service.Received().Process("test");
 
-// 驗證呼叫次數
+// Verify call count
 _service.Received(2).Process(Arg.Any<string>());
 
-// 驗證未被呼叫
+// Verify not called
 _service.DidNotReceive().Delete(Arg.Any<int>());
 
-// 驗證任意參數呼叫
+// Verify called with any args
 _service.ReceivedWithAnyArgs().Process(default);
 
-// 驗證呼叫順序
+// Verify call order
 Received.InOrder(() =>
 {
     _service.Start();
@@ -271,11 +264,11 @@ Received.InOrder(() =>
 });
 ```
 
-## 實戰模式
+## Real-World Patterns
 
-### 模式 1：依賴注入與測試設定
+### Pattern 1: Dependency Injection & Test Setup
 
-#### 被測試類別
+#### System Under Test
 
 ```csharp
 public class FileBackupService
@@ -284,7 +277,7 @@ public class FileBackupService
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IBackupRepository _backupRepository;
     private readonly ILogger<FileBackupService> _logger;
-    
+
     public FileBackupService(
         IFileSystem fileSystem,
         IDateTimeProvider dateTimeProvider,
@@ -296,7 +289,7 @@ public class FileBackupService
         _backupRepository = backupRepository;
         _logger = logger;
     }
-    
+
     public async Task<BackupResult> BackupFileAsync(string sourcePath, string destinationPath)
     {
         if (!_fileSystem.FileExists(sourcePath))
@@ -304,28 +297,28 @@ public class FileBackupService
             _logger.LogWarning("Source file not found: {Path}", sourcePath);
             return new BackupResult { Success = false, Message = "Source file not found" };
         }
-        
+
         var fileInfo = _fileSystem.GetFileInfo(sourcePath);
         if (fileInfo.Length > 100 * 1024 * 1024)
         {
             return new BackupResult { Success = false, Message = "File too large" };
         }
-        
+
         var timestamp = _dateTimeProvider.Now.ToString("yyyyMMdd_HHmmss");
         var backupFileName = $"{Path.GetFileNameWithoutExtension(sourcePath)}_{timestamp}{Path.GetExtension(sourcePath)}";
         var fullBackupPath = Path.Combine(destinationPath, backupFileName);
-        
+
         _fileSystem.CopyFile(sourcePath, fullBackupPath);
         await _backupRepository.SaveBackupHistory(sourcePath, fullBackupPath, _dateTimeProvider.Now);
-        
+
         _logger.LogInformation("Backup completed: {Path}", fullBackupPath);
-        
+
         return new BackupResult { Success = true, BackupPath = fullBackupPath };
     }
 }
 ```
 
-#### 測試類別設定
+#### Test Class Setup
 
 ```csharp
 public class FileBackupServiceTests
@@ -335,36 +328,36 @@ public class FileBackupServiceTests
     private readonly IBackupRepository _backupRepository;
     private readonly ILogger<FileBackupService> _logger;
     private readonly FileBackupService _sut; // System Under Test
-    
+
     public FileBackupServiceTests()
     {
         _fileSystem = Substitute.For<IFileSystem>();
         _dateTimeProvider = Substitute.For<IDateTimeProvider>();
         _backupRepository = Substitute.For<IBackupRepository>();
         _logger = Substitute.For<ILogger<FileBackupService>>();
-        
+
         _sut = new FileBackupService(_fileSystem, _dateTimeProvider, _backupRepository, _logger);
     }
-    
+
     [Fact]
-    public async Task BackupFileAsync_檔案存在且大小合理_應成功備份()
+    public async Task BackupFileAsync_FileExistsAndSizeReasonable_ShouldBackupSuccessfully()
     {
         // Arrange
         var sourcePath = @"C:\source\test.txt";
         var destinationPath = @"C:\backup";
         var testTime = new DateTime(2024, 1, 1, 12, 0, 0);
-        
+
         _fileSystem.FileExists(sourcePath).Returns(true);
         _fileSystem.GetFileInfo(sourcePath).Returns(new FileInfo { Length = 1024 });
         _dateTimeProvider.Now.Returns(testTime);
-        
+
         // Act
         var result = await _sut.BackupFileAsync(sourcePath, destinationPath);
-        
+
         // Assert
         result.Success.Should().BeTrue();
         result.BackupPath.Should().Be(@"C:\backup\test_20240101_120000.txt");
-        
+
         _fileSystem.Received(1).CopyFile(sourcePath, result.BackupPath);
         await _backupRepository.Received(1).SaveBackupHistory(
             sourcePath, result.BackupPath, testTime);
@@ -372,83 +365,83 @@ public class FileBackupServiceTests
 }
 ```
 
-### 模式 2：Mock vs Stub 的實戰差異
+### Pattern 2: Mock vs Stub Real-World Differences
 
-#### Stub：關注狀態
+#### Stub: Focus on State
 
 ```csharp
 [Fact]
-public void CalculateDiscount_高級會員_應回傳20折扣()
+public void CalculateDiscount_PremiumMember_ShouldReturn20Discount()
 {
-    // Stub：只關心回傳值，用於設定測試情境
+    // Stub: Only care about return value, used to set test scenario
     var stubCustomerService = Substitute.For<ICustomerService>();
     stubCustomerService.GetCustomerType(123).Returns(CustomerType.Premium);
-    
+
     var service = new PricingService(stubCustomerService);
-    
+
     // Act
     var discount = service.CalculateDiscount(123, 1000);
-    
-    // Assert - 只驗證結果狀態
+
+    // Assert - Only verify result state
     discount.Should().Be(200); // 20% of 1000
 }
 ```
 
-#### Mock：關注行為
+#### Mock: Focus on Behavior
 
 ```csharp
 [Fact]
-public void ProcessPayment_成功付款_應記錄交易資訊()
+public void ProcessPayment_SuccessfulPayment_ShouldLogTransactionInfo()
 {
-    // Mock：關心是否正確互動
+    // Mock: Care about correct interactions
     var mockLogger = Substitute.For<ILogger<PaymentService>>();
     var stubPaymentGateway = Substitute.For<IPaymentGateway>();
     stubPaymentGateway.ProcessPayment(Arg.Any<decimal>()).Returns(PaymentResult.Success);
-    
+
     var service = new PaymentService(stubPaymentGateway, mockLogger);
-    
+
     // Act
     service.ProcessPayment(100);
-    
-    // Assert - 驗證互動行為
+
+    // Assert - Verify interaction behavior
     mockLogger.Received(1).LogInformation(
-        "Payment processed: {Amount} - Result: {Result}", 
-        100, 
+        "Payment processed: {Amount} - Result: {Result}",
+        100,
         PaymentResult.Success);
 }
 ```
 
-### 模式 3：非同步方法測試
+### Pattern 3: Async Method Testing
 
 ```csharp
 [Fact]
-public async Task GetUserAsync_使用者存在_應回傳使用者資料()
+public async Task GetUserAsync_UserExists_ShouldReturnUserData()
 {
     // Arrange
     var repository = Substitute.For<IUserRepository>();
     repository.GetByIdAsync(123).Returns(Task.FromResult(
         new User { Id = 123, Name = "John" }));
-    
+
     var service = new UserService(repository);
-    
+
     // Act
     var result = await service.GetUserAsync(123);
-    
+
     // Assert
     result.Name.Should().Be("John");
     await repository.Received(1).GetByIdAsync(123);
 }
 
 [Fact]
-public async Task SaveUserAsync_資料庫錯誤_應拋出例外()
+public async Task SaveUserAsync_DatabaseError_ShouldThrowException()
 {
     // Arrange
     var repository = Substitute.For<IUserRepository>();
     repository.SaveAsync(Arg.Any<User>())
               .Throws(new InvalidOperationException("Database error"));
-    
+
     var service = new UserService(repository);
-    
+
     // Act & Assert
     await service.SaveUserAsync(new User { Name = "John" })
                 .Should().ThrowAsync<InvalidOperationException>()
@@ -456,25 +449,25 @@ public async Task SaveUserAsync_資料庫錯誤_應拋出例外()
 }
 ```
 
-### 模式 4：ILogger 驗證
+### Pattern 4: ILogger Verification
 
-由於 ILogger 的擴展方法特性，需要驗證底層的 Log 方法：
+Due to ILogger's extension method nature, verify the underlying Log method:
 
 ```csharp
 [Fact]
-public async Task BackupFileAsync_檔案不存在_應記錄警告()
+public async Task BackupFileAsync_FileNotExists_ShouldLogWarning()
 {
     // Arrange
     var sourcePath = @"C:\nonexistent\test.txt";
     _fileSystem.FileExists(sourcePath).Returns(false);
-    
+
     // Act
     var result = await _sut.BackupFileAsync(sourcePath, @"C:\backup");
-    
+
     // Assert
     result.Success.Should().BeFalse();
-    
-    // 驗證 ILogger.Log 方法被正確呼叫
+
+    // Verify ILogger.Log method was called correctly
     _logger.Received(1).Log(
         LogLevel.Warning,
         Arg.Any<EventId>(),
@@ -484,9 +477,9 @@ public async Task BackupFileAsync_檔案不存在_應記錄警告()
 }
 ```
 
-### 模式 5：複雜設定管理
+### Pattern 5: Complex Setup Management
 
-使用基底測試類別管理共用設定：
+Use base test class to manage shared setup:
 
 ```csharp
 public class OrderServiceTestsBase
@@ -495,7 +488,7 @@ public class OrderServiceTestsBase
     protected readonly IEmailService EmailService;
     protected readonly ILogger<OrderService> Logger;
     protected readonly OrderService Sut;
-    
+
     protected OrderServiceTestsBase()
     {
         Repository = Substitute.For<IOrderRepository>();
@@ -503,13 +496,13 @@ public class OrderServiceTestsBase
         Logger = Substitute.For<ILogger<OrderService>>();
         Sut = new OrderService(Repository, EmailService, Logger);
     }
-    
+
     protected void SetupValidOrder(int orderId = 1)
     {
         Repository.GetById(orderId).Returns(
             new Order { Id = orderId, Status = OrderStatus.Pending });
     }
-    
+
     protected void SetupEmailServiceSuccess()
     {
         EmailService.SendConfirmation(Arg.Any<string>()).Returns(true);
@@ -519,35 +512,35 @@ public class OrderServiceTestsBase
 public class OrderServiceTests : OrderServiceTestsBase
 {
     [Fact]
-    public void ProcessOrder_有效訂單_應成功處理()
+    public void ProcessOrder_ValidOrder_ShouldProcessSuccessfully()
     {
         // Arrange
         SetupValidOrder();
         SetupEmailServiceSuccess();
-        
+
         // Act
         var result = Sut.ProcessOrder(1);
-        
+
         // Assert
         result.Success.Should().BeTrue();
     }
 }
 ```
 
-## 引數匹配進階技巧
+## Advanced Argument Matching Techniques
 
-### 複雜物件匹配
+### Complex Object Matching
 
 ```csharp
 [Fact]
-public void CreateOrder_建立訂單_應儲存正確的訂單資料()
+public void CreateOrder_CreateOrder_ShouldSaveCorrectOrderData()
 {
     var repository = Substitute.For<IOrderRepository>();
     var service = new OrderService(repository);
-    
+
     service.CreateOrder("Product A", 5, 100);
-    
-    // 驗證物件屬性
+
+    // Verify object properties
     repository.Received(1).Save(Arg.Is<Order>(o =>
         o.ProductName == "Product A" &&
         o.Quantity == 5 &&
@@ -555,67 +548,67 @@ public void CreateOrder_建立訂單_應儲存正確的訂單資料()
 }
 ```
 
-### 引數擷取與驗證
+### Argument Capture & Verification
 
 ```csharp
 [Fact]
-public void RegisterUser_註冊使用者_應產生正確的雜湊密碼()
+public void RegisterUser_RegisterUser_ShouldGenerateCorrectPasswordHash()
 {
     var repository = Substitute.For<IUserRepository>();
     var service = new UserService(repository);
-    
+
     User capturedUser = null;
     repository.Save(Arg.Do<User>(u => capturedUser = u));
-    
+
     service.RegisterUser("john@example.com", "password123");
-    
+
     capturedUser.Should().NotBeNull();
     capturedUser.Email.Should().Be("john@example.com");
-    capturedUser.PasswordHash.Should().NotBe("password123"); // 應該被雜湊
+    capturedUser.PasswordHash.Should().NotBe("password123"); // Should be hashed
     capturedUser.PasswordHash.Length.Should().BeGreaterThan(20);
 }
 ```
 
-## 常見陷阱與最佳實踐
+## Common Pitfalls & Best Practices
 
-### ✅ 推薦做法
+### ✅ Recommended Practices
 
-1. **針對介面而非實作建立 Substitute**
+1. **Create Substitute for Interfaces, Not Implementations**
 
     ```csharp
-    // ✅ 正確：針對介面
+    // ✅ Correct: Target interface
     var repository = Substitute.For<IUserRepository>();
 
-    // ❌ 錯誤：針對具體類別（除非有虛擬成員）
+    // ❌ Wrong: Target concrete class (unless virtual members)
     var repository = Substitute.For<UserRepository>();
     ```
 
-2. **使用有意義的測試資料**
+2. **Use Meaningful Test Data**
 
     ```csharp
-    // ✅ 正確：清楚表達意圖
+    // ✅ Correct: Clearly expresses intent
     var user = new User { Id = 123, Name = "John Doe", Email = "john@example.com" };
 
-    // ❌ 錯誤：無意義的資料
+    // ❌ Wrong: Meaningless data
     var user = new User { Id = 1, Name = "test", Email = "a@b.c" };
     ```
 
-3. **避免過度驗證**
+3. **Avoid Over-Verification**
 
     ```csharp
-    // ✅ 正確：只驗證重要的行為
+    // ✅ Correct: Only verify important behavior
     _emailService.Received(1).SendWelcomeEmail(Arg.Any<string>());
 
-    // ❌ 錯誤：驗證所有內部實作細節
+    // ❌ Wrong: Verify all internal implementation details
     _repository.Received(1).GetById(123);
     _repository.Received(1).Update(Arg.Any<User>());
     _validator.Received(1).Validate(Arg.Any<User>());
     ```
 
-4. **Mock 與 Stub 的明確區分**
+4. **Clear Distinction Between Mock and Stub**
 
     ```csharp
-    // ✅ 正確：Stub 用於設定情境，Mock 用於驗證行為
+    // ✅ Correct: Stub for setting scenario, Mock for verifying behavior
     var stubRepository = Substitute.For<IUserRepository>(); // Stub
     var mockLogger = Substitute.For<ILogger>(); // Mock
 
@@ -624,69 +617,69 @@ public void RegisterUser_註冊使用者_應產生正確的雜湊密碼()
     mockLogger.Received(1).LogInformation(Arg.Any<string>());
     ```
 
-### ❌ 避免做法
+### ❌ Practices to Avoid
 
-1. **避免模擬值類型**
+1. **Avoid Mocking Value Types**
 
     ```csharp
-    // ❌ 錯誤：DateTime 是值類型
+    // ❌ Wrong: DateTime is value type
     var badDate = Substitute.For<DateTime>();
 
-    // ✅ 正確：抽象時間提供者
+    // ✅ Correct: Abstract time provider
     var dateTimeProvider = Substitute.For<IDateTimeProvider>();
     dateTimeProvider.Now.Returns(new DateTime(2024, 1, 1));
     ```
 
-2. **避免測試與實作強耦合**
+2. **Avoid Tight Coupling Between Tests and Implementation**
 
     ```csharp
-    // ❌ 錯誤：測試實作細節
+    // ❌ Wrong: Test implementation details
     _repository.Received(1).Query(Arg.Any<string>());
     _repository.Received(1).Filter(Arg.Any<Expression<Func<User, bool>>>());
 
-    // ✅ 正確：測試行為結果
+    // ✅ Correct: Test behavior results
     var users = service.GetActiveUsers();
     users.Should().HaveCount(2);
     ```
 
-3. **避免設定過於複雜**
+3. **Avoid Overly Complex Setup**
 
     ```csharp
-    // ❌ 錯誤：過多的 Substitute（可能違反 SRP）
+    // ❌ Wrong: Too many Substitutes (may violate SRP)
     var sub1 = Substitute.For<IService1>();
     var sub2 = Substitute.For<IService2>();
     var sub3 = Substitute.For<IService3>();
     var sub4 = Substitute.For<IService4>();
 
-    // ✅ 正確：重新思考類別職責
-    // 考慮是否違反單一職責原則，需要重構
+    // ✅ Correct: Reconsider class responsibilities
+    // Consider if violating Single Responsibility Principle, needs refactoring
     ```
 
-## 識別需要替代的相依性
+## Identifying Dependencies to Substitute
 
-### 應該替代的
+### Should Substitute
 
-- ✅ 外部 API 呼叫（IHttpClient、IApiClient）
-- ✅ 資料庫操作（IRepository、IDbContext）
-- ✅ 檔案系統操作（IFileSystem）
-- ✅ 網路通訊（IEmailService、IMessageQueue）
-- ✅ 時間依賴（IDateTimeProvider、TimeProvider）
-- ✅ 隨機數產生（IRandom）
-- ✅ 昂貴的計算（IComplexCalculator）
-- ✅ 記錄服務（ILogger<T>）
+- ✅ External API calls (IHttpClient, IApiClient)
+- ✅ Database operations (IRepository, IDbContext)
+- ✅ File system operations (IFileSystem)
+- ✅ Network communication (IEmailService, IMessageQueue)
+- ✅ Time dependencies (IDateTimeProvider, TimeProvider)
+- ✅ Random number generation (IRandom)
+- ✅ Expensive calculations (IComplexCalculator)
+- ✅ Logging services (ILogger<T>)
 
-### 不應該替代的
+### Should Not Substitute
 
-- ❌ 值物件（DateTime、string、int）
-- ❌ 簡單的資料傳輸物件（DTO）
-- ❌ 純函數工具（如 AutoMapper 的 IMapper，考慮使用真實實例）
-- ❌ 框架核心類別（除非有明確需求）
+- ❌ Value objects (DateTime, string, int)
+- ❌ Simple data transfer objects (DTO)
+- ❌ Pure function utilities (like AutoMapper's IMapper, consider real instance)
+- ❌ Framework core classes (unless specific need)
 
-## 疑難排解
+## Troubleshooting
 
-### Q1: 如何測試沒有介面的類別？
+### Q1: How to test classes without interfaces?
 
-**A:** 確保要模擬的成員是 virtual：
+**A:** Ensure members to mock are `virtual`:
 
 ```csharp
 public class BaseService
@@ -698,9 +691,9 @@ var substitute = Substitute.For<BaseService>();
 substitute.GetData().Returns("test data");
 ```
 
-### Q2: 如何驗證方法被呼叫的順序？
+### Q2: How to verify method call order?
 
-**A:** 使用 Received.InOrder()：
+**A:** Use `Received.InOrder()`:
 
 ```csharp
 Received.InOrder(() =>
@@ -711,9 +704,9 @@ Received.InOrder(() =>
 });
 ```
 
-### Q3: 如何處理 out 參數？
+### Q3: How to handle out parameters?
 
-**A:** 使用 Returns() 配合委派：
+**A:** Use `Returns()` with delegate:
 
 ```csharp
 _service.TryGetValue("key", out Arg.Any<string>())
@@ -724,56 +717,56 @@ _service.TryGetValue("key", out Arg.Any<string>())
         });
 ```
 
-### Q4: NSubstitute 與 Moq 該如何選擇？
+### Q4: NSubstitute vs Moq - Which to choose?
 
-**A:** NSubstitute 優勢：
+**A:** NSubstitute advantages:
 
-- 語法更簡潔直觀
-- 學習曲線平緩
-- 沒有隱私爭議
-- 對多數測試場景足夠
+- More concise, intuitive syntax
+- Gentler learning curve
+- No privacy concerns
+- Sufficient for most testing scenarios
 
-選擇 NSubstitute，除非：
+Choose NSubstitute unless:
 
-- 專案已使用 Moq
-- 需要 Moq 特有的進階功能
-- 團隊已熟悉 Moq 語法
+- Project already uses Moq
+- Need Moq-specific advanced features
+- Team already familiar with Moq syntax
 
-## 與其他技能整合
+## Integration with Other Skills
 
-此技能可與以下技能組合使用：
+This skill can be combined with:
 
-- **unit-test-fundamentals**: 單元測試基礎與 3A 模式
-- **dependency-injection-testing**: 依賴注入測試策略
-- **test-naming-conventions**: 測試命名規範
-- **test-output-logging**: ITestOutputHelper 與 ILogger 整合
-- **datetime-testing-timeprovider**: TimeProvider 抽象化時間依賴
-- **filesystem-testing-abstractions**: 檔案系統依賴抽象化
+- **unit-test-fundamentals**: Unit testing basics and 3A pattern
+- **dependency-injection-testing**: Dependency injection testing strategies
+- **test-naming-conventions**: Test naming conventions
+- **test-output-logging**: ITestOutputHelper and ILogger integration
+- **datetime-testing-timeprovider**: TimeProvider for abstracting time dependencies
+- **filesystem-testing-abstractions**: File system dependency abstraction
 
-## 範本檔案參考
+## Template Files Reference
 
-本技能提供以下範本檔案：
+This skill provides these template files:
 
-- `templates/mock-patterns.cs`: 完整的 Mock/Stub/Spy 模式範例
-- `templates/verification-examples.cs`: 行為驗證與引數匹配範例
+- `templates/mock-patterns.cs`: Complete Mock/Stub/Spy pattern examples
+- `templates/verification-examples.cs`: Behavior verification and argument matching examples
 
-## 參考資源
+## Reference Resources
 
-### 原始文章
+### Original Articles
 
-本技能內容提煉自「老派軟體工程師的測試修練 - 30 天挑戰」系列文章：
+Content distilled from "Old-School Software Engineer's Testing Practice - 30 Day Challenge" series:
 
-- **Day 07 - 依賴替代入門：使用 NSubstitute**
-  - 鐵人賽文章：https://ithelp.ithome.com.tw/articles/10374593
-  - 範例程式碼：https://github.com/kevintsengtw/30Days_in_Testing_Samples/tree/main/day07
+- **Day 07 - Dependency Substitution Introduction: Using NSubstitute**
+  - Ironman article: https://ithelp.ithome.com.tw/articles/10374593
+  - Sample code: https://github.com/kevintsengtw/30Days_in_Testing_Samples/tree/main/day07
 
-### NSubstitute 官方
+### NSubstitute Official
 
-- [NSubstitute 官方網站](https://nsubstitute.github.io/)
+- [NSubstitute Official Website](https://nsubstitute.github.io/)
 - [NSubstitute GitHub](https://github.com/nsubstitute/NSubstitute)
 - [NSubstitute NuGet](https://www.nuget.org/packages/NSubstitute/)
 
-### Test Double 理論
+### Test Double Theory
 
 - [XUnit Test Patterns](http://xunitpatterns.com/Test%20Double.html)
 - [Martin Fowler - Test Double](https://martinfowler.com/bliki/TestDouble.html)
