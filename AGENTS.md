@@ -105,6 +105,56 @@ This ensures all agents follow the same high-quality, tested patterns that the p
 - `TaskFlow.Infrastructure`: EF Core, repository implementations, persistence details.
 - `TaskFlow.Presentation`: Blazor components/pages and UI interactions.
 
+## Frontend Guidelines
+
+For Blazor frontend bug fixes and new features, follow this short process:
+
+1. Reproduce first:
+   - Verify the issue/behavior in the running app before editing code (prefer Playwright for repeatable repro).
+2. Trace ownership:
+   - Identify which component renders the UI and which parent/service/orchestrator owns the state change.
+3. Patch minimally:
+   - Make the smallest focused change that fixes the behavior.
+   - Prefer MudBlazor-native components/patterns over custom HTML/CSS.
+4. Use callbacks for child-to-parent actions:
+   - Prefer `EventCallback` from child components; let parent pages orchestrate state changes.
+5. Keep boundaries clean:
+   - UI logic stays in Presentation.
+   - Business rules stay in Domain/Application, not in Razor component markup.
+6. Validate every change:
+   - Run `dotnet build` for compile safety.
+   - Run targeted headless Playwright checks for the changed UX flow.
+   - Use the `playwright-skill` (`.agents/skills/playwright-skill/SKILL.md`) for browser automation workflow.
+7. Report outcome clearly:
+   - List changed files, behavior fixed, and validation steps/results.
+
+## Backend Guidelines
+
+For server-side development and bug fixes, follow this  workflow:
+
+1. Start from behavior and use-case:
+   - Define the expected business behavior first (inputs, rules, outputs, side effects).
+2. Place logic in the correct layer:
+   - `Domain`: business rules, invariants, entity behavior.
+   - `Application`: orchestration/use-case flow, transactions, coordination between repositories/services.
+   - `Infrastructure`: EF Core persistence, repository implementations, external integrations.
+   - `Presentation`: transport/UI endpoint concerns only (no business rules).
+3. Keep dependency direction strict:
+   - `Presentation -> Application -> Domain`, and `Infrastructure -> Domain`.
+   - Do not introduce reverse or cross-layer shortcuts.
+4. Prefer domain-first fixes:
+   - If a bug is a rule/invariant issue, fix it in Domain.
+   - If a bug is coordination/order-of-operations, fix it in Application.
+   - If a bug is query/persistence mapping, fix it in Infrastructure.
+5. Repository discipline:
+   - Use repository abstractions in Application.
+   - Keep `DbContext` usage and EF-specific logic in Infrastructure only.
+6. Validate safely:
+   - Build after changes.
+   - Add/update xUnit tests at the layer where behavior changed (especially Domain/Application).
+7. Report by layer:
+   - Summarize what changed in each impacted layer and why.
+
 ## Testing Expectations
 
 - Add or update tests for non-trivial behavior changes.
