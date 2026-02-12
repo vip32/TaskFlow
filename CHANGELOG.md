@@ -19,6 +19,10 @@ All notable updates to TaskFlow are documented here.
 - EF Core migration `AddTaskOrdering` for persisted `Task.SortOrder` and ordering index improvements.
 - Optional-field nullability model for domain entities (for example unassigned task `ProjectId`, optional completion/due/reminder timestamps, and open-ended subscription schedules).
 - New single baseline migration `InitialCreate` regenerated from the current domain model after migration reset.
+- Expanded unit test suite with architecture-aligned folders under `tests/TaskFlow.UnitTests`: `Application/`, `Domain/`, `Infrastructure/`, and `Presentation/`.
+- New infrastructure repository unit tests using EF Core InMemory (no `DbContext` mocking) for projects, tasks, task history, My Task Flow sections, and focus sessions.
+- Coverage configuration via `coverlet.runsettings` and local `reportgenerator` tooling for HTML coverage reports.
+- VS Code coverage task flow that restores tools, runs coverage, generates HTML, and opens `.artifacts/coverage/unit/index.html`.
 
 ### Changed
 - Subscription schedules now use `DateOnly` to avoid UTC date boundary issues.
@@ -38,6 +42,10 @@ All notable updates to TaskFlow are documented here.
 - Sentinel values (`Guid.Empty`, `DateTime.MinValue`, `DateOnly.MinValue`, `TimeOnly.MinValue`) were replaced by nullable optional properties where semantically appropriate.
 - EF Core mappings were updated so optional fields are nullable in persistence, including optional task-project foreign key behavior.
 - Historical incremental migrations were consolidated by deleting prior migration chain and recreating a single initial migration from current schema.
+- Unit tests were standardized on xUnit + Shouldly + NSubstitute conventions with explicit AAA structure.
+- Test naming and placement now follow class-under-test and architectural layer boundaries for clearer ownership and coverage tracking.
+- Coverage output paths were standardized to `.artifacts/` (including `.artifacts/TestResults/UnitCoverage` and `.artifacts/coverage/unit`).
+- Testing guidance in `AGENTS.md` now defines mandatory non-empty `Act` blocks and preferred `sut` naming in AAA tests.
 
 ## [1.0.1] - 2026-02-09
 
