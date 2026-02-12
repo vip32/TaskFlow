@@ -274,7 +274,6 @@ public class Task
         }
 
         this.IsCompleted = true;
-        this.Status = TaskStatus.Done;
         this.CompletedAt = DateTime.UtcNow;
 
         foreach (var subTask in this.subTasks)
@@ -295,11 +294,6 @@ public class Task
 
         this.IsCompleted = false;
         this.CompletedAt = null;
-
-        if (this.Status == TaskStatus.Done)
-        {
-            this.Status = TaskStatus.Todo;
-        }
     }
 
     /// <summary>
@@ -468,19 +462,6 @@ public class Task
     public void SetStatus(TaskStatus status)
     {
         this.Status = status;
-
-        if (status == TaskStatus.Done)
-        {
-            this.Complete();
-            return;
-        }
-
-        if (this.IsCompleted)
-        {
-            this.Uncomplete();
-        }
-
-        this.CompletedAt = null;
     }
 
     /// <summary>

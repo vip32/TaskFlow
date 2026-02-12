@@ -27,6 +27,31 @@ a {
     text-decoration: line-through;
 }
 
+.tf-board-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.tf-board-lane {
+    min-width: 0;
+}
+
+.tf-task-title-group {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.tf-task-title-truncate {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .tf-color-option {
     display: inline-flex;
     align-items: center;

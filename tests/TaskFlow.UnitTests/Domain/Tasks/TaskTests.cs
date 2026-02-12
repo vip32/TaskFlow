@@ -59,17 +59,18 @@ public class TaskTests
 
         // Act
         var task = new DomainTask(Guid.NewGuid(), "Task", Guid.NewGuid());
+        task.SetStatus(DomainTaskStatus.Doing);
 
         task.Complete();
 
         // Assert
         task.IsCompleted.ShouldBeTrue();
-        task.Status.ShouldBe(DomainTaskStatus.Done);
+        task.Status.ShouldBe(DomainTaskStatus.Doing);
         task.CompletedAt.ShouldNotBeNull();
 
         task.Uncomplete();
         task.IsCompleted.ShouldBeFalse();
-        task.Status.ShouldBe(DomainTaskStatus.Todo);
+        task.Status.ShouldBe(DomainTaskStatus.Doing);
         task.CompletedAt.ShouldBeNull();
     }
 
@@ -316,6 +317,21 @@ public class TaskTests
         task.Status.ShouldBe(DomainTaskStatus.Doing);
 
         task.SetStatus(DomainTaskStatus.Done);
+        task.IsCompleted.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Complete_DoesNotChangeStatus()
+    {
+        // Arrange
+        var task = new DomainTask(Guid.NewGuid(), "Task", Guid.NewGuid());
+        task.SetStatus(DomainTaskStatus.Doing);
+
+        // Act
+        task.Complete();
+
+        // Assert
+        task.Status.ShouldBe(DomainTaskStatus.Doing);
         task.IsCompleted.ShouldBeTrue();
     }
 

@@ -95,6 +95,15 @@ public interface ITaskOrchestrator
     Task<DomainTask> UpdateNoteAsync(Guid taskId, string newNote, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Sets task completion state and persists immediately.
+    /// </summary>
+    /// <param name="taskId">Task identifier.</param>
+    /// <param name="isCompleted">Target completion state.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated task.</returns>
+    Task<DomainTask> SetCompletedAsync(Guid taskId, bool isCompleted, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Sets task priority and persists immediately.
     /// </summary>
     /// <param name="taskId">Task identifier.</param>

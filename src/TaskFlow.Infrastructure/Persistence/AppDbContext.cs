@@ -28,6 +28,11 @@ public class AppDbContext : DbContext
     public DbSet<Domain.SubscriptionSchedule> SubscriptionSchedules => this.Set<Domain.SubscriptionSchedule>();
 
     /// <summary>
+    /// Gets the subscription settings set.
+    /// </summary>
+    public DbSet<Domain.SubscriptionSettings> SubscriptionSettings => this.Set<Domain.SubscriptionSettings>();
+
+    /// <summary>
     /// Gets the task history set.
     /// </summary>
     public DbSet<Domain.TaskHistory> TaskHistories => this.Set<Domain.TaskHistory>();
@@ -78,6 +83,19 @@ public class AppDbContext : DbContext
             entity.Property(s => s.CreatedAt).IsRequired();
             entity.Property(s => s.TimeZoneId).IsRequired().HasMaxLength(128);
             entity.Ignore(s => s.Schedules);
+
+            entity.HasOne(s => s.Settings)
+                .WithOne()
+                .HasForeignKey<Domain.SubscriptionSettings>(settings => settings.SubscriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Domain.SubscriptionSettings>(entity =>
+        {
+            entity.ToTable("SubscriptionSettings");
+            entity.HasKey(settings => settings.SubscriptionId);
+            entity.Property(settings => settings.SubscriptionId).IsRequired();
+            entity.Property(settings => settings.AlwaysShowCompletedTasks).IsRequired();
         });
 
         modelBuilder.Entity<Domain.SubscriptionSchedule>(entity =>

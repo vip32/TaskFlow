@@ -38,6 +38,7 @@ Time-based grouping (Today, This Week, Upcoming) and reminders are evaluated in 
 - Subscription-timezone aware scheduling (default `Europe/Berlin`)
 - List and board workflows to match different planning styles
 - Focus-oriented workflow support for action and momentum
+- Subscription-level preferences (for example, always show completed tasks in list/board views)
 - Import/export for selected projects using JSON (ID-based add/update)
 
 ## Target Audience

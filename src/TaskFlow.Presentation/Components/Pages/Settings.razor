@@ -1,19 +1,103 @@
 @page "/settings"
 @using Microsoft.AspNetCore.Components.Sections
+@inject ISubscriptionSettingsOrchestrator SubscriptionSettingsOrchestrator
+@inject ISnackbar Snackbar
+@inject IAppExceptionHandler UiExceptionHandler
 
 <PageTitle>Settings</PageTitle>
 
 <SectionContent SectionName="AppTopBarTitle">
     <MudStack Class="ml-2" Spacing="0">
         <MudText Typo="Typo.subtitle1">Settings</MudText>
-        <MudText Typo="Typo.caption">Configuration page placeholder</MudText>
+        <MudText Typo="Typo.caption">Subscription preferences</MudText>
     </MudStack>
 </SectionContent>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
-    <MudCard Elevation="1">
-        <MudCardContent>
-            <MudText Typo="Typo.body1">Settings page is ready. We can fill in preferences and account controls next.</MudText>
-        </MudCardContent>
-    </MudCard>
+    @if (isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!string.IsNullOrWhiteSpace(loadError))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">@loadError</MudAlert>
+    }
+    else
+    {
+        <MudCard Elevation="1">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Task Visibility</MudText>
+                    <MudText Typo="Typo.body2">Manage how completed tasks are shown across list and board views.</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudSwitch T="bool"
+                           Value="alwaysShowCompletedTasks"
+                           ValueChanged="OnAlwaysShowCompletedTasksChangedAsync"
+                           Disabled="isSaving"
+                           Label="Always show completed tasks in list and board"
+                           Color="Color.Primary" />
+            </MudCardContent>
+        </MudCard>
+    }
 </MudContainer>
+
+@code {
+    private bool isLoading;
+    private bool isSaving;
+    private bool alwaysShowCompletedTasks;
+    private string loadError = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        this.isLoading = true;
+        this.loadError = null;
+        try
+        {
+            var settings = await this.SubscriptionSettingsOrchestrator.GetAsync();
+            this.alwaysShowCompletedTasks = settings.AlwaysShowCompletedTasks;
+        }
+        catch (Exception ex)
+        {
+            this.UiExceptionHandler.Handle(ex, "Settings - Load");
+            this.loadError = "Could not load settings. Please try again.";
+        }
+        finally
+        {
+            this.isLoading = false;
+        }
+    }
+
+    private async Task OnAlwaysShowCompletedTasksChangedAsync(bool value)
+    {
+        if (this.alwaysShowCompletedTasks == value)
+        {
+            return;
+        }
+
+        var previous = this.alwaysShowCompletedTasks;
+        this.alwaysShowCompletedTasks = value;
+        this.isSaving = true;
+        try
+        {
+            var updated = await this.SubscriptionSettingsOrchestrator.UpdateAlwaysShowCompletedTasksAsync(value);
+            this.alwaysShowCompletedTasks = updated.AlwaysShowCompletedTasks;
+        }
+        catch (Exception ex)
+        {
+            this.UiExceptionHandler.Handle(ex, "Settings - Save");
+            this.alwaysShowCompletedTasks = previous;
+            this.Snackbar.Add("Could not save settings.", Severity.Error);
+        }
+        finally
+        {
+            this.isSaving = false;
+        }
+    }
+}

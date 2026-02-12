@@ -132,6 +132,23 @@ public sealed class TaskOrchestrator : ITaskOrchestrator
     }
 
     /// <inheritdoc/>
+    public async Task<DomainTask> SetCompletedAsync(Guid taskId, bool isCompleted, CancellationToken cancellationToken = default)
+    {
+        this.logger.LogInformation("Task - SetCompleted: setting completion {IsCompleted} for task {TaskId}", isCompleted, taskId);
+        var task = await this.taskRepository.GetByIdAsync(taskId, cancellationToken);
+        if (isCompleted)
+        {
+            task.Complete();
+        }
+        else
+        {
+            task.Uncomplete();
+        }
+
+        return await this.taskRepository.UpdateAsync(task, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public async Task<DomainTask> SetPriorityAsync(Guid taskId, TaskPriority priority, CancellationToken cancellationToken = default)
     {
         this.logger.LogInformation("Task - SetPriority: setting priority {Priority} for task {TaskId}", priority, taskId);

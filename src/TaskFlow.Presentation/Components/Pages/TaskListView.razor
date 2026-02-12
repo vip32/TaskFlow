@@ -15,7 +15,7 @@
         {
             <MudPaper id="@GetTaskContainerId(task.Id)" Elevation="1" Class="pa-2">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="tf-task-title-group">
                         <MudCheckBox T="bool"
                                      Value="task.IsCompleted"
                                      ValueChanged="_ => OnToggleCompleteRequested.InvokeAsync(task.Id)"
@@ -31,18 +31,8 @@
                                                Size="Size.Small"
                                                aria-label="Toggle focus pin"
                                                title="Toggle focus pin"
+                                               Disabled="@task.IsCompleted"
                                                OnClick="() => ToggleFocusAsync(task)" />
-                            </span>
-                        </MudTooltip>
-                        <MudTooltip Text="Toggle important">
-                            <span @onmousedown:stopPropagation="true" @onclick:stopPropagation="true">
-                                <MudIconButton Icon="@(IsImportant(task) ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
-                                               Color="@(IsImportant(task) ? Color.Warning : Color.Default)"
-                                               Class="@(IsImportant(task) ? "tf-toggle-active" : string.Empty)"
-                                               Size="Size.Small"
-                                               aria-label="Toggle important"
-                                               title="Toggle important"
-                                               OnClick="() => ToggleImportantAsync(task)" />
                             </span>
                         </MudTooltip>
                         <MudTooltip Text="Toggle today">
@@ -53,6 +43,7 @@
                                                Size="Size.Small"
                                                aria-label="Toggle today"
                                                title="Toggle today"
+                                               Disabled="@task.IsCompleted"
                                                OnClick="() => ToggleTodayAsync(task)" />
                             </span>
                         </MudTooltip>
@@ -74,14 +65,35 @@
                             <span @onmousedown:stopPropagation="true"
                                   @onmousedown="() => BeginEdit(task)">
                                 <MudText Typo="Typo.body1"
-                                         Class="@(task.IsCompleted ? "tf-task-title-done" : string.Empty)"
-                                         style="cursor:text">
+                                         Class="@(task.IsCompleted ? "tf-task-title-done tf-task-title-truncate" : "tf-task-title-truncate")"
+                                         title="@task.Title"
+                                         Style="@GetTaskTitleStyle(task)">
                                     @task.Title
                                 </MudText>
                             </span>
                         }
                     </MudStack>
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" aria-label="Edit task" title="Edit task" OnClick="() => OnEditTaskRequested.InvokeAsync(task.Id)" />
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudTooltip Text="Toggle important">
+                            <span @onmousedown:stopPropagation="true" @onclick:stopPropagation="true">
+                                <MudIconButton Icon="@(IsImportant(task) ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
+                                               Color="@(IsImportant(task) ? Color.Warning : Color.Default)"
+                                               Class="@(IsImportant(task) ? "tf-toggle-active" : string.Empty)"
+                                               Size="Size.Small"
+                                               aria-label="Toggle important"
+                                               title="Toggle important"
+                                               Disabled="@task.IsCompleted"
+                                               OnClick="() => ToggleImportantAsync(task)" />
+                            </span>
+                        </MudTooltip>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       aria-label="Edit task"
+                                       title="Edit task"
+                                       Disabled="@task.IsCompleted"
+                                       OnClick="() => OnEditTaskRequested.InvokeAsync(task.Id)" />
+                    </MudStack>
                 </MudStack>
             </MudPaper>
         }
@@ -134,6 +146,11 @@
 
     private void BeginEdit(TaskFlow.Domain.Task task)
     {
+        if (task.IsCompleted)
+        {
+            return;
+        }
+
         this.editingTaskId = task.Id;
         this.pendingFocusTaskId = task.Id;
         this.editingTitle = task.Title;
@@ -203,6 +220,11 @@
     private static string GetTaskContainerId(Guid taskId)
     {
         return $"list-task-{taskId:N}";
+    }
+
+    private static string GetTaskTitleStyle(TaskFlow.Domain.Task task)
+    {
+        return task.IsCompleted ? "cursor:default" : "cursor:text";
     }
 
     private bool IsImportant(TaskFlow.Domain.Task task)

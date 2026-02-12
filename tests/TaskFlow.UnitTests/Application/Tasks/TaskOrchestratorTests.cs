@@ -158,6 +158,31 @@ public class TaskOrchestratorTests
     }
 
     [Fact]
+    public async System.Threading.Tasks.Task SetCompletedAsync_DoesNotChangeStatus()
+    {
+        // Arrange
+        var subscription = CreateSubscription();
+        var task = new DomainTask(subscription.Id, "Task", Guid.NewGuid());
+        task.SetStatus(DomainTaskStatus.Doing);
+        var repository = new FakeTaskRepository(task);
+
+        // Act
+        var sut = CreateSut(subscription, repository, new FakeTaskHistoryRepository());
+        var completed = await sut.SetCompletedAsync(task.Id, true);
+
+        // Assert
+        completed.IsCompleted.ShouldBeTrue();
+        completed.Status.ShouldBe(DomainTaskStatus.Doing);
+
+        // Act
+        var restored = await sut.SetCompletedAsync(task.Id, false);
+
+        // Assert
+        restored.IsCompleted.ShouldBeFalse();
+        restored.Status.ShouldBe(DomainTaskStatus.Doing);
+    }
+
+    [Fact]
     public async System.Threading.Tasks.Task MoveToProjectAsync_SubTask_ThrowsInvalidOperationException()
     {
         // Arrange

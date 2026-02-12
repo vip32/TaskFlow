@@ -43,10 +43,16 @@ public class Subscription
     /// </summary>
     public IReadOnlyCollection<SubscriptionSchedule> Schedules => this.schedules.AsReadOnly();
 
+    /// <summary>
+    /// Gets the settings attached to this subscription.
+    /// </summary>
+    public SubscriptionSettings Settings { get; private set; }
+
     private Subscription()
     {
         this.Name = string.Empty;
         this.TimeZoneId = DEFAULT_TIME_ZONE_ID;
+        this.Settings = null!;
     }
 
     /// <summary>
@@ -85,6 +91,7 @@ public class Subscription
         this.IsEnabled = isEnabled;
         this.CreatedAt = DateTime.UtcNow;
         this.TimeZoneId = ValidateTimeZoneId(timeZoneId);
+        this.Settings = new SubscriptionSettings(this.Id);
     }
 
     /// <summary>
@@ -155,6 +162,16 @@ public class Subscription
     public void Disable()
     {
         this.IsEnabled = false;
+    }
+
+    /// <summary>
+    /// Updates the completed-task visibility preference for this subscription.
+    /// </summary>
+    /// <param name="alwaysShowCompletedTasks">Whether completed tasks should always be shown.</param>
+    public void SetAlwaysShowCompletedTasks(bool alwaysShowCompletedTasks)
+    {
+        this.Settings ??= new SubscriptionSettings(this.Id);
+        this.Settings.SetAlwaysShowCompletedTasks(alwaysShowCompletedTasks);
     }
 
     /// <summary>

@@ -6,6 +6,7 @@
 @inject IProjectOrchestrator ProjectOrchestrator
 @inject ITaskOrchestrator TaskOrchestrator
 @inject IMyTaskFlowSectionOrchestrator MyTaskFlowSectionOrchestrator
+@inject ISubscriptionSettingsOrchestrator SubscriptionSettingsOrchestrator
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IAppExceptionHandler UiExceptionHandler
@@ -52,7 +53,10 @@
                     <MudSelectItem T="SortMode?" Value="@SortMode.Priority">Priority</MudSelectItem>
                     <MudSelectItem T="SortMode?" Value="@SortMode.Focused">Focused</MudSelectItem>
                 </MudSelect>
-                <MudSwitch @bind-Value="showCompleted" Label="Show completed" Color="Color.Primary" />
+                <MudSwitch @bind-Value="showCompleted"
+                           Label="@ShowCompletedLabel"
+                           Disabled="alwaysShowCompletedTasks"
+                           Color="Color.Primary" />
             </MudStack>
         </MudHidden>
     </MudStack>
@@ -177,6 +181,7 @@
     private TaskPriority? priorityFilter;
     private DomainTaskStatus? statusFilter;
     private bool showCompleted;
+    private bool alwaysShowCompletedTasks;
     private bool isShortcutsDialogOpen;
     private bool isLoading;
     private SortMode? sortMode = SortMode.CreatedDesc;
@@ -226,46 +231,13 @@
         ? "Switch to list view"
         : "Switch to board view";
 
-    private List<TaskFlow.Domain.Task> FilteredTasks
-    {
-        get
-        {
-            IEnumerable<TaskFlow.Domain.Task> query = this.activeTasks;
+    private string ShowCompletedLabel => this.alwaysShowCompletedTasks ? "Show completed (always on)" : "Show completed";
 
-            if (!string.IsNullOrWhiteSpace(this.searchQuery))
-            {
-                var normalized = this.searchQuery.Trim();
-                query = query.Where(task =>
-                    task.Title.Contains(normalized, StringComparison.OrdinalIgnoreCase)
-                    || (task.Note?.Contains(normalized, StringComparison.OrdinalIgnoreCase) ?? false));
-            }
+    private bool ShouldIncludeCompletedTasks => this.alwaysShowCompletedTasks || this.showCompleted;
 
-            if (this.priorityFilter.HasValue)
-            {
-                query = query.Where(task => task.Priority == this.priorityFilter.Value);
-            }
+    private List<TaskFlow.Domain.Task> FilteredTasks => BuildFilteredTasks(includeCompleted: this.ShouldIncludeCompletedTasks);
 
-            if (this.statusFilter.HasValue)
-            {
-                query = query.Where(task => task.Status == this.statusFilter.Value);
-            }
-
-            if (!this.showCompleted)
-            {
-                query = query.Where(task => !task.IsCompleted);
-            }
-
-            query = (this.sortMode ?? SortMode.CreatedDesc) switch
-            {
-                SortMode.CreatedAsc => query.OrderByDescending(task => task.IsFocused).ThenBy(task => task.CreatedAt),
-                SortMode.Priority => query.OrderByDescending(task => task.IsFocused).ThenByDescending(task => task.Priority).ThenByDescending(task => task.CreatedAt),
-                SortMode.Focused => query.Where(task => task.IsFocused).OrderByDescending(task => task.CreatedAt),
-                _ => query.OrderByDescending(task => task.IsFocused).ThenByDescending(task => task.CreatedAt),
-            };
-
-            return query.Where(task => !task.ParentTaskId.HasValue).ToList();
-        }
-    }
+    private List<TaskFlow.Domain.Task> BoardFilteredTasks => BuildFilteredTasks(includeCompleted: this.ShouldIncludeCompletedTasks);
 
     protected override async Task OnInitializedAsync()
     {
@@ -292,8 +264,10 @@
             var projects = (await this.ProjectOrchestrator.GetAllAsync()).OrderBy(project => project.CreatedAt).ToList();
             var myTaskFlowSections = await this.MyTaskFlowSectionOrchestrator.GetAllAsync();
             var taskCounts = await BuildProjectTaskCountsAsync(projects);
+            var settings = await this.SubscriptionSettingsOrchestrator.GetAsync();
 
             this.AppState.SetNavigationData(projects, myTaskFlowSections, taskCounts);
+            this.alwaysShowCompletedTasks = settings.AlwaysShowCompletedTasks;
             await ApplySelectionAsync();
         }
         catch (Exception ex)
@@ -595,17 +569,17 @@
 
     private async Task ToggleCompleteAsync(TaskFlow.Domain.Task task)
     {
-        var target = task.IsCompleted ? DomainTaskStatus.Todo : DomainTaskStatus.Done;
-        var previousStatus = task.Status;
+        var target = !task.IsCompleted;
+        var previous = task.IsCompleted;
         this.UndoManager.Register("toggle completion", async () =>
         {
-            await this.TaskOrchestrator.SetStatusAsync(task.Id, previousStatus);
+            await this.TaskOrchestrator.SetCompletedAsync(task.Id, previous);
         });
 
-        await this.TaskOrchestrator.SetStatusAsync(task.Id, target);
+        await this.TaskOrchestrator.SetCompletedAsync(task.Id, target);
         await ReloadCurrentTasksAsync();
         StateHasChanged();
-        var statusMessage = target == DomainTaskStatus.Done ? "Task completed." : "Task restored.";
+        var statusMessage = target ? "Task completed." : "Task restored.";
         this.Snackbar.Add($"{statusMessage} Press Ctrl/Cmd+Z to undo.", Severity.Success);
     }
 
@@ -797,7 +771,45 @@
 
     private List<TaskFlow.Domain.Task> GetBoardTasks(DomainTaskStatus status)
     {
-        return this.FilteredTasks.Where(task => task.Status == status).ToList();
+        return this.BoardFilteredTasks.Where(task => task.Status == status).ToList();
+    }
+
+    private List<TaskFlow.Domain.Task> BuildFilteredTasks(bool includeCompleted)
+    {
+        IEnumerable<TaskFlow.Domain.Task> query = this.activeTasks;
+
+        if (!string.IsNullOrWhiteSpace(this.searchQuery))
+        {
+            var normalized = this.searchQuery.Trim();
+            query = query.Where(task =>
+                task.Title.Contains(normalized, StringComparison.OrdinalIgnoreCase)
+                || (task.Note?.Contains(normalized, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        if (this.priorityFilter.HasValue)
+        {
+            query = query.Where(task => task.Priority == this.priorityFilter.Value);
+        }
+
+        if (this.statusFilter.HasValue)
+        {
+            query = query.Where(task => task.Status == this.statusFilter.Value);
+        }
+
+        if (!includeCompleted)
+        {
+            query = query.Where(task => !task.IsCompleted);
+        }
+
+        query = (this.sortMode ?? SortMode.CreatedDesc) switch
+        {
+            SortMode.CreatedAsc => query.OrderByDescending(task => task.IsFocused).ThenBy(task => task.CreatedAt),
+            SortMode.Priority => query.OrderByDescending(task => task.IsFocused).ThenByDescending(task => task.Priority).ThenByDescending(task => task.CreatedAt),
+            SortMode.Focused => query.Where(task => task.IsFocused).OrderByDescending(task => task.CreatedAt),
+            _ => query.OrderByDescending(task => task.IsFocused).ThenByDescending(task => task.CreatedAt),
+        };
+
+        return query.Where(task => !task.ParentTaskId.HasValue).ToList();
     }
 
     private async Task RecalculateProjectTaskCountsAsync()

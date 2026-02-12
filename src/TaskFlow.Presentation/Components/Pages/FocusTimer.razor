@@ -4,6 +4,7 @@
 @implements IDisposable
 @inject ISnackbar Snackbar
 @inject IJSRuntime JsRuntime
+@inject FocusTimerStateService TimerState
 
 <PageTitle>Focus Timer</PageTitle>
 
@@ -19,17 +20,17 @@
         <MudCardContent>
             <MudStack Spacing="2">
                 <MudText Typo="Typo.subtitle2">Session</MudText>
-                <MudText Typo="Typo.h4">@timerRemaining.ToString(@"mm\:ss")</MudText>
-                <MudSelect T="int" Value="selectedTimerMinutes" ValueChanged="OnTimerPresetChangedAsync" Label="Duration" Dense="true" Variant="Variant.Outlined">
+                <MudText Typo="Typo.h4">@this.TimerState.TimerRemaining.ToString(@"mm\:ss")</MudText>
+                <MudSelect T="int" Value="this.TimerState.SelectedTimerMinutes" ValueChanged="OnTimerPresetChangedAsync" Label="Duration" Dense="true" Variant="Variant.Outlined">
                     <MudSelectItem Value="5">5 mins</MudSelectItem>
                     <MudSelectItem Value="15">15 mins</MudSelectItem>
                     <MudSelectItem Value="30">30 mins</MudSelectItem>
                     <MudSelectItem Value="60">60 mins</MudSelectItem>
                 </MudSelect>
                 <MudStack Row="true" Spacing="1">
-                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="StartTimerAsync" Disabled="@timerRunning">Start</MudButton>
-                    <MudButton Variant="Variant.Outlined" OnClick="PauseTimer" Disabled="@(!timerRunning)">Pause</MudButton>
-                    <MudButton Variant="Variant.Text" OnClick="ResetTimer">Reset</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="StartTimerAsync" Disabled="@this.TimerState.TimerRunning">Start</MudButton>
+                    <MudButton Variant="Variant.Outlined" OnClick="PauseTimerAsync" Disabled="@(!this.TimerState.TimerRunning)">Pause</MudButton>
+                    <MudButton Variant="Variant.Text" OnClick="ResetTimerAsync">Reset</MudButton>
                 </MudStack>
             </MudStack>
         </MudCardContent>
@@ -37,73 +38,46 @@
 </MudContainer>
 
 @code {
-    private int selectedTimerMinutes = 30;
-    private TimeSpan timerRemaining = TimeSpan.FromMinutes(30);
-    private bool timerRunning;
-    private PeriodicTimer timer;
-    private CancellationTokenSource timerCts;
+    protected override void OnInitialized()
+    {
+        this.TimerState.Changed += OnTimerStateChanged;
+        this.TimerState.Completed += OnTimerCompleted;
+    }
 
     private Task OnTimerPresetChangedAsync(int minutes)
     {
-        this.selectedTimerMinutes = minutes;
-        if (!this.timerRunning)
-        {
-            this.timerRemaining = TimeSpan.FromMinutes(minutes);
-        }
-
-        return Task.CompletedTask;
+        return this.TimerState.SetPresetAsync(minutes);
     }
 
     private async Task StartTimerAsync()
     {
-        if (this.timerRunning)
-        {
-            return;
-        }
-
-        this.timerRunning = true;
-        this.timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
-        this.timerCts = new CancellationTokenSource();
         await PlayTimerBeepAsync("start");
-        _ = RunTimerAsync(this.timer, this.timerCts.Token);
+        await this.TimerState.StartAsync();
     }
 
-    private async Task RunTimerAsync(PeriodicTimer localTimer, CancellationToken cancellationToken)
+    private Task PauseTimerAsync()
     {
-        try
+        return this.TimerState.PauseAsync();
+    }
+
+    private Task ResetTimerAsync()
+    {
+        return this.TimerState.ResetAsync();
+    }
+
+    private void OnTimerStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnTimerCompleted()
+    {
+        _ = InvokeAsync(async () =>
         {
-            while (await localTimer.WaitForNextTickAsync(cancellationToken))
-            {
-                if (this.timerRemaining <= TimeSpan.Zero)
-                {
-                    this.timerRunning = false;
-                    this.Snackbar.Add("Focus session complete.", Severity.Success);
-                    await PlayTimerBeepAsync("finish");
-                    await InvokeAsync(StateHasChanged);
-                    return;
-                }
-
-                this.timerRemaining -= TimeSpan.FromSeconds(1);
-                await InvokeAsync(StateHasChanged);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    private void PauseTimer()
-    {
-        this.timerRunning = false;
-        this.timerCts?.Cancel();
-        this.timer?.Dispose();
-        this.timer = null;
-    }
-
-    private void ResetTimer()
-    {
-        PauseTimer();
-        this.timerRemaining = TimeSpan.FromMinutes(this.selectedTimerMinutes);
+            this.Snackbar.Add("Focus session complete.", Severity.Success);
+            await PlayTimerBeepAsync("finish");
+            StateHasChanged();
+        });
     }
 
     private async Task PlayTimerBeepAsync(string eventType)
@@ -119,8 +93,7 @@
 
     public void Dispose()
     {
-        this.timerCts?.Cancel();
-        this.timer?.Dispose();
-        this.timerCts?.Dispose();
+        this.TimerState.Changed -= OnTimerStateChanged;
+        this.TimerState.Completed -= OnTimerCompleted;
     }
 }

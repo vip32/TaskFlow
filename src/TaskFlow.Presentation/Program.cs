@@ -27,6 +27,7 @@ builder.Services.AddMudServices(config =>
 });
 builder.Services.AddScoped<IAppExceptionHandler, AppExceptionHandler>();
 builder.Services.AddTransient<IUndoManager, UndoManager>();
+builder.Services.AddScoped<FocusTimerStateService>();
 
 builder.Services.AddTaskFlowApplicationServices();
 

@@ -146,6 +146,19 @@ public class SubscriptionTests
         // Assert
         isActive.ShouldBeFalse();
     }
+
+    [Fact]
+    public void SetAlwaysShowCompletedTasks_UpdatesSubscriptionSettings()
+    {
+        // Arrange
+        var subscription = new Subscription("Starter", SubscriptionTier.Free);
+
+        // Act
+        subscription.SetAlwaysShowCompletedTasks(true);
+
+        // Assert
+        subscription.Settings.AlwaysShowCompletedTasks.ShouldBeTrue();
+    }
 }
 
 
