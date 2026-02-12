@@ -2,6 +2,9 @@ using TaskFlow.Domain;
 
 namespace TaskFlow.UnitTests.Domain;
 
+[Trait("Layer", "Domain")]
+[Trait("Slice", "Tasks")]
+[Trait("Type", "Unit")]
 public class TaskReminderTests
 {
     [Fact]
@@ -56,3 +59,5 @@ public class TaskReminderTests
         reminder.SentAtUtc.ShouldBe(first);
     }
 }
+
+

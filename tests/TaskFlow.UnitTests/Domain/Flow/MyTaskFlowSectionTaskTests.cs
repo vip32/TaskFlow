@@ -2,6 +2,9 @@ using TaskFlow.Domain;
 
 namespace TaskFlow.UnitTests.Domain;
 
+[Trait("Layer", "Domain")]
+[Trait("Slice", "Flow")]
+[Trait("Type", "Unit")]
 public class MyTaskFlowSectionTaskTests
 {
     [Fact]
@@ -28,3 +31,5 @@ public class MyTaskFlowSectionTaskTests
         Should.Throw<ArgumentException>(act);
     }
 }
+
+

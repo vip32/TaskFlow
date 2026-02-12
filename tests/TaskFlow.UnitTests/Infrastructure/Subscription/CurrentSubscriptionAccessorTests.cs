@@ -3,6 +3,9 @@ using TaskFlow.Infrastructure;
 
 namespace TaskFlow.UnitTests.Infrastructure;
 
+[Trait("Layer", "Infrastructure")]
+[Trait("Slice", "Subscription")]
+[Trait("Type", "Unit")]
 public class CurrentSubscriptionAccessorTests
 {
     [Fact]
@@ -69,3 +72,5 @@ public class CurrentSubscriptionAccessorTests
         sut.GetCurrentSubscription().Schedules.Single().IsOpenEnded.ShouldBeTrue();
     }
 }
+
+

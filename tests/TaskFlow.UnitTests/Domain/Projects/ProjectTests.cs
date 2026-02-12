@@ -3,6 +3,9 @@ using DomainTask = TaskFlow.Domain.Task;
 
 namespace TaskFlow.UnitTests.Domain;
 
+[Trait("Layer", "Domain")]
+[Trait("Slice", "Projects")]
+[Trait("Type", "Unit")]
 public class ProjectTests
 {
     [Fact]
@@ -172,3 +175,5 @@ public class ProjectTests
         sut.Tags.ShouldHaveSingleItem();
     }
 }
+
+

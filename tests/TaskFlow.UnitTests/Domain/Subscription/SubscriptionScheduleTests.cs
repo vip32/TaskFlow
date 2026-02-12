@@ -5,6 +5,9 @@ namespace TaskFlow.UnitTests.Domain;
 /// <summary>
 /// Tests subscription schedule domain behavior.
 /// </summary>
+[Trait("Layer", "Domain")]
+[Trait("Slice", "Subscription")]
+[Trait("Type", "Unit")]
 public class SubscriptionScheduleTests
 {
     /// <summary>
@@ -66,3 +69,5 @@ public class SubscriptionScheduleTests
         schedule.IsActiveAt(new DateOnly(2026, 2, 1)).ShouldBeFalse();
     }
 }
+
+

@@ -4,6 +4,9 @@ using DomainTaskStatus = TaskFlow.Domain.TaskStatus;
 
 namespace TaskFlow.UnitTests.Domain;
 
+[Trait("Layer", "Domain")]
+[Trait("Slice", "Tasks")]
+[Trait("Type", "Unit")]
 public class TaskTests
 {
     [Fact]
@@ -417,3 +420,5 @@ public class TaskTests
         task.Tags.ShouldHaveSingleItem();
     }
 }
+
+

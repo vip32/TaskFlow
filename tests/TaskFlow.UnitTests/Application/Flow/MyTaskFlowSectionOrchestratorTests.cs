@@ -7,6 +7,9 @@ using DomainTask = TaskFlow.Domain.Task;
 
 namespace TaskFlow.UnitTests.Application;
 
+[Trait("Layer", "Application")]
+[Trait("Slice", "Flow")]
+[Trait("Type", "Unit")]
 public class MyTaskFlowSectionOrchestratorTests
 {
     [Fact]
@@ -189,3 +192,5 @@ public class MyTaskFlowSectionOrchestratorTests
         return accessor;
     }
 }
+
+

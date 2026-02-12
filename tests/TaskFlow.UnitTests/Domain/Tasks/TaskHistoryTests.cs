@@ -2,6 +2,9 @@ using TaskFlow.Domain;
 
 namespace TaskFlow.UnitTests.Domain;
 
+[Trait("Layer", "Domain")]
+[Trait("Slice", "Tasks")]
+[Trait("Type", "Unit")]
 public class TaskHistoryTests
 {
     [Fact]
@@ -42,3 +45,5 @@ public class TaskHistoryTests
         history.UsageCount.ShouldBe(2);
     }
 }
+
+

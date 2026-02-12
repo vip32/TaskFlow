@@ -6,6 +6,9 @@ using TaskFlow.Domain;
 
 namespace TaskFlow.UnitTests.Application;
 
+[Trait("Layer", "Application")]
+[Trait("Slice", "Projects")]
+[Trait("Type", "Unit")]
 public class ProjectOrchestratorTests
 {
     [Fact]
@@ -180,3 +183,5 @@ public class ProjectOrchestratorTests
         return accessor;
     }
 }
+
+

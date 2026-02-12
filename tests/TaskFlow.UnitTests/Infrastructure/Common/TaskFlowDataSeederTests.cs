@@ -3,6 +3,9 @@ using TaskFlow.Infrastructure.Persistence;
 
 namespace TaskFlow.UnitTests.Infrastructure;
 
+[Trait("Layer", "Infrastructure")]
+[Trait("Slice", "Common")]
+[Trait("Type", "Unit")]
 public class TaskFlowDataSeederTests
 {
     [Fact]
@@ -82,3 +85,5 @@ public class TaskFlowDataSeederTests
         return new AppDbContext(options);
     }
 }
+
+

@@ -4,6 +4,9 @@ using TaskFlow.Infrastructure.Repositories;
 
 namespace TaskFlow.UnitTests.Infrastructure;
 
+[Trait("Layer", "Infrastructure")]
+[Trait("Slice", "Tasks")]
+[Trait("Type", "Unit")]
 public class TaskHistoryRepositoryTests
 {
     [Fact]
@@ -76,3 +79,5 @@ public class TaskHistoryRepositoryTests
         suggestions[1].ShouldBe("Plaster");
     }
 }
+
+

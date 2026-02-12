@@ -6,6 +6,9 @@ using TaskFlow.Domain;
 
 namespace TaskFlow.UnitTests.Application;
 
+[Trait("Layer", "Application")]
+[Trait("Slice", "Focus")]
+[Trait("Type", "Unit")]
 public class FocusTimerOrchestratorTests
 {
     [Fact]
@@ -133,3 +136,5 @@ public class FocusTimerOrchestratorTests
         return accessor;
     }
 }
+
+

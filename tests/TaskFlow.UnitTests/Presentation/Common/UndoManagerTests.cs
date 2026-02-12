@@ -2,6 +2,9 @@ using TaskFlow.Presentation.Services;
 
 namespace TaskFlow.UnitTests.Presentation;
 
+[Trait("Layer", "Presentation")]
+[Trait("Slice", "Common")]
+[Trait("Type", "Unit")]
 public class UndoManagerTests
 {
     [Fact]
@@ -102,3 +105,5 @@ public class UndoManagerTests
         result.Description.ShouldBe("good");
     }
 }
+
+

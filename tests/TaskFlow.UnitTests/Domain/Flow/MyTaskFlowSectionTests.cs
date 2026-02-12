@@ -7,6 +7,9 @@ namespace TaskFlow.UnitTests.Domain;
 /// <summary>
 /// Tests My Task Flow section rule and manual curation behavior.
 /// </summary>
+[Trait("Layer", "Domain")]
+[Trait("Slice", "Flow")]
+[Trait("Type", "Unit")]
 public class MyTaskFlowSectionTests
 {
     [Fact]
@@ -241,3 +244,5 @@ public class MyTaskFlowSectionTests
         noDue.Matches(noDueTask, today, endOfWeek, nowUtc, timezone).ShouldBeTrue();
     }
 }
+
+

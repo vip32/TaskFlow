@@ -4,6 +4,9 @@ using TaskFlow.Infrastructure.Repositories;
 
 namespace TaskFlow.UnitTests.Infrastructure;
 
+[Trait("Layer", "Infrastructure")]
+[Trait("Slice", "Projects")]
+[Trait("Type", "Unit")]
 public class ProjectRepositoryTests
 {
     [Fact]
@@ -88,3 +91,5 @@ public class ProjectRepositoryTests
         await Should.ThrowAsync<EntityNotFoundException>(() => sut.GetByIdAsync(Guid.NewGuid()));
     }
 }
+
+

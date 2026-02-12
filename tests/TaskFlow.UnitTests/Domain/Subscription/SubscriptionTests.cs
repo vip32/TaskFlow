@@ -5,6 +5,9 @@ namespace TaskFlow.UnitTests.Domain;
 /// <summary>
 /// Tests subscription aggregate behavior.
 /// </summary>
+[Trait("Layer", "Domain")]
+[Trait("Slice", "Subscription")]
+[Trait("Type", "Unit")]
 public class SubscriptionTests
 {
     [Fact]
@@ -144,3 +147,5 @@ public class SubscriptionTests
         isActive.ShouldBeFalse();
     }
 }
+
+

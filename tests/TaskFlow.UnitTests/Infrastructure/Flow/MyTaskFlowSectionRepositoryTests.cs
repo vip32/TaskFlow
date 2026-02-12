@@ -4,6 +4,9 @@ using TaskFlow.Infrastructure.Repositories;
 
 namespace TaskFlow.UnitTests.Infrastructure;
 
+[Trait("Layer", "Infrastructure")]
+[Trait("Slice", "Flow")]
+[Trait("Type", "Unit")]
 public class MyTaskFlowSectionRepositoryTests
 {
     [Fact]
@@ -117,3 +120,5 @@ public class MyTaskFlowSectionRepositoryTests
         deleted.ShouldBeFalse();
     }
 }
+
+

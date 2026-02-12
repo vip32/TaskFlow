@@ -5,6 +5,9 @@ using TaskFlow.Infrastructure.Persistence;
 
 namespace TaskFlow.UnitTests.Infrastructure;
 
+[Trait("Layer", "Infrastructure")]
+[Trait("Slice", "Common")]
+[Trait("Type", "Unit")]
 public class DependencyInjectionTests
 {
     [Fact]
@@ -59,3 +62,5 @@ public class DependencyInjectionTests
         (await db.Subscriptions.AnyAsync()).ShouldBeTrue();
     }
 }
+
+

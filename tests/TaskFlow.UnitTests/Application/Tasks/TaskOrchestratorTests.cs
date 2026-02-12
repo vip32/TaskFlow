@@ -6,6 +6,9 @@ using DomainTaskStatus = TaskFlow.Domain.TaskStatus;
 
 namespace TaskFlow.UnitTests.Application;
 
+[Trait("Layer", "Application")]
+[Trait("Slice", "Tasks")]
+[Trait("Type", "Unit")]
 public class TaskOrchestratorTests
 {
     [Fact]
@@ -658,3 +661,5 @@ public class TaskOrchestratorTests
         }
     }
 }
+
+

@@ -2,6 +2,9 @@ using TaskFlow.Domain;
 
 namespace TaskFlow.UnitTests.Domain;
 
+[Trait("Layer", "Domain")]
+[Trait("Slice", "Focus")]
+[Trait("Type", "Unit")]
 public class FocusSessionTests
 {
     [Fact]
@@ -86,3 +89,5 @@ public class FocusSessionTests
         sut.TaskId.ShouldBe(taskId);
     }
 }
+
+

@@ -4,6 +4,9 @@ using TaskFlow.Infrastructure.Repositories;
 
 namespace TaskFlow.UnitTests.Infrastructure;
 
+[Trait("Layer", "Infrastructure")]
+[Trait("Slice", "Focus")]
+[Trait("Type", "Unit")]
 public class FocusSessionRepositoryTests
 {
     [Fact]
@@ -96,3 +99,5 @@ public class FocusSessionRepositoryTests
         await Should.ThrowAsync<ArgumentNullException>(() => sut.UpdateAsync(null!));
     }
 }
+
+

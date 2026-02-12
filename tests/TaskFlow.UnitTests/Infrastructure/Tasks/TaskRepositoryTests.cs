@@ -4,6 +4,9 @@ using DomainTask = TaskFlow.Domain.Task;
 
 namespace TaskFlow.UnitTests.Infrastructure;
 
+[Trait("Layer", "Infrastructure")]
+[Trait("Slice", "Tasks")]
+[Trait("Type", "Unit")]
 public class TaskRepositoryTests
 {
     [Fact]
@@ -210,3 +213,5 @@ public class TaskRepositoryTests
         deletedForeign.ShouldBeFalse();
     }
 }
+
+
