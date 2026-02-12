@@ -10,28 +10,37 @@ public class DependencyInjectionTests
     [Fact]
     public void AddTaskFlowInfrastructure_EmptyConnectionString_ThrowsArgumentException()
     {
+        // Arrange
+
+        // Act
         var services = new ServiceCollection();
 
-        Assert.Throws<ArgumentException>(() => services.AddTaskFlowInfrastructure(" "));
+        // Assert
+        Should.Throw<ArgumentException>(() => services.AddTaskFlowInfrastructure(" "));
     }
 
     [Fact]
     public void AddTaskFlowInfrastructure_RegistersDbContextFactory()
     {
+        // Arrange
         var services = new ServiceCollection();
         var dbPath = Path.Combine(Path.GetTempPath(), $"taskflow-{Guid.NewGuid():N}.db");
 
         services.AddTaskFlowInfrastructure($"Data Source={dbPath}");
+
+        // Act
         using var provider = services.BuildServiceProvider();
 
         var factory = provider.GetService<IDbContextFactory<AppDbContext>>();
 
-        Assert.NotNull(factory);
+        // Assert
+        factory.ShouldNotBeNull();
     }
 
     [Fact]
     public async System.Threading.Tasks.Task InitializeTaskFlowDatabaseAsync_RunsMigrations()
     {
+        // Arrange
         var services = new ServiceCollection();
         var dbPath = Path.Combine(Path.GetTempPath(), $"taskflow-{Guid.NewGuid():N}.db");
 
@@ -41,8 +50,12 @@ public class DependencyInjectionTests
         await provider.InitializeTaskFlowDatabaseAsync();
 
         await using var scope = provider.CreateAsyncScope();
+
+        // Act
         var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
         await using var db = await factory.CreateDbContextAsync();
-        Assert.True(await db.Subscriptions.AnyAsync());
+
+        // Assert
+        (await db.Subscriptions.AnyAsync()).ShouldBeTrue();
     }
 }

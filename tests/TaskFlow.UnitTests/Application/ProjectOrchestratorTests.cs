@@ -1,4 +1,6 @@
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
+using Shouldly;
 using TaskFlow.Application;
 using TaskFlow.Domain;
 
@@ -9,98 +11,159 @@ public class ProjectOrchestratorTests
     [Fact]
     public async System.Threading.Tasks.Task GetAllAsync_ForwardsToRepository()
     {
+        // Arrange
         var subscription = CreateSubscription();
         var first = new Project(subscription.Id, "One", "#111111", "work");
         var second = new Project(subscription.Id, "Two", "#222222", "person");
+        var repository = Substitute.For<IProjectRepository>();
+        repository.GetAllAsync(Arg.Any<CancellationToken>()).Returns([first, second]);
 
-        var repository = new FakeProjectRepository(first, second);
-        var sut = new ProjectOrchestrator(NullLogger<ProjectOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var sut = new ProjectOrchestrator(
+            Substitute.For<ILogger<ProjectOrchestrator>>(),
+            repository,
+            CreateAccessor(subscription));
 
+        // Act
         var result = await sut.GetAllAsync();
 
-        Assert.Equal(2, result.Count);
+        // Assert
+        result.Count.ShouldBe(2);
+        await repository.Received(1).GetAllAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetByIdAsync_ForwardsToRepository()
     {
+        // Arrange
         var subscription = CreateSubscription();
         var existing = new Project(subscription.Id, "One", "#111111", "work");
-        var repository = new FakeProjectRepository(existing);
-        var sut = new ProjectOrchestrator(NullLogger<ProjectOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var repository = Substitute.For<IProjectRepository>();
+        repository.GetByIdAsync(existing.Id, Arg.Any<CancellationToken>()).Returns(existing);
 
+        var sut = new ProjectOrchestrator(
+            Substitute.For<ILogger<ProjectOrchestrator>>(),
+            repository,
+            CreateAccessor(subscription));
+
+        // Act
         var result = await sut.GetByIdAsync(existing.Id);
 
-        Assert.Equal(existing.Id, result.Id);
+        // Assert
+        result.Id.ShouldBe(existing.Id);
+        await repository.Received(1).GetByIdAsync(existing.Id, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async System.Threading.Tasks.Task CreateAsync_ValidInput_PersistsProjectWithCurrentSubscription()
     {
+        // Arrange
         var subscription = CreateSubscription();
-        var repository = new FakeProjectRepository();
-        var sut = new ProjectOrchestrator(NullLogger<ProjectOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var repository = Substitute.For<IProjectRepository>();
+        repository.AddAsync(Arg.Any<Project>(), Arg.Any<CancellationToken>()).Returns(call => call.Arg<Project>());
 
+        var sut = new ProjectOrchestrator(
+            Substitute.For<ILogger<ProjectOrchestrator>>(),
+            repository,
+            CreateAccessor(subscription));
+
+        // Act
         var created = await sut.CreateAsync("Work", "#123456", "work", false);
 
-        Assert.Equal(subscription.Id, created.SubscriptionId);
-        Assert.Equal(1, repository.AddCallCount);
+        // Assert
+        created.SubscriptionId.ShouldBe(subscription.Id);
+        await repository.Received(1).AddAsync(Arg.Is<Project>(p => p.SubscriptionId == subscription.Id), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async System.Threading.Tasks.Task UpdateNameAsync_ExistingProject_PersistsChange()
     {
+        // Arrange
         var subscription = CreateSubscription();
         var existing = new Project(subscription.Id, "Old", "#123456", "work");
-        var repository = new FakeProjectRepository(existing);
-        var sut = new ProjectOrchestrator(NullLogger<ProjectOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var repository = Substitute.For<IProjectRepository>();
+        repository.GetByIdAsync(existing.Id, Arg.Any<CancellationToken>()).Returns(existing);
+        repository.UpdateAsync(Arg.Any<Project>(), Arg.Any<CancellationToken>()).Returns(call => call.Arg<Project>());
 
+        var sut = new ProjectOrchestrator(
+            Substitute.For<ILogger<ProjectOrchestrator>>(),
+            repository,
+            CreateAccessor(subscription));
+
+        // Act
         var updated = await sut.UpdateNameAsync(existing.Id, "New");
 
-        Assert.Equal("New", updated.Name);
-        Assert.Equal(1, repository.UpdateCallCount);
+        // Assert
+        updated.Name.ShouldBe("New");
+        await repository.Received(1).UpdateAsync(Arg.Is<Project>(p => p.Name == "New"), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async System.Threading.Tasks.Task UpdateVisualsAsync_ExistingProject_PersistsChange()
     {
+        // Arrange
         var subscription = CreateSubscription();
         var existing = new Project(subscription.Id, "Work", "#123456", "work");
-        var repository = new FakeProjectRepository(existing);
-        var sut = new ProjectOrchestrator(NullLogger<ProjectOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var repository = Substitute.For<IProjectRepository>();
+        repository.GetByIdAsync(existing.Id, Arg.Any<CancellationToken>()).Returns(existing);
+        repository.UpdateAsync(Arg.Any<Project>(), Arg.Any<CancellationToken>()).Returns(call => call.Arg<Project>());
 
+        var sut = new ProjectOrchestrator(
+            Substitute.For<ILogger<ProjectOrchestrator>>(),
+            repository,
+            CreateAccessor(subscription));
+
+        // Act
         var updated = await sut.UpdateVisualsAsync(existing.Id, "#abcdef", "star");
 
-        Assert.Equal("#abcdef", updated.Color);
-        Assert.Equal("star", updated.Icon);
-        Assert.Equal(1, repository.UpdateCallCount);
+        // Assert
+        updated.Color.ShouldBe("#abcdef");
+        updated.Icon.ShouldBe("star");
+        await repository.Received(1).UpdateAsync(Arg.Is<Project>(p => p.Color == "#abcdef" && p.Icon == "star"), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async System.Threading.Tasks.Task UpdateViewTypeAsync_ExistingProject_PersistsChange()
     {
+        // Arrange
         var subscription = CreateSubscription();
         var existing = new Project(subscription.Id, "Work", "#123456", "work");
-        var repository = new FakeProjectRepository(existing);
-        var sut = new ProjectOrchestrator(NullLogger<ProjectOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var repository = Substitute.For<IProjectRepository>();
+        repository.GetByIdAsync(existing.Id, Arg.Any<CancellationToken>()).Returns(existing);
+        repository.UpdateAsync(Arg.Any<Project>(), Arg.Any<CancellationToken>()).Returns(call => call.Arg<Project>());
 
+        var sut = new ProjectOrchestrator(
+            Substitute.For<ILogger<ProjectOrchestrator>>(),
+            repository,
+            CreateAccessor(subscription));
+
+        // Act
         var updated = await sut.UpdateViewTypeAsync(existing.Id, ProjectViewType.Board);
 
-        Assert.Equal(ProjectViewType.Board, updated.ViewType);
-        Assert.Equal(1, repository.UpdateCallCount);
+        // Assert
+        updated.ViewType.ShouldBe(ProjectViewType.Board);
+        await repository.Received(1).UpdateAsync(Arg.Is<Project>(p => p.ViewType == ProjectViewType.Board), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async System.Threading.Tasks.Task DeleteAsync_ForwardsToRepository()
     {
+        // Arrange
         var subscription = CreateSubscription();
         var existing = new Project(subscription.Id, "Work", "#123456", "work");
-        var repository = new FakeProjectRepository(existing);
-        var sut = new ProjectOrchestrator(NullLogger<ProjectOrchestrator>.Instance, repository, new FakeCurrentSubscriptionAccessor(subscription));
+        var repository = Substitute.For<IProjectRepository>();
+        repository.DeleteAsync(existing.Id, Arg.Any<CancellationToken>()).Returns(true);
 
+        var sut = new ProjectOrchestrator(
+            Substitute.For<ILogger<ProjectOrchestrator>>(),
+            repository,
+            CreateAccessor(subscription));
+
+        // Act
         var deleted = await sut.DeleteAsync(existing.Id);
 
-        Assert.True(deleted);
+        // Assert
+        deleted.ShouldBeTrue();
+        await repository.Received(1).DeleteAsync(existing.Id, Arg.Any<CancellationToken>());
     }
 
     private static Subscription CreateSubscription()
@@ -110,64 +173,10 @@ public class ProjectOrchestratorTests
         return subscription;
     }
 
-    private sealed class FakeCurrentSubscriptionAccessor : ICurrentSubscriptionAccessor
+    private static ICurrentSubscriptionAccessor CreateAccessor(Subscription subscription)
     {
-        private readonly Subscription subscription;
-
-        public FakeCurrentSubscriptionAccessor(Subscription subscription)
-        {
-            this.subscription = subscription;
-        }
-
-        public Subscription GetCurrentSubscription()
-        {
-            return this.subscription;
-        }
-    }
-
-    private sealed class FakeProjectRepository : IProjectRepository
-    {
-        private readonly Dictionary<Guid, Project> store = [];
-
-        public FakeProjectRepository(params Project[] existing)
-        {
-            foreach (var project in existing)
-            {
-                this.store[project.Id] = project;
-            }
-        }
-
-        public int AddCallCount { get; private set; }
-
-        public int UpdateCallCount { get; private set; }
-
-        public Task<List<Project>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            return System.Threading.Tasks.Task.FromResult(this.store.Values.ToList());
-        }
-
-        public Task<Project> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            return System.Threading.Tasks.Task.FromResult(this.store[id]);
-        }
-
-        public Task<Project> AddAsync(Project project, CancellationToken cancellationToken = default)
-        {
-            this.AddCallCount++;
-            this.store[project.Id] = project;
-            return System.Threading.Tasks.Task.FromResult(project);
-        }
-
-        public Task<Project> UpdateAsync(Project project, CancellationToken cancellationToken = default)
-        {
-            this.UpdateCallCount++;
-            this.store[project.Id] = project;
-            return System.Threading.Tasks.Task.FromResult(project);
-        }
-
-        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            return System.Threading.Tasks.Task.FromResult(this.store.Remove(id));
-        }
+        var accessor = Substitute.For<ICurrentSubscriptionAccessor>();
+        accessor.GetCurrentSubscription().Returns(subscription);
+        return accessor;
     }
 }

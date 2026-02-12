@@ -40,7 +40,6 @@ The codebase follows DDD with a rich domain model and clean architecture. Busine
 - Use existing devkit features (requester, notifier, pipeline behaviors) instead of re-inventing infrastructure.
 - Produce testable changes with unit/integration tests where meaningful.
 
-
 ## Agent Skills
 
 **IMPORTANT**: This project uses Agent Skills to provide specialized, standardized workflows for common tasks.
@@ -155,12 +154,41 @@ For server-side development and bug fixes, follow this  workflow:
 7. Report by layer:
    - Summarize what changed in each impacted layer and why.
 
-## Testing Expectations
+## Testing Guidelines
+
+The testing has these standards. Keep work aligned with them:
 
 - Add or update tests for non-trivial behavior changes.
-- Prefer xUnit tests with clear Arrange-Act-Assert structure.
-- Mock collaborators when unit testing orchestrators.
+- Use **xUnit** for unit tests.
+- Use clear **AAA pattern** in tests:
+  - Arrange
+  - Act
+  - Assert
+- Use **NSubstitute** for test doubles when mocking collaborators (especially in Application/orchestrator tests).
+- Use **Shouldly** directly for assertions.
+- Do not introduce assertion wrapper helpers (for example `TestAssert`); call Shouldly APIs directly.
+- Prefer naming the system under test variable as `sut`.
 - Keep domain tests focused on business behavior.
+- AAA sections are mandatory in test methods:
+  - `// Arrange` contains setup only.
+  - `// Act` contains the action under test and must not be empty.
+  - `// Assert` contains assertions only.
+- For exception tests, define the action in `Act` (for example `var act = () => sut.Do();`) and assert in `Assert` with Shouldly.
+- Test organization in `tests/TaskFlow.UnitTests` is layer-based:
+  - `Application/`
+  - `Domain/`
+  - `Infrastructure/`
+  - `Presentation/`
+- Test classes should be named after the class under test (for coverage traceability).
+- Coverage target is at least **80% line coverage per class** across the codebase, with a focus on Domain and Application layers.
+- Repository tests should use real EF Core behavior with `Microsoft.EntityFrameworkCore.InMemory` (do not mock `DbContext`).
+- Coverage output is standardized under `.artifacts/`:
+  - Test collector output: `.artifacts/TestResults/UnitCoverage`
+  - HTML report: `.artifacts/coverage/unit/index.html`
+- Use `coverlet.runsettings` when collecting coverage to keep include/exclude filters consistent.
+- Before completing backend changes, run:
+  - `dotnet test tests/TaskFlow.UnitTests/TaskFlow.UnitTests.csproj --configuration Debug`
+  - `dotnet test tests/TaskFlow.UnitTests/TaskFlow.UnitTests.csproj --configuration Debug --settings coverlet.runsettings --collect "XPlat Code Coverage" --results-directory .artifacts/TestResults/UnitCoverage`
 
 ## Documentation
 
@@ -169,6 +197,8 @@ For server-side development and bug fixes, follow this  workflow:
 
 ## Reference Docs
 
+- Project overview: `README.md`
 - Product and requirements: `docs/REQUIREMENTS.md`
 - System design: `docs/SYSTEMDESIGN.md`
-- Project overview: `README.md`
+- UI and UX guide: `docs/VISUAL_UI_UX_GUIDE.md`
+- Coding conventions: `.editorconfig`

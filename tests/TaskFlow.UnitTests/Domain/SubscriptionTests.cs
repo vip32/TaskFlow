@@ -10,9 +10,17 @@ public class SubscriptionTests
     [Fact]
     public void Constructor_InvalidArguments_Throws()
     {
-        Assert.Throws<ArgumentException>(() => new Subscription(Guid.Empty, "Name", SubscriptionTier.Free, true));
-        Assert.Throws<ArgumentException>(() => new Subscription(Guid.NewGuid(), " ", SubscriptionTier.Free, true));
-        Assert.Throws<ArgumentException>(() => new Subscription(Guid.NewGuid(), "Name", SubscriptionTier.Free, true, " "));
+        // Arrange
+
+        // Act
+        var emptyIdAct = () => new Subscription(Guid.Empty, "Name", SubscriptionTier.Free, true);
+        var emptyNameAct = () => new Subscription(Guid.NewGuid(), " ", SubscriptionTier.Free, true);
+        var emptyTimeZoneAct = () => new Subscription(Guid.NewGuid(), "Name", SubscriptionTier.Free, true, " ");
+
+        // Assert
+        Should.Throw<ArgumentException>(emptyIdAct);
+        Should.Throw<ArgumentException>(emptyNameAct);
+        Should.Throw<ArgumentException>(emptyTimeZoneAct);
     }
 
     /// <summary>
@@ -21,16 +29,21 @@ public class SubscriptionTests
     [Fact]
     public void TierTransitions_UpgradeAndDowngrade_ChangesTier()
     {
+        // Arrange
+
+        // Act
         var subscription = new Subscription("Starter", SubscriptionTier.Free);
 
         subscription.UpgradeToPlus();
-        Assert.Equal(SubscriptionTier.Plus, subscription.Tier);
+
+        // Assert
+        subscription.Tier.ShouldBe(SubscriptionTier.Plus);
 
         subscription.UpgradeToPro();
-        Assert.Equal(SubscriptionTier.Pro, subscription.Tier);
+        subscription.Tier.ShouldBe(SubscriptionTier.Pro);
 
         subscription.DowngradeToFree();
-        Assert.Equal(SubscriptionTier.Free, subscription.Tier);
+        subscription.Tier.ShouldBe(SubscriptionTier.Free);
     }
 
     /// <summary>
@@ -39,13 +52,17 @@ public class SubscriptionTests
     [Fact]
     public void IsActiveAt_DisabledSubscription_ReturnsFalse()
     {
+        // Arrange
         var subscription = new Subscription("Starter", SubscriptionTier.Free);
         subscription.AddOpenEndedSchedule(new DateOnly(2026, 1, 1));
+
+        // Act
         subscription.Disable();
 
         var isActive = subscription.IsActiveAt(new DateOnly(2026, 1, 10));
 
-        Assert.False(isActive);
+        // Assert
+        isActive.ShouldBeFalse();
     }
 
     /// <summary>
@@ -54,12 +71,16 @@ public class SubscriptionTests
     [Fact]
     public void IsActiveAt_EnabledWithMatchingSchedule_ReturnsTrue()
     {
+        // Arrange
         var subscription = new Subscription("Starter", SubscriptionTier.Free);
+
+        // Act
         subscription.AddScheduledWindow(new DateOnly(2026, 1, 1), new DateOnly(2026, 1, 31));
 
         var isActive = subscription.IsActiveAt(new DateOnly(2026, 1, 15));
 
-        Assert.True(isActive);
+        // Assert
+        isActive.ShouldBeTrue();
     }
 
     /// <summary>
@@ -68,9 +89,13 @@ public class SubscriptionTests
     [Fact]
     public void Constructor_DefaultTimezone_IsEuropeBerlin()
     {
+        // Arrange
+
+        // Act
         var subscription = new Subscription("Starter", SubscriptionTier.Free);
 
-        Assert.Equal("Europe/Berlin", subscription.TimeZoneId);
+        // Assert
+        subscription.TimeZoneId.ShouldBe("Europe/Berlin");
     }
 
     /// <summary>
@@ -79,31 +104,43 @@ public class SubscriptionTests
     [Fact]
     public void SetTimeZone_UnknownTimeZone_ThrowsArgumentException()
     {
+        // Arrange
+
+        // Act
         var subscription = new Subscription("Starter", SubscriptionTier.Free);
 
-        Assert.Throws<ArgumentException>(() => subscription.SetTimeZone("invalid/timezone"));
+        // Assert
+        Should.Throw<ArgumentException>(() => subscription.SetTimeZone("invalid/timezone"));
     }
 
     [Fact]
     public void EnableAfterDisable_ActiveAgainWhenScheduleMatches()
     {
+        // Arrange
         var subscription = new Subscription("Starter", SubscriptionTier.Free);
         subscription.AddOpenEndedSchedule(new DateOnly(2026, 1, 1));
         subscription.Disable();
+
+        // Act
         subscription.Enable();
 
         var isActive = subscription.IsActiveAt(new DateOnly(2026, 1, 2));
 
-        Assert.True(isActive);
+        // Assert
+        isActive.ShouldBeTrue();
     }
 
     [Fact]
     public void IsActiveAt_NoSchedules_ReturnsFalse()
     {
+        // Arrange
+
+        // Act
         var subscription = new Subscription("Starter", SubscriptionTier.Free);
 
         var isActive = subscription.IsActiveAt(new DateOnly(2026, 1, 10));
 
-        Assert.False(isActive);
+        // Assert
+        isActive.ShouldBeFalse();
     }
 }

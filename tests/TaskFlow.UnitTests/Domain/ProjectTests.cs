@@ -8,108 +8,152 @@ public class ProjectTests
     [Fact]
     public void Constructor_EmptySubscription_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => new Project(Guid.Empty, "Work", "#123456", "work"));
+        // Arrange
+
+        // Act
+        var act = () => new Project(Guid.Empty, "Work", "#123456", "work");
+
+        // Assert
+        Should.Throw<ArgumentException>(act);
     }
 
     [Fact]
     public void Constructor_NameTooLong_ThrowsArgumentException()
     {
+        // Arrange
         var name = new string('a', 101);
 
-        Assert.Throws<ArgumentException>(() => new Project(Guid.NewGuid(), name, "#123456", "work"));
+        // Act
+        var act = () => new Project(Guid.NewGuid(), name, "#123456", "work");
+
+        // Assert
+        Should.Throw<ArgumentException>(act);
     }
 
     [Fact]
     public void UpdateNote_Whitespace_ClearsToNull()
     {
-        var project = new Project(Guid.NewGuid(), "Work", "#123456", "work", "Initial");
+        // Arrange
+        var sut = new Project(Guid.NewGuid(), "Work", "#123456", "work", "Initial");
 
-        project.UpdateNote(" ");
+        // Act
+        sut.UpdateNote(" ");
 
-        Assert.Null(project.Note);
+        // Assert
+        sut.Note.ShouldBeNull();
     }
 
     [Fact]
     public void AddTask_MismatchedSubscription_ThrowsInvalidOperationException()
     {
-        var project = new Project(Guid.NewGuid(), "Work", "#40E0D0", "work");
-        var task = new DomainTask(Guid.NewGuid(), "Task", project.Id);
+        // Arrange
+        var sut = new Project(Guid.NewGuid(), "Work", "#40E0D0", "work");
+        var task = new DomainTask(Guid.NewGuid(), "Task", sut.Id);
 
-        Assert.Throws<InvalidOperationException>(() => project.AddTask(task));
+        // Act
+        var act = () => sut.AddTask(task);
+
+        // Assert
+        Should.Throw<InvalidOperationException>(act);
     }
 
     [Fact]
     public void AddTask_Duplicate_ThrowsInvalidOperationException()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
-        var project = new Project(subscriptionId, "Work", "#40E0D0", "work");
-        var task = new DomainTask(subscriptionId, "Task", project.Id);
+        var sut = new Project(subscriptionId, "Work", "#40E0D0", "work");
+        var task = new DomainTask(subscriptionId, "Task", sut.Id);
+        sut.AddTask(task);
 
-        project.AddTask(task);
+        // Act
+        var act = () => sut.AddTask(task);
 
-        Assert.Throws<InvalidOperationException>(() => project.AddTask(task));
+        // Assert
+        Should.Throw<InvalidOperationException>(act);
     }
 
     [Fact]
     public void AddAndRemoveTask_UpdatesTaskCount()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
-        var project = new Project(subscriptionId, "Work", "#40E0D0", "work");
+        var sut = new Project(subscriptionId, "Work", "#40E0D0", "work");
         var task = new DomainTask(subscriptionId, "Task", null);
 
-        project.AddTask(task);
-        Assert.Equal(project.Id, task.ProjectId);
-        Assert.Equal(1, project.GetTaskCount());
+        // Act
+        sut.AddTask(task);
 
-        project.RemoveTask(task);
-        Assert.Equal(0, project.GetTaskCount());
+        // Assert
+        task.ProjectId.ShouldBe(sut.Id);
+        sut.GetTaskCount().ShouldBe(1);
+
+        sut.RemoveTask(task);
+        sut.GetTaskCount().ShouldBe(0);
     }
 
     [Fact]
     public void GetTaskCount_CompletedTasksAreExcluded()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
-        var project = new Project(subscriptionId, "Work", "#40E0D0", "work");
-        var active = new DomainTask(subscriptionId, "Active", project.Id);
-        var done = new DomainTask(subscriptionId, "Done", project.Id);
+        var sut = new Project(subscriptionId, "Work", "#40E0D0", "work");
+        var active = new DomainTask(subscriptionId, "Active", sut.Id);
+        var done = new DomainTask(subscriptionId, "Done", sut.Id);
         done.Complete();
-        project.AddTask(active);
-        project.AddTask(done);
+        sut.AddTask(active);
+        sut.AddTask(done);
 
-        var count = project.GetTaskCount();
+        // Act
+        var count = sut.GetTaskCount();
 
-        Assert.Equal(1, count);
+        // Assert
+        count.ShouldBe(1);
     }
 
     [Fact]
     public void UpdateNameColorIcon_Invalid_Throws()
     {
-        var project = new Project(Guid.NewGuid(), "Work", "#123456", "work");
+        // Arrange
+        var sut = new Project(Guid.NewGuid(), "Work", "#123456", "work");
 
-        Assert.Throws<ArgumentException>(() => project.UpdateName(" "));
-        Assert.Throws<ArgumentException>(() => project.UpdateColor(" "));
-        Assert.Throws<ArgumentException>(() => project.UpdateIcon(" "));
+        // Act
+        var nameAct = () => sut.UpdateName(" ");
+        var colorAct = () => sut.UpdateColor(" ");
+        var iconAct = () => sut.UpdateIcon(" ");
+
+        // Assert
+        Should.Throw<ArgumentException>(nameAct);
+        Should.Throw<ArgumentException>(colorAct);
+        Should.Throw<ArgumentException>(iconAct);
     }
 
     [Fact]
     public void TagOperations_AreCaseInsensitive()
     {
-        var project = new Project(Guid.NewGuid(), "Work", "#123456", "work");
-        project.AddTag("Study");
-        project.AddTag("study");
+        // Arrange
+        var sut = new Project(Guid.NewGuid(), "Work", "#123456", "work");
 
-        Assert.Single(project.Tags);
+        // Act
+        sut.AddTag("Study");
+        sut.AddTag("study");
 
-        project.RemoveTag("STUDY");
-        Assert.Empty(project.Tags);
+        // Assert
+        sut.Tags.ShouldHaveSingleItem();
+
+        sut.RemoveTag("STUDY");
+        sut.Tags.ShouldBeEmpty();
     }
 
     [Fact]
     public void Rehydrate_PopulatesFields()
     {
+        // Arrange
         var id = Guid.NewGuid();
         var createdAt = DateTime.UtcNow.AddDays(-1);
-        var project = Project.Rehydrate(
+
+        // Act
+        var sut = Project.Rehydrate(
             Guid.NewGuid(),
             id,
             "Work",
@@ -121,9 +165,10 @@ public class ProjectTests
             createdAt: createdAt,
             tags: ["A"]);
 
-        Assert.Equal(id, project.Id);
-        Assert.Equal(ProjectViewType.Board, project.ViewType);
-        Assert.Equal(createdAt, project.CreatedAt);
-        Assert.Single(project.Tags);
+        // Assert
+        sut.Id.ShouldBe(id);
+        sut.ViewType.ShouldBe(ProjectViewType.Board);
+        sut.CreatedAt.ShouldBe(createdAt);
+        sut.Tags.ShouldHaveSingleItem();
     }
 }

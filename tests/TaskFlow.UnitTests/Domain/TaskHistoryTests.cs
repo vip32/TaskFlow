@@ -7,22 +7,38 @@ public class TaskHistoryTests
     [Fact]
     public void Constructor_EmptySubscriptionId_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => new TaskHistory(Guid.Empty, "Name", false));
+        // Arrange
+
+        // Act
+        var act = () => new TaskHistory(Guid.Empty, "Name", false);
+
+        // Assert
+        Should.Throw<ArgumentException>(act);
     }
 
     [Fact]
     public void Constructor_WhitespaceName_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => new TaskHistory(Guid.NewGuid(), " ", true));
+        // Arrange
+
+        // Act
+        var act = () => new TaskHistory(Guid.NewGuid(), " ", true);
+
+        // Assert
+        Should.Throw<ArgumentException>(act);
     }
 
     [Fact]
     public void MarkUsed_IncrementsUsageCount()
     {
+        // Arrange
+
+        // Act
         var history = new TaskHistory(Guid.NewGuid(), "Plan", false);
 
         history.MarkUsed();
 
-        Assert.Equal(2, history.UsageCount);
+        // Assert
+        history.UsageCount.ShouldBe(2);
     }
 }

@@ -9,6 +9,7 @@ public class TaskRepositoryTests
     [Fact]
     public async System.Threading.Tasks.Task GetByProjectIdAsync_ReturnsOnlyTopLevelOrderedTasksForCurrentSubscription()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var otherSubscriptionId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
@@ -33,18 +34,21 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
-        var result = await repository.GetByProjectIdAsync(projectId);
+        // Act
+        var sut = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var result = await sut.GetByProjectIdAsync(projectId);
 
-        Assert.Equal(3, result.Count);
-        Assert.Equal("A", result[0].Title);
-        Assert.Equal("B", result[1].Title);
-        Assert.Equal("Parent", result[2].Title);
+        // Assert
+        result.Count.ShouldBe(3);
+        result[0].Title.ShouldBe("A");
+        result[1].Title.ShouldBe("B");
+        result[2].Title.ShouldBe("Parent");
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetSubTasksAsync_ReturnsOrderedSubTasks()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
         var parent = new DomainTask(subscriptionId, "Parent", projectId);
@@ -61,17 +65,20 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
-        var result = await repository.GetSubTasksAsync(parent.Id);
+        // Act
+        var sut = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        var result = await sut.GetSubTasksAsync(parent.Id);
 
-        Assert.Equal(2, result.Count);
-        Assert.Equal(first.Id, result[0].Id);
-        Assert.Equal(second.Id, result[1].Id);
+        // Assert
+        result.Count.ShouldBe(2);
+        result[0].Id.ShouldBe(first.Id);
+        result[1].Id.ShouldBe(second.Id);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetNextSortOrderAsync_ReturnsMaxPlusOneWithinScope()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
         var first = new DomainTask(subscriptionId, "A", projectId);
@@ -86,30 +93,37 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        // Act
+        var sut = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        var next = await repository.GetNextSortOrderAsync(projectId, null);
+        var next = await sut.GetNextSortOrderAsync(projectId, null);
 
-        Assert.Equal(6, next);
+        // Assert
+        next.ShouldBe(6);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task SearchAsync_WhitespaceQuery_ReturnsEmptyList()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
-        var repository = new TaskRepository(
+
+        // Act
+        var sut = new TaskRepository(
             NullLogger<TaskRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        var result = await repository.SearchAsync(" ", Guid.NewGuid());
+        var result = await sut.SearchAsync(" ", Guid.NewGuid());
 
-        Assert.Empty(result);
+        // Assert
+        result.ShouldBeEmpty();
     }
 
     [Fact]
     public async System.Threading.Tasks.Task DueDateQueries_FilterCorrectly()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
         var today = new DateOnly(2026, 2, 11);
@@ -132,35 +146,42 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        // Act
+        var sut = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        var onDate = await repository.GetDueOnDateAsync(today);
-        var inRange = await repository.GetDueInRangeAsync(today, today.AddDays(1));
-        var afterDate = await repository.GetDueAfterDateAsync(today.AddDays(1));
+        var onDate = await sut.GetDueOnDateAsync(today);
+        var inRange = await sut.GetDueInRangeAsync(today, today.AddDays(1));
+        var afterDate = await sut.GetDueAfterDateAsync(today.AddDays(1));
 
-        Assert.Single(onDate);
-        Assert.Equal(2, inRange.Count);
-        Assert.Single(afterDate);
+        // Assert
+        onDate.ShouldHaveSingleItem();
+        inRange.Count.ShouldBe(2);
+        afterDate.ShouldHaveSingleItem();
     }
 
     [Fact]
     public async System.Threading.Tasks.Task AddAndUpdateRange_WithMismatchedSubscription_ThrowsInvalidOperationException()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
-        var repository = new TaskRepository(
+
+        // Act
+        var sut = new TaskRepository(
             NullLogger<TaskRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var foreign = new DomainTask(Guid.NewGuid(), "Foreign", Guid.NewGuid());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => repository.AddAsync(foreign));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => repository.UpdateRangeAsync([foreign]));
+        // Assert
+        await Should.ThrowAsync<InvalidOperationException>(() => sut.AddAsync(foreign));
+        await Should.ThrowAsync<InvalidOperationException>(() => sut.UpdateRangeAsync([foreign]));
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetByIdsAndDeleteAsync_RespectsCurrentSubscription()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var foreignSubscriptionId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
@@ -175,15 +196,17 @@ public class TaskRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        // Act
+        var sut = new TaskRepository(NullLogger<TaskRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        var byIds = await repository.GetByIdsAsync([mine.Id, foreign.Id]);
-        var deletedMine = await repository.DeleteAsync(mine.Id);
-        var deletedForeign = await repository.DeleteAsync(foreign.Id);
+        var byIds = await sut.GetByIdsAsync([mine.Id, foreign.Id]);
+        var deletedMine = await sut.DeleteAsync(mine.Id);
+        var deletedForeign = await sut.DeleteAsync(foreign.Id);
 
-        Assert.Single(byIds);
-        Assert.Equal(mine.Id, byIds[0].Id);
-        Assert.True(deletedMine);
-        Assert.False(deletedForeign);
+        // Assert
+        byIds.ShouldHaveSingleItem();
+        byIds[0].Id.ShouldBe(mine.Id);
+        deletedMine.ShouldBeTrue();
+        deletedForeign.ShouldBeFalse();
     }
 }

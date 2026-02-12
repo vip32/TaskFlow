@@ -9,6 +9,7 @@ public class MyTaskFlowSectionRepositoryTests
     [Fact]
     public async System.Threading.Tasks.Task GetAllAsync_FiltersByCurrentSubscriptionAndOrdersBySortOrderThenName()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
 
@@ -21,19 +22,22 @@ public class MyTaskFlowSectionRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new MyTaskFlowSectionRepository(NullLogger<MyTaskFlowSectionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        // Act
+        var sut = new MyTaskFlowSectionRepository(NullLogger<MyTaskFlowSectionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        var result = await repository.GetAllAsync();
+        var result = await sut.GetAllAsync();
 
-        Assert.Equal(3, result.Count);
-        Assert.Equal("First", result[0].Name);
-        Assert.Equal("A", result[1].Name);
-        Assert.Equal("B", result[2].Name);
+        // Assert
+        result.Count.ShouldBe(3);
+        result[0].Name.ShouldBe("First");
+        result[1].Name.ShouldBe("A");
+        result[2].Name.ShouldBe("B");
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetByIdAsync_FallsBackToSectionIdLookupWhenSubscriptionScopedMisses()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var foreignSection = new MyTaskFlowSection(Guid.NewGuid(), "Foreign", 1);
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
@@ -44,58 +48,72 @@ public class MyTaskFlowSectionRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new MyTaskFlowSectionRepository(NullLogger<MyTaskFlowSectionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        // Act
+        var sut = new MyTaskFlowSectionRepository(NullLogger<MyTaskFlowSectionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        var fetched = await repository.GetByIdAsync(foreignSection.Id);
+        var fetched = await sut.GetByIdAsync(foreignSection.Id);
 
-        Assert.Equal(foreignSection.Id, fetched.Id);
+        // Assert
+        fetched.Id.ShouldBe(foreignSection.Id);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task AddUpdateDeleteAsync_PerformsCrudWithinSubscription()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
-        var repository = new MyTaskFlowSectionRepository(
+
+        // Act
+        var sut = new MyTaskFlowSectionRepository(
             NullLogger<MyTaskFlowSectionRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var section = new MyTaskFlowSection(subscriptionId, "Inbox", 1);
-        await repository.AddAsync(section);
+        await sut.AddAsync(section);
 
         section.Rename("Renamed");
-        await repository.UpdateAsync(section);
-        var fetched = await repository.GetByIdAsync(section.Id);
-        var deleted = await repository.DeleteAsync(section.Id);
+        await sut.UpdateAsync(section);
+        var fetched = await sut.GetByIdAsync(section.Id);
+        var deleted = await sut.DeleteAsync(section.Id);
 
-        Assert.Equal("Renamed", fetched.Name);
-        Assert.True(deleted);
+        // Assert
+        fetched.Name.ShouldBe("Renamed");
+        deleted.ShouldBeTrue();
     }
 
     [Fact]
     public async System.Threading.Tasks.Task AddAsync_MismatchedSubscription_ThrowsInvalidOperationException()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
-        var repository = new MyTaskFlowSectionRepository(
+
+        // Act
+        var sut = new MyTaskFlowSectionRepository(
             NullLogger<MyTaskFlowSectionRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var foreignSection = new MyTaskFlowSection(Guid.NewGuid(), "Foreign", 1);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => repository.AddAsync(foreignSection));
+        // Assert
+        await Should.ThrowAsync<InvalidOperationException>(() => sut.AddAsync(foreignSection));
     }
 
     [Fact]
     public async System.Threading.Tasks.Task DeleteAsync_MissingSection_ReturnsFalse()
     {
-        var repository = new MyTaskFlowSectionRepository(
+        // Arrange
+
+        // Act
+        var sut = new MyTaskFlowSectionRepository(
             NullLogger<MyTaskFlowSectionRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(Guid.NewGuid()));
 
-        var deleted = await repository.DeleteAsync(Guid.NewGuid());
+        var deleted = await sut.DeleteAsync(Guid.NewGuid());
 
-        Assert.False(deleted);
+        // Assert
+        deleted.ShouldBeFalse();
     }
 }

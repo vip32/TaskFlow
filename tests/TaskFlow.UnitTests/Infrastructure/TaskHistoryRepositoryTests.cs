@@ -9,34 +9,45 @@ public class TaskHistoryRepositoryTests
     [Fact]
     public async System.Threading.Tasks.Task RegisterUsageAsync_BlankName_DoesNothing()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
-        var repository = new TaskHistoryRepository(NullLogger<TaskHistoryRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        await repository.RegisterUsageAsync(" ", false);
+        // Act
+        var sut = new TaskHistoryRepository(NullLogger<TaskHistoryRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+
+        await sut.RegisterUsageAsync(" ", false);
 
         await using var db = await factory.CreateDbContextAsync();
-        Assert.Empty(db.TaskHistories);
+
+        // Assert
+        db.TaskHistories.ShouldBeEmpty();
     }
 
     [Fact]
     public async System.Threading.Tasks.Task RegisterUsageAsync_SameNameIncrementsUsageCountCaseInsensitive()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
-        var repository = new TaskHistoryRepository(NullLogger<TaskHistoryRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        await repository.RegisterUsageAsync("Plan", false);
-        await repository.RegisterUsageAsync("plan", false);
+        // Act
+        var sut = new TaskHistoryRepository(NullLogger<TaskHistoryRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+
+        await sut.RegisterUsageAsync("Plan", false);
+        await sut.RegisterUsageAsync("plan", false);
 
         await using var db = await factory.CreateDbContextAsync();
-        var entry = Assert.Single(db.TaskHistories);
-        Assert.Equal(2, entry.UsageCount);
+
+        // Assert
+        var entry = db.TaskHistories.ShouldHaveSingleItem();
+        entry.UsageCount.ShouldBe(2);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetSuggestionsAsync_FiltersByPrefixAndOrdersByUsage()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
 
@@ -54,12 +65,14 @@ public class TaskHistoryRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new TaskHistoryRepository(NullLogger<TaskHistoryRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        // Act
+        var sut = new TaskHistoryRepository(NullLogger<TaskHistoryRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        var suggestions = await repository.GetSuggestionsAsync("Pla", false, 10);
+        var suggestions = await sut.GetSuggestionsAsync("Pla", false, 10);
 
-        Assert.Equal(2, suggestions.Count);
-        Assert.Equal("Plan", suggestions[0]);
-        Assert.Equal("Plaster", suggestions[1]);
+        // Assert
+        suggestions.Count.ShouldBe(2);
+        suggestions[0].ShouldBe("Plan");
+        suggestions[1].ShouldBe("Plaster");
     }
 }

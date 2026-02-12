@@ -8,19 +8,23 @@ public class CurrentSubscriptionAccessorTests
     [Fact]
     public void Constructor_UsesDefaultsWhenConfigurationMissing()
     {
+        // Arrange
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string>()).Build();
 
-        var accessor = new CurrentSubscriptionAccessor(config);
-        var subscription = accessor.GetCurrentSubscription();
+        // Act
+        var sut = new CurrentSubscriptionAccessor(config);
+        var subscription = sut.GetCurrentSubscription();
 
-        Assert.Equal(Guid.Parse("00000000-0000-0000-0000-000000000001"), subscription.Id);
-        Assert.Equal("Default", subscription.Name);
-        Assert.NotEmpty(subscription.Schedules);
+        // Assert
+        subscription.Id.ShouldBe(Guid.Parse("00000000-0000-0000-0000-000000000001"));
+        subscription.Name.ShouldBe("Default");
+        subscription.Schedules.ShouldNotBeEmpty();
     }
 
     [Fact]
     public void Constructor_UsesConfiguredValuesIncludingWindow()
     {
+        // Arrange
         var dict = new Dictionary<string, string>
         {
             ["Subscription:CurrentSubscriptionId"] = Guid.NewGuid().ToString(),
@@ -34,19 +38,22 @@ public class CurrentSubscriptionAccessorTests
 
         var config = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
 
-        var accessor = new CurrentSubscriptionAccessor(config);
-        var subscription = accessor.GetCurrentSubscription();
+        // Act
+        var sut = new CurrentSubscriptionAccessor(config);
+        var subscription = sut.GetCurrentSubscription();
 
-        Assert.Equal("Workspace", subscription.Name);
-        Assert.Equal(TaskFlow.Domain.SubscriptionTier.Pro, subscription.Tier);
-        Assert.False(subscription.IsEnabled);
-        Assert.Single(subscription.Schedules);
-        Assert.False(subscription.Schedules.Single().IsOpenEnded);
+        // Assert
+        subscription.Name.ShouldBe("Workspace");
+        subscription.Tier.ShouldBe(TaskFlow.Domain.SubscriptionTier.Pro);
+        subscription.IsEnabled.ShouldBeFalse();
+        subscription.Schedules.ShouldHaveSingleItem();
+        subscription.Schedules.Single().IsOpenEnded.ShouldBeFalse();
     }
 
     [Fact]
     public void Constructor_InvalidScheduleEnd_FallsBackToOpenEnded()
     {
+        // Arrange
         var dict = new Dictionary<string, string>
         {
             ["Subscription:Schedule:StartsOn"] = "2026-01-01",
@@ -55,8 +62,10 @@ public class CurrentSubscriptionAccessorTests
 
         var config = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
 
-        var accessor = new CurrentSubscriptionAccessor(config);
+        // Act
+        var sut = new CurrentSubscriptionAccessor(config);
 
-        Assert.True(accessor.GetCurrentSubscription().Schedules.Single().IsOpenEnded);
+        // Assert
+        sut.GetCurrentSubscription().Schedules.Single().IsOpenEnded.ShouldBeTrue();
     }
 }

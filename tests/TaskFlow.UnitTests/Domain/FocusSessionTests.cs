@@ -7,58 +7,82 @@ public class FocusSessionTests
     [Fact]
     public void Constructor_EmptySubscriptionId_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => new FocusSession(Guid.Empty));
+        // Arrange
+
+        // Act
+        var act = () => new FocusSession(Guid.Empty);
+
+        // Assert
+        Should.Throw<ArgumentException>(act);
     }
 
     [Fact]
     public void End_CalledTwice_KeepsFirstEndTime()
     {
-        var session = new FocusSession(Guid.NewGuid());
+        // Arrange
+        var sut = new FocusSession(Guid.NewGuid());
+        sut.End();
 
-        session.End();
-        var firstEnd = session.EndedAt;
-        session.End();
+        // Act
+        var firstEnd = sut.EndedAt;
+        sut.End();
 
-        Assert.Equal(firstEnd, session.EndedAt);
+        // Assert
+        sut.EndedAt.ShouldBe(firstEnd);
     }
 
     [Fact]
     public void AttachToTask_EmptyTaskId_ThrowsArgumentException()
     {
-        var session = new FocusSession(Guid.NewGuid());
+        // Arrange
+        var sut = new FocusSession(Guid.NewGuid());
 
-        Assert.Throws<ArgumentException>(() => session.AttachToTask(Guid.Empty));
+        // Act
+        var act = () => sut.AttachToTask(Guid.Empty);
+
+        // Assert
+        Should.Throw<ArgumentException>(act);
     }
 
     [Fact]
     public void Constructor_WithTask_AssignsTaskId()
     {
+        // Arrange
         var taskId = Guid.NewGuid();
-        var session = new FocusSession(Guid.NewGuid(), taskId);
 
-        Assert.Equal(taskId, session.TaskId);
-        Assert.False(session.IsCompleted);
+        // Act
+        var sut = new FocusSession(Guid.NewGuid(), taskId);
+
+        // Assert
+        sut.TaskId.ShouldBe(taskId);
+        sut.IsCompleted.ShouldBeFalse();
     }
 
     [Fact]
     public void End_MarksSessionCompleted()
     {
-        var session = new FocusSession(Guid.NewGuid());
+        // Arrange
+        var sut = new FocusSession(Guid.NewGuid());
 
-        session.End();
+        // Act
+        sut.End();
 
-        Assert.True(session.IsCompleted);
-        Assert.NotEqual(DateTime.MinValue, session.EndedAt);
+        // Assert
+        sut.IsCompleted.ShouldBeTrue();
+        sut.EndedAt.ShouldNotBe(DateTime.MinValue);
     }
 
     [Fact]
     public void AttachToTask_AssignsTaskId()
     {
-        var session = new FocusSession(Guid.NewGuid());
+        // Arrange
+        var sut = new FocusSession(Guid.NewGuid());
         var taskId = Guid.NewGuid();
 
-        session.AttachToTask(taskId);
+        // Act
+        sut.AttachToTask(taskId);
 
-        Assert.Equal(taskId, session.TaskId);
+        // Assert
+        sut.TaskId.ShouldBe(taskId);
     }
 }

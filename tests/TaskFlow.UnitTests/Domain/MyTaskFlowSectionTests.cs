@@ -12,48 +12,66 @@ public class MyTaskFlowSectionTests
     [Fact]
     public void Constructor_InvalidInput_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => new MyTaskFlowSection(Guid.Empty, "Name", 1));
-        Assert.Throws<ArgumentException>(() => new MyTaskFlowSection(Guid.NewGuid(), " ", 1));
+        // Arrange
+
+        // Act
+        var emptySubscriptionAct = () => new MyTaskFlowSection(Guid.Empty, "Name", 1);
+        var emptyNameAct = () => new MyTaskFlowSection(Guid.NewGuid(), " ", 1);
+
+        // Assert
+        Should.Throw<ArgumentException>(emptySubscriptionAct);
+        Should.Throw<ArgumentException>(emptyNameAct);
     }
 
     [Fact]
     public void RenameAndReorder_UpdatesValues()
     {
+        // Arrange
         var section = new MyTaskFlowSection(Guid.NewGuid(), "Old", 10);
 
+        // Act
         section.Rename("New");
         section.Reorder(4);
 
-        Assert.Equal("New", section.Name);
-        Assert.Equal(4, section.SortOrder);
+        // Assert
+        section.Name.ShouldBe("New");
+        section.SortOrder.ShouldBe(4);
     }
 
     [Fact]
     public void UpdateRule_UpdatesAllFlags()
     {
+        // Arrange
+
+        // Act
         var section = new MyTaskFlowSection(Guid.NewGuid(), "Custom", 10);
 
         section.UpdateRule(TaskFlowDueBucket.NoDueDate, includeAssignedTasks: false, includeUnassignedTasks: true, includeDoneTasks: true, includeCancelledTasks: true);
 
-        Assert.Equal(TaskFlowDueBucket.NoDueDate, section.DueBucket);
-        Assert.False(section.IncludeAssignedTasks);
-        Assert.True(section.IncludeUnassignedTasks);
-        Assert.True(section.IncludeDoneTasks);
-        Assert.True(section.IncludeCancelledTasks);
+        // Assert
+        section.DueBucket.ShouldBe(TaskFlowDueBucket.NoDueDate);
+        section.IncludeAssignedTasks.ShouldBeFalse();
+        section.IncludeUnassignedTasks.ShouldBeTrue();
+        section.IncludeDoneTasks.ShouldBeTrue();
+        section.IncludeCancelledTasks.ShouldBeTrue();
     }
 
     [Fact]
     public void IncludeTask_DuplicateIgnored_AndRemoveTask_Works()
     {
+        // Arrange
         var section = new MyTaskFlowSection(Guid.NewGuid(), "Custom", 1);
         var taskId = Guid.NewGuid();
 
+        // Act
         section.IncludeTask(taskId);
         section.IncludeTask(taskId);
-        Assert.Single(section.ManualTasks);
+
+        // Assert
+        section.ManualTasks.ShouldHaveSingleItem();
 
         section.RemoveTask(taskId);
-        Assert.Empty(section.ManualTasks);
+        section.ManualTasks.ShouldBeEmpty();
     }
 
     /// <summary>
@@ -62,6 +80,7 @@ public class MyTaskFlowSectionTests
     [Fact]
     public void Matches_ManualInclude_ReturnsTrue()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var section = new MyTaskFlowSection(subscriptionId, "Two-minute", 10);
         var task = new DomainTask(subscriptionId, "Quick fix", null);
@@ -69,11 +88,14 @@ public class MyTaskFlowSectionTests
 
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         var nowUtc = DateTime.UtcNow;
+
+        // Act
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(nowUtc, timezone));
 
         var matches = section.Matches(task, today, today.AddDays(6), nowUtc, timezone);
 
-        Assert.True(matches);
+        // Assert
+        matches.ShouldBeTrue();
     }
 
     /// <summary>
@@ -82,6 +104,7 @@ public class MyTaskFlowSectionTests
     [Fact]
     public void Matches_TodayBucket_DueOrMarkedTask_ReturnsTrue()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var section = MyTaskFlowSection.CreateSystem(subscriptionId, "Today", 1, TaskFlowDueBucket.Today);
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
@@ -94,11 +117,13 @@ public class MyTaskFlowSectionTests
         var markedTask = new DomainTask(subscriptionId, "Marked", null);
         markedTask.ToggleTodayMark();
 
+        // Act
         var dueMatches = section.Matches(dueTask, today, today.AddDays(6), nowUtc, timezone);
         var markedMatches = section.Matches(markedTask, today, today.AddDays(6), nowUtc, timezone);
 
-        Assert.True(dueMatches);
-        Assert.True(markedMatches);
+        // Assert
+        dueMatches.ShouldBeTrue();
+        markedMatches.ShouldBeTrue();
     }
 
     /// <summary>
@@ -107,6 +132,7 @@ public class MyTaskFlowSectionTests
     [Fact]
     public void Matches_ImportantBucket_OnlyImportantTasksMatch()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var section = MyTaskFlowSection.CreateSystem(subscriptionId, "Important", 2, TaskFlowDueBucket.Important);
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
@@ -118,11 +144,13 @@ public class MyTaskFlowSectionTests
 
         var regularTask = new DomainTask(subscriptionId, "Regular", Guid.NewGuid());
 
+        // Act
         var importantMatches = section.Matches(importantTask, today, today.AddDays(6), nowUtc, timezone);
         var regularMatches = section.Matches(regularTask, today, today.AddDays(6), nowUtc, timezone);
 
-        Assert.True(importantMatches);
-        Assert.False(regularMatches);
+        // Assert
+        importantMatches.ShouldBeTrue();
+        regularMatches.ShouldBeFalse();
     }
 
     /// <summary>
@@ -131,6 +159,7 @@ public class MyTaskFlowSectionTests
     [Fact]
     public void Matches_LegacyImportantByName_OnlyImportantTasksMatch()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var section = MyTaskFlowSection.CreateSystem(subscriptionId, "Important", 2, TaskFlowDueBucket.Any);
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
@@ -138,48 +167,60 @@ public class MyTaskFlowSectionTests
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(nowUtc, timezone));
 
         var importantTask = new DomainTask(subscriptionId, "Starred", Guid.NewGuid());
+
+        // Act
         importantTask.ToggleImportant();
         var regularTask = new DomainTask(subscriptionId, "Regular", Guid.NewGuid());
 
-        Assert.True(section.Matches(importantTask, today, today.AddDays(6), nowUtc, timezone));
-        Assert.False(section.Matches(regularTask, today, today.AddDays(6), nowUtc, timezone));
+        // Assert
+        section.Matches(importantTask, today, today.AddDays(6), nowUtc, timezone).ShouldBeTrue();
+        section.Matches(regularTask, today, today.AddDays(6), nowUtc, timezone).ShouldBeFalse();
     }
 
     [Fact]
     public void Matches_AssignedFiltering_Respected()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var section = new MyTaskFlowSection(subscriptionId, "Custom", 1);
         section.UpdateRule(TaskFlowDueBucket.Any, includeAssignedTasks: false, includeUnassignedTasks: true, includeDoneTasks: false, includeCancelledTasks: false);
         var task = new DomainTask(subscriptionId, "Assigned", Guid.NewGuid());
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         var nowUtc = DateTime.UtcNow;
+
+        // Act
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(nowUtc, timezone));
 
         var matches = section.Matches(task, today, today.AddDays(6), nowUtc, timezone);
 
-        Assert.False(matches);
+        // Assert
+        matches.ShouldBeFalse();
     }
 
     [Fact]
     public void Matches_DoneTask_ExcludedByDefault()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var section = new MyTaskFlowSection(subscriptionId, "Custom", 1);
         var task = new DomainTask(subscriptionId, "Done", null);
         task.SetStatus(DomainTaskStatus.Done);
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         var nowUtc = DateTime.UtcNow;
+
+        // Act
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(nowUtc, timezone));
 
         var matches = section.Matches(task, today, today.AddDays(6), nowUtc, timezone);
 
-        Assert.False(matches);
+        // Assert
+        matches.ShouldBeFalse();
     }
 
     [Fact]
     public void Matches_UpcomingAndNoDueDateBuckets_WorkAsExpected()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var timezone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         var nowUtc = DateTime.UtcNow;
@@ -190,10 +231,13 @@ public class MyTaskFlowSectionTests
         var noDue = MyTaskFlowSection.CreateSystem(subscriptionId, "No due", 2, TaskFlowDueBucket.NoDueDate);
 
         var futureTask = new DomainTask(subscriptionId, "Future", null);
+
+        // Act
         futureTask.SetDueDate(endOfWeek.AddDays(3));
         var noDueTask = new DomainTask(subscriptionId, "NoDue", null);
 
-        Assert.True(upcoming.Matches(futureTask, today, endOfWeek, nowUtc, timezone));
-        Assert.True(noDue.Matches(noDueTask, today, endOfWeek, nowUtc, timezone));
+        // Assert
+        upcoming.Matches(futureTask, today, endOfWeek, nowUtc, timezone).ShouldBeTrue();
+        noDue.Matches(noDueTask, today, endOfWeek, nowUtc, timezone).ShouldBeTrue();
     }
 }

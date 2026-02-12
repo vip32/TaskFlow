@@ -13,15 +13,19 @@ public class SubscriptionScheduleTests
     [Fact]
     public void CreateOpenEnded_ValidInput_SetsOpenEndedSchedule()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
+
+        // Act
         var startsOn = new DateOnly(2026, 1, 1);
 
         var schedule = SubscriptionSchedule.CreateOpenEnded(subscriptionId, startsOn);
 
-        Assert.Equal(subscriptionId, schedule.SubscriptionId);
-        Assert.Equal(startsOn, schedule.StartsOn);
-        Assert.Null(schedule.EndsOn);
-        Assert.True(schedule.IsOpenEnded);
+        // Assert
+        schedule.SubscriptionId.ShouldBe(subscriptionId);
+        schedule.StartsOn.ShouldBe(startsOn);
+        schedule.EndsOn.ShouldBeNull();
+        schedule.IsOpenEnded.ShouldBeTrue();
     }
 
     /// <summary>
@@ -30,11 +34,15 @@ public class SubscriptionScheduleTests
     [Fact]
     public void CreateWindow_EndBeforeStart_ThrowsArgumentException()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
+
+        // Act
         var startsOn = new DateOnly(2026, 2, 1);
         var endsOn = new DateOnly(2026, 1, 31);
 
-        Assert.Throws<ArgumentException>(() => SubscriptionSchedule.CreateWindow(subscriptionId, startsOn, endsOn));
+        // Assert
+        Should.Throw<ArgumentException>(() => SubscriptionSchedule.CreateWindow(subscriptionId, startsOn, endsOn));
     }
 
     /// <summary>
@@ -43,14 +51,18 @@ public class SubscriptionScheduleTests
     [Fact]
     public void IsActiveAt_BoundedSchedule_IsInclusiveOnBoundaries()
     {
+        // Arrange
         var schedule = SubscriptionSchedule.CreateWindow(
             Guid.NewGuid(),
+
+        // Act
             new DateOnly(2026, 1, 1),
             new DateOnly(2026, 1, 31));
 
-        Assert.False(schedule.IsActiveAt(new DateOnly(2025, 12, 31)));
-        Assert.True(schedule.IsActiveAt(new DateOnly(2026, 1, 1)));
-        Assert.True(schedule.IsActiveAt(new DateOnly(2026, 1, 31)));
-        Assert.False(schedule.IsActiveAt(new DateOnly(2026, 2, 1)));
+        // Assert
+        schedule.IsActiveAt(new DateOnly(2025, 12, 31)).ShouldBeFalse();
+        schedule.IsActiveAt(new DateOnly(2026, 1, 1)).ShouldBeTrue();
+        schedule.IsActiveAt(new DateOnly(2026, 1, 31)).ShouldBeTrue();
+        schedule.IsActiveAt(new DateOnly(2026, 2, 1)).ShouldBeFalse();
     }
 }

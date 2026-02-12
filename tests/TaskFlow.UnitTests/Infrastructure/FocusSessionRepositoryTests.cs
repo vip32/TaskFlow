@@ -9,22 +9,27 @@ public class FocusSessionRepositoryTests
     [Fact]
     public async System.Threading.Tasks.Task AddAndUpdateAsync_PersistSession()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
-        var repository = new FocusSessionRepository(NullLogger<FocusSessionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+
+        // Act
+        var sut = new FocusSessionRepository(NullLogger<FocusSessionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
         var session = new FocusSession(subscriptionId, Guid.NewGuid());
-        await repository.AddAsync(session);
+        await sut.AddAsync(session);
 
         session.End();
-        var updated = await repository.UpdateAsync(session);
+        var updated = await sut.UpdateAsync(session);
 
-        Assert.True(updated.IsCompleted);
+        // Assert
+        updated.IsCompleted.ShouldBeTrue();
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetRunningAsync_ReturnsOnlyCurrentSubscriptionRunningSession()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var otherSubscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
@@ -38,17 +43,20 @@ public class FocusSessionRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new FocusSessionRepository(NullLogger<FocusSessionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        // Act
+        var sut = new FocusSessionRepository(NullLogger<FocusSessionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        var running = await repository.GetRunningAsync();
+        var running = await sut.GetRunningAsync();
 
-        Assert.NotNull(running);
-        Assert.Equal(mine.Id, running.Id);
+        // Assert
+        running.ShouldNotBeNull();
+        running.Id.ShouldBe(mine.Id);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetRecentAsync_UsesFallbackTakeForNonPositiveInput()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
         var factory = new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N"));
 
@@ -62,23 +70,29 @@ public class FocusSessionRepositoryTests
             await db.SaveChangesAsync();
         }
 
-        var repository = new FocusSessionRepository(NullLogger<FocusSessionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
+        // Act
+        var sut = new FocusSessionRepository(NullLogger<FocusSessionRepository>.Instance, factory, new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        var recent = await repository.GetRecentAsync(0);
+        var recent = await sut.GetRecentAsync(0);
 
-        Assert.Equal(20, recent.Count);
+        // Assert
+        recent.Count.ShouldBe(20);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task AddAndUpdate_Null_ThrowArgumentNullException()
     {
+        // Arrange
         var subscriptionId = Guid.NewGuid();
-        var repository = new FocusSessionRepository(
+
+        // Act
+        var sut = new FocusSessionRepository(
             NullLogger<FocusSessionRepository>.Instance,
             new InMemoryAppDbContextFactory(Guid.NewGuid().ToString("N")),
             new TestCurrentSubscriptionAccessor(subscriptionId));
 
-        await Assert.ThrowsAsync<ArgumentNullException>(() => repository.AddAsync(null!));
-        await Assert.ThrowsAsync<ArgumentNullException>(() => repository.UpdateAsync(null!));
+        // Assert
+        await Should.ThrowAsync<ArgumentNullException>(() => sut.AddAsync(null!));
+        await Should.ThrowAsync<ArgumentNullException>(() => sut.UpdateAsync(null!));
     }
 }
