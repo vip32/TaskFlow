@@ -165,7 +165,7 @@
         .Select(group => group.First())
         .ToList();
 
-    private string BoardRenderKey => $"{string.Join('|', this.BoardItems.Select(item => $"{item.Id:N}:{item.Status}:{item.IsCompleted}:{IsFocused(item)}:{IsImportant(item)}:{IsMarkedForToday(item)}"))}|edit:{this.editingTaskId?.ToString("N")}";
+    private string BoardRenderKey => $"{string.Join('|', this.BoardItems.Select(item => $"{item.Id:N}:{item.Status}:{item.IsCompleted}:{IsFocused(item)}:{IsImportant(item)}:{IsMarkedForToday(item)}:{item.Title}"))}|edit:{this.editingTaskId?.ToString("N")}";
     private Guid? editingTaskId;
     private Guid? pendingFocusTaskId;
     private string editingTitle = string.Empty;

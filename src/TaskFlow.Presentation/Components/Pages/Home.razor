@@ -268,6 +268,8 @@
 
             this.AppState.SetNavigationData(projects, myTaskFlowSections, taskCounts);
             this.alwaysShowCompletedTasks = settings.AlwaysShowCompletedTasks;
+            this.loadedProjectId = null;
+            this.loadedSectionId = null;
             await ApplySelectionAsync();
         }
         catch (Exception ex)
@@ -496,7 +498,7 @@
 
         await this.ProjectOrchestrator.DeleteAsync(projectId);
         await ReloadAllAsync();
-        this.Snackbar.Add("Project deleted. Press Ctrl/Cmd+Z to undo.", Severity.Info);
+        ShowUndoSnackbar("Project deleted.", Severity.Info);
     }
 
     private async Task CreateTaskAsync()
@@ -580,7 +582,7 @@
         await ReloadCurrentTasksAsync();
         StateHasChanged();
         var statusMessage = target ? "Task completed." : "Task restored.";
-        this.Snackbar.Add($"{statusMessage} Press Ctrl/Cmd+Z to undo.", Severity.Success);
+        ShowUndoSnackbar(statusMessage, Severity.Success);
     }
 
     private async Task UpdateTitleAsync(TaskFlow.Domain.Task task, string value)
@@ -651,7 +653,7 @@
         await this.TaskOrchestrator.DeleteAsync(task.Id);
         await ReloadCurrentTasksAsync();
         StateHasChanged();
-        this.Snackbar.Add("Task deleted. Press Ctrl/Cmd+Z to undo.", Severity.Info);
+        ShowUndoSnackbar("Task deleted.", Severity.Info);
     }
 
     private async Task DuplicateTaskAsync(TaskFlow.Domain.Task task)
@@ -748,7 +750,7 @@
 
         await ReloadCurrentTasksAsync();
         StateHasChanged();
-        this.Snackbar.Add($"Cleared {completed.Count} completed task(s). Press Ctrl/Cmd+Z to undo.", Severity.Warning);
+        ShowUndoSnackbar($"Cleared {completed.Count} completed task(s).", Severity.Warning);
     }
 
     private async Task ReloadCurrentTasksAsync()
@@ -803,10 +805,10 @@
 
         query = (this.sortMode ?? SortMode.CreatedDesc) switch
         {
-            SortMode.CreatedAsc => query.OrderByDescending(task => task.IsFocused).ThenBy(task => task.CreatedAt),
-            SortMode.Priority => query.OrderByDescending(task => task.IsFocused).ThenByDescending(task => task.Priority).ThenByDescending(task => task.CreatedAt),
-            SortMode.Focused => query.Where(task => task.IsFocused).OrderByDescending(task => task.CreatedAt),
-            _ => query.OrderByDescending(task => task.IsFocused).ThenByDescending(task => task.CreatedAt),
+            SortMode.CreatedAsc => query.OrderBy(task => task.IsCompleted).ThenByDescending(task => task.IsFocused).ThenBy(task => task.CreatedAt),
+            SortMode.Priority => query.OrderBy(task => task.IsCompleted).ThenByDescending(task => task.IsFocused).ThenByDescending(task => task.Priority).ThenByDescending(task => task.CreatedAt),
+            SortMode.Focused => query.Where(task => task.IsFocused).OrderBy(task => task.IsCompleted).ThenByDescending(task => task.CreatedAt),
+            _ => query.OrderBy(task => task.IsCompleted).ThenByDescending(task => task.IsFocused).ThenByDescending(task => task.CreatedAt),
         };
 
         return query.Where(task => !task.ParentTaskId.HasValue).ToList();
@@ -848,6 +850,16 @@
 
         await ReloadAllAsync();
         this.Snackbar.Add($"Undid: {undoResult.Description}", Severity.Success);
+    }
+
+    private void ShowUndoSnackbar(string message, Severity severity)
+    {
+        this.Snackbar.Add(message, severity, options =>
+        {
+            options.Action = "Undo";
+            options.ActionColor = Color.Primary;
+            options.OnClick = _ => UndoLastActionAsync();
+        });
     }
 
     private async Task<TaskSnapshot> CaptureTaskSnapshotAsync(TaskFlow.Domain.Task task)
@@ -1104,3 +1116,4 @@
         this.AppState.Changed -= OnAppStateChanged;
     }
 }
+

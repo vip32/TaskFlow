@@ -48,13 +48,22 @@
     </DialogContent>
 
     <DialogActions>
-        <MudTooltip Text="Delete project">
-            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                           Color="Color.Error"
-                           aria-label="Delete project"
-                           title="Delete project"
-                           OnClick="DeleteProjectAsync" />
-        </MudTooltip>
+        @if (showDeleteConfirmation)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Error">Delete this project?</MudText>
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="CancelDeleteConfirmation">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteProjectAsync">Delete</MudButton>
+        }
+        else
+        {
+            <MudTooltip Text="Delete project">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               aria-label="Delete project"
+                               title="Delete project"
+                               OnClick="ShowDeleteConfirmation" />
+            </MudTooltip>
+        }
         <MudSpacer />
         <MudButton Variant="Variant.Outlined" OnClick="Close">Cancel</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">OK</MudButton>
@@ -94,12 +103,14 @@
     private string projectName = string.Empty;
     private string projectColor = "primary";
     private string projectIcon = "folder";
+    private bool showDeleteConfirmation;
 
     protected override void OnParametersSet()
     {
         this.projectName = this.InitialName;
         this.projectColor = NormalizeProjectColor(this.InitialColor);
         this.projectIcon = this.InitialIcon;
+        this.showDeleteConfirmation = false;
     }
 
     private async System.Threading.Tasks.Task OnNameChangedAsync(string value)
@@ -129,6 +140,16 @@
     private void Close()
     {
         this.MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        this.showDeleteConfirmation = true;
+    }
+
+    private void CancelDeleteConfirmation()
+    {
+        this.showDeleteConfirmation = false;
     }
 
     private async System.Threading.Tasks.Task DeleteProjectAsync()

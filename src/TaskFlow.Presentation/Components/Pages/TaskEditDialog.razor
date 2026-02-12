@@ -56,13 +56,22 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudTooltip Text="Delete task">
-            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                           Color="Color.Error"
-                           aria-label="Delete task"
-                           title="Delete task"
-                           OnClick="DeleteTaskAndCloseAsync" />
-        </MudTooltip>
+        @if (showDeleteConfirmation)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Error">Delete this task?</MudText>
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="CancelDeleteConfirmation">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteTaskAndCloseAsync">Delete</MudButton>
+        }
+        else
+        {
+            <MudTooltip Text="Delete task">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               aria-label="Delete task"
+                               title="Delete task"
+                               OnClick="ShowDeleteConfirmation" />
+            </MudTooltip>
+        }
         <MudSpacer />
         <MudButton Variant="Variant.Outlined" OnClick="CancelDialog">Cancel</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OkDialog">OK</MudButton>
@@ -125,6 +134,12 @@
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     private string newSubTaskTitle = string.Empty;
+    private bool showDeleteConfirmation;
+
+    protected override void OnParametersSet()
+    {
+        this.showDeleteConfirmation = false;
+    }
 
     private void OkDialog()
     {
@@ -140,6 +155,16 @@
     {
         await this.OnDelete.InvokeAsync(this.Task);
         this.MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        this.showDeleteConfirmation = true;
+    }
+
+    private void CancelDeleteConfirmation()
+    {
+        this.showDeleteConfirmation = false;
     }
 
     private async Task CreateSubTaskAsync()
