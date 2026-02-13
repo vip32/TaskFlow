@@ -18,6 +18,10 @@ Validated routes:
 - `/focus-timer`
 - `/about`
 
+### PRD Decomposition
+Detailed workflow-level requirements are documented in `docs/prd/` as PRDs using slice-based 100 ranges (`PRD-0000`, `PRD-0100`, `PRD-0200`, ...).
+This baseline remains the canonical high-level requirements source, while PRDs provide workflow detail.
+
 ---
 
 ## 2. Product Scope
@@ -240,11 +244,83 @@ A build is acceptable when:
 
 ---
 
-## 8. Version History
+## 8. PRD Coverage Mapping
+
+Implemented workflow PRDs:
+- `PRD-0000`
+- `PRD-0100` to `PRD-0105`
+- `PRD-0107`
+- `PRD-0200`
+- `PRD-0300` to `PRD-0301`
+- `PRD-0400` to `PRD-0401`
+- `PRD-0500`
+- `PRD-0600` to `PRD-0601`
+- `PRD-0700`
+- `PRD-0800`
+
+Partial workflow PRDs:
+- `PRD-0501` to `PRD-0502`
+
+Pending workflow PRDs:
+- `PRD-0106`
+- `PRD-0900`
+- `PRD-1000`
+- `PRD-1100`
+- `PRD-1200`
+
+Reference documents:
+- PRD index: `docs/prd/README.md`
+- Traceability matrix: `docs/prd/TRACEABILITY.md`
+
+---
+
+## 9. Version History
 
 | Version | Date | Changes |
 |---|---|---|
+| 2.4 | 2026-02-13 | Added workflow-level PRD decomposition in `docs/prd/` (implemented and pending slices), added traceability matrix at `docs/prd/TRACEABILITY.md`, aligned baseline to hybrid requirements model |
 | 2.3 | 2026-02-12 | Replaced speculative requirements with current implemented baseline; added subscription settings requirement (`AlwaysShowCompletedTasks`); aligned board/list behavior and page scope with actual app |
 | 2.2 | 2026-02-09 | Added persisted task/subtask ordering requirements |
 | 2.1 | 2026-02-09 | Expanded My Task Flow and due/reminder requirement set |
 | 2.0 | 2025-02-09 | Added architecture/code quality requirement sections |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

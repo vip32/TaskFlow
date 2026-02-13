@@ -1,11 +1,11 @@
 ---
 name: requirements-engineering
-description: Transform vague feature ideas into lightweight, testable requirements using user stories and short acceptance criteria. Use when clarifying scope, defining expected behavior, capturing edge cases, and producing decision-ready requirements without heavy specification overhead.
+description: Transform vague feature ideas into lightweight, testable requirements using user stories and short acceptance criteria. Use when clarifying scope, defining expected behavior, capturing edge cases, and producing decision-ready requirements with Definition of Ready checks.
 ---
 
 # Requirements Engineering
 
-Capture what needs to be built before diving into design. This skill produces lightweight, testable requirements using user stories and short acceptance criteria.
+Capture what needs to be built before diving into design. This skill produces lightweight, testable requirements using user stories and short acceptance criteria, with explicit readiness quality gates.
 
 ## When to Use This Skill
 
@@ -20,9 +20,36 @@ Use requirements engineering when:
 
 Use simple, consistent statements that are easy to review and test.
 
+**File Naming Convention (Feature Slices)**
+```text
+prd-<ID>-<SLICE>-<title>.md
+```
+- Use a zero-padded numeric ID for `<ID>` (minimum 4 digits).
+- Use per-slice ranges in steps of 100 (`0000`, `0100`, `0200`, ...).
+- Assign additional PRDs within the same slice range (`0100`, `0101`, `0102`, ...).
+- Use uppercase for `<SLICE>` (for example: `TASKS`, `PROJECTS`, `SETTINGS`).
+- Use lowercase kebab-case for `<title>`.
+- Store files under `docs/prd/`.
+- A slice can have one or more PRD files.
+- Create multiple PRDs for the same slice when there is more than one distinct story or workflow.
+- Keep each PRD focused on a coherent requirement scope.
+
+**Minimal Frontmatter (required)**
+```yaml
+---
+id: PRD-<ID>
+title: <Feature Slice Title>
+slice: <SLICE>
+status: Implemented | Partial | Pending
+---
+```
+- Keep frontmatter minimal: only `id`, `title`, `slice`, and `status`.
+- Match `slice` with the file naming convention.
+- Use the same status legend as story status: `Implemented`, `Partial`, or `Pending`.
+
 **User Story**
 ```text
-As a [role], I want [capability], so that [benefit].
+As a [actor], I want [action], so that [achievement].
 ```
 
 **Short Acceptance Criteria**
@@ -33,44 +60,90 @@ Given [context], when [action], then [outcome].
 
 Each story should have 3-5 acceptance criteria and at least one edge or error criterion.
 
+**Optional Story Additions (ASCII Diagrams)**
+- Use diagrams as optional additions when behavior is stateful, multi-step, or branch-heavy.
+- Prefer simple ASCII in fenced `text` code blocks.
+- Diagram usage is optional; acceptance criteria remain the source of truth.
+
+**Diagram Rules**
+1. Keep diagrams plain ASCII and readable in raw Markdown.
+2. Keep width near 80 characters.
+3. Place global diagrams under `## Diagram` or `## Diagrams` after `## Scope`.
+4. Place story-specific diagrams under the story as `Flow (ASCII)` when needed.
+5. Add a short `Covers AC:` line mapping diagram to acceptance criteria.
+6. Use diagrams to clarify behavior only; do not duplicate full criteria text.
+
+## Definition of Ready (DoR)
+
+Use this gate before marking a story as ready.
+
+**Core mandatory checks (blockers):**
+1. Name is clear, concise, and specific.
+2. Story uses the actor-action-achievement format.
+3. Acceptance criteria clearly define what the story must achieve.
+4. Data requirements (fields, types, constraints) are identified if applicable.
+5. Notes include dependencies/external input and known risks/constraints.
+
+**Optional checks (recommended):**
+1. Required assets/content/design links are attached when needed.
+2. Story size estimate is captured.
+3. Priority/order is explicit.
+
+**INVEST quick check (lightweight):**
+- I: Independent
+- N: Negotiable
+- V: Valuable
+- E: Estimable
+- S: Small
+- T: Testable
+
+Only obvious failures in `V`, `S`, or `T` should block readiness.
+
+## Ready Decision Rule
+
+Set `Ready: Yes` only when:
+1. All core mandatory DoR checks pass.
+2. There is no critical INVEST failure in `V`, `S`, or `T`.
+
+Otherwise:
+- Set `Ready: No`.
+- Fill `Ready Reason` with explicit missing conditions.
+
 ## Step-by-Step Process
 
 ### Step 1: Capture User Stories
 
-Format: **As a [role], I want [feature], so that [benefit]**
+Format: **As a [actor], I want [action], so that [achievement]**
 
 Focus on:
-- Who is the user? (role)
-- What do they want to accomplish? (capability)
-- Why does it matter? (benefit/value)
+- Who is the actor?
+- What action do they need?
+- What achievement/outcome matters?
 
 ### Step 2: Add Short Acceptance Criteria
 
 For each story, add 3-5 short, testable criteria.
 
 Rules:
-- Use observable outcomes
-- Keep each criterion focused on one behavior
-- Include at least one error or edge case
+- Use observable outcomes.
+- Keep each criterion focused on one behavior.
+- Include at least one error or edge case.
+- Add an ASCII diagram only if it improves clarity for transitions, timelines, or decisions.
 
-**Example:**
-```text
-1. Given the user is signed in, when they add a valid card, then the card is saved.
-2. When they add an invalid card number, then an inline validation message is shown.
-3. When they open checkout with saved cards, then a saved-card list is displayed.
-4. When they delete a saved card, then it is removed from the list.
-```
+### Step 3: Define Data & Technical Context
 
-### Step 3: Add Edge and Error Cases
+Capture:
+- Specific data fields, types, and validation rules (e.g., regex, max length).
+- Technical context (e.g., API endpoints, database changes, architectural constraints).
 
-Cover failure paths in plain language:
-- Invalid input
-- Empty states
-- Boundary values
-- Permission or access failures
-- Timeouts or external dependency failures
+### Step 4: Evaluate DoR and Set Readiness
 
-### Step 4: Validate Requirements
+Set:
+- `Ready: Yes|No`
+- `Ready Reason: ...`
+- `INVEST Check: I/N/V/E/S/T with short notes`
+
+### Step 5: Validate Requirements Quality
 
 Use this checklist:
 
@@ -132,8 +205,9 @@ Use this checklist:
 5. When upload completes successfully, then a success message with the uploaded file link is shown.
 6. When upload fails due to network issues, then a retry option is shown.
 
-**Supported File Types:** PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, GIF
-**Maximum File Size:** 10MB
+**Data Requirements:**
+- Supported Types: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, GIF
+- Max Size: 20MB (hard limit)
 ```
 
 ### Example 2: Search Feature
@@ -149,14 +223,22 @@ Use this checklist:
 5. When results exceed 20 items, then pagination is shown with 20 items per page.
 6. When the customer searches, then results are returned within 2 seconds.
 
-**Search Fields:** Product name, description, category, SKU
-**Minimum Search Length:** 2 characters
+**Data Requirements:**
+- Search Fields: Product name, description, category, SKU
+- Min Length: 2 chars
 ```
 
 ## Requirements Document Template
 
 ```markdown
-# Requirements Document: [Feature Name]
+---
+id: PRD-<ID>
+title: [Feature Slice Name]
+slice: [SLICE]
+status: Implemented | Partial | Pending
+---
+
+# Product Requirements: [Feature Slice Name]
 
 ## Overview
 [Short description of the feature and why it exists]
@@ -165,44 +247,83 @@ Use this checklist:
 - In scope: [items included]
 - Out of scope: [items excluded]
 
+## Diagram (Optional)
+```text
+[State A] --> [State B]
+```
+Covers AC: [list]
+
 ## User Roles
-- [Role 1]: [Description of this user type]
-- [Role 2]: [Description of this user type]
+- [Role 1]: [Description]
+- [Role 2]: [Description]
 
-## User Stories
+## Stories
 
-### Story 1: [Name]
-As a [role], I want [capability], so that [benefit].
+### Story 1: [Clear, specific name]
+- Status: Implemented | Partial | Pending
+- Ready: Yes | No
+- Ready Reason: [Why this is ready or what is missing]
+- User Story: As a [actor], I want [action], so that [achievement].
 
 Acceptance Criteria:
 1. Given [context], when [action], then [outcome].
 2. When [action], then [outcome].
 3. When [error or edge case], then [outcome].
 
-### Story 2: [Name]
-As a [role], I want [capability], so that [benefit].
+Flow (ASCII) (optional):
+```text
+User action -> system action -> outcome
+```
+Covers AC: [list]
+
+Data Requirements:
+- [Field Name]: [Type], [Constraints/Validation]
+
+Notes:
+- Dependencies / external input:
+- Risks / constraints:
+- Technical context: [e.g., API endpoints, DB changes]
+
+INVEST Check:
+- I: Pass|Fail - [note]
+- N: Pass|Fail - [note]
+- V: Pass|Fail - [note]
+- E: Pass|Fail - [note]
+- S: Pass|Fail - [note]
+- T: Pass|Fail - [note]
+
+### Story 2: [Clear, specific name]
+- Status: Implemented | Partial | Pending
+- Ready: Yes | No
+- Ready Reason: ...
+- User Story: As a [actor], I want [action], so that [achievement].
 
 Acceptance Criteria:
 1. ...
 2. ...
 3. ...
 
+Data Requirements:
+- ...
+
+Notes:
+- Dependencies / external input:
+- Risks / constraints:
+- Technical context:
+
+INVEST Check:
+- I: Pass|Fail - [note]
+- N: Pass|Fail - [note]
+- V: Pass|Fail - [note]
+- E: Pass|Fail - [note]
+- S: Pass|Fail - [note]
+- T: Pass|Fail - [note]
+
 ## Non-Functional Notes
 - Performance: [response targets]
 - Security: [access and data expectations]
 - Accessibility: [standards and constraints]
 
-## Out of Scope
-- [Items explicitly not included in this feature]
-
 ## Open Questions
 - [Questions that need stakeholder input]
 ```
-
-## Next Steps
-
-After completing requirements:
-1. Review with stakeholders for accuracy
-2. Get explicit approval before proceeding
-3. Move to design phase to create technical architecture
-4. Use requirements as foundation for acceptance testing

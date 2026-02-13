@@ -40,11 +40,13 @@ Use scoring matrices, cost modeling, or load testing to support decision. See [Q
 When one architectural choice forces or constrains subsequent decisions.
 
 **Approach:**
+
 1. Create primary ADR for the main architectural decision
 2. Create child ADRs for cascading decisions, referencing parent
 3. Use "Related ADRs" field to link the chain
 
 **Example:**
+
 - ADR-100: Adopt Microservices Architecture (parent)
 - ADR-101: Use gRPC for Inter-Service Communication (child - follows from ADR-100)
 - ADR-102: Implement Service Mesh with Istio (child - follows from ADR-101)
@@ -77,11 +79,13 @@ Add **Analysis Sections** to standard ADR:
 When full solution is too complex to decide at once; need to make interim decision.
 
 **Approach:**
+
 1. Create ADR for Phase 1 decision
 2. Add "Future Decisions" section listing what's deferred
 3. Set review date to revisit (e.g., "Review in 6 months")
 
 **Example:**
+
 ```markdown
 ## Decision (Phase 1)
 Start with managed PostgreSQL on RDS. Evaluate sharding vs Aurora vs NewSQL in 12 months.
@@ -96,26 +100,31 @@ Start with managed PostgreSQL on RDS. Evaluate sharding vs Aurora vs NewSQL in 1
 ### When to Add Detailed Analysis Sections
 
 **Security Analysis** - Add when:
+
 - Decision affects authentication, authorization, or data protection
 - Compliance requirements involved (SOC2, HIPAA, GDPR)
 - Handling sensitive data
 
 **Performance Analysis** - Add when:
+
 - SLA commitments at stake
 - Significant performance differences between alternatives
 - Scalability is critical concern
 
 **Cost Analysis** - Add when:
+
 - Multi-year TCO differs significantly (>20%) between alternatives
 - Hidden costs exist (operational overhead, training, vendor lock-in)
 - Budget constraints are tight
 
 **Operational Complexity Analysis** - Add when:
+
 - Team skill gaps exist for some alternatives
 - On-call burden varies significantly
 - Monitoring/debugging complexity differs
 
 **Migration Analysis** - Add when:
+
 - Replacing existing system
 - Need to maintain backward compatibility
 - Rollback strategy is complex
@@ -143,12 +152,14 @@ Start with managed PostgreSQL on RDS. Evaluate sharding vs Aurora vs NewSQL in 1
 ### Identifying Stakeholders
 
 **Technical stakeholders:**
+
 - Engineering teams affected by the decision
 - DevOps/SRE teams who will operate the solution
 - Security team for compliance/security decisions
 - Architecture review board (if exists)
 
 **Business stakeholders:**
+
 - Product managers (feature impact)
 - Finance (budget implications)
 - Legal/compliance (regulatory requirements)
@@ -157,16 +168,19 @@ Start with managed PostgreSQL on RDS. Evaluate sharding vs Aurora vs NewSQL in 1
 ### Getting Input
 
 **Pre-ADR phase:**
+
 1. Conduct stakeholder interviews to gather requirements and constraints
 2. Share draft alternatives for early feedback
 3. Identify concerns and dealbreakers
 
 **ADR draft phase:**
+
 1. Share draft ADR with key stakeholders for review
 2. Hold working session to discuss controversial points
 3. Revise based on feedback
 
 **Approval phase:**
+
 1. Present ADR at architecture review (if applicable)
 2. Get sign-off from decision-makers
 3. Communicate decision to broader team
@@ -209,6 +223,7 @@ Q1: Which cloud provider?
 ```
 
 **Approach:**
+
 1. Create ADR for Q1 (cloud provider selection)
 2. Create separate ADRs for Q2 based on Q1 outcome
 3. Link ADRs using "Related ADRs" field
@@ -278,11 +293,13 @@ For decisions under uncertainty, model different futures:
 ### When to Review ADRs
 
 **Scheduled reviews:**
+
 - High-stakes decisions: Review after 6 months
 - Medium-stakes: Review after 12 months
 - Check if consequences matched reality
 
 **Triggered reviews:**
+
 - Major change in context (team size, scale, requirements)
 - Significant problems attributed to decision
 - New technology emerges that changes trade-offs
@@ -296,6 +313,7 @@ For decisions under uncertainty, model different futures:
 3. New ADR should reference old one and explain what changed
 
 **Example:**
+
 ```markdown
 # ADR-099: Migrate from PostgreSQL to CockroachDB
 
@@ -316,6 +334,7 @@ ADR-042 chose PostgreSQL in 2024 when we had 5k users. We now have 500k users ac
 ## Summary
 
 For complex decisions:
+
 - Break into multiple ADRs if needed (use cascading pattern)
 - Add detailed analysis sections for critical factors
 - Engage stakeholders early and document positions
