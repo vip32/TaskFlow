@@ -263,6 +263,8 @@ Partial workflow PRDs:
 
 Pending workflow PRDs:
 - `PRD-0106`
+- `PRD-0302`
+- `PRD-0402`
 - `PRD-0900`
 - `PRD-1000`
 - `PRD-1100`
